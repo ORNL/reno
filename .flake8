@@ -1,0 +1,20 @@
+[flake8]
+# E201: Often mistaken about '{' and '}' in python strings
+# E202: Often mistaken about '{' and '}' in python strings
+# E203: black disagrees about ' ' before ':' in some situations
+# E231: Often mistakenly thinks ';' within a string is python
+# E402: occasionally valid reasons to not import at top of file
+# E501: let other linters deal with line length
+# E702: Often mistakenly thinks ';' within a string is python
+# W503: linebreaks across operators, black handles this
+# F824: I use nonlocal to help loosely track external dependencies in specific
+# situations
+ignore = E201, E202, E203, E231, E402, E501, E702, W503, F824
+max-line-length = 100
+max-complexity = 18
+select = B,C,E,F,W,T4,B9
+per-file-ignores =
+    # C901: Flake8, I'd like to see YOU try to implement this without it being ""too complex""
+    reno/pymc.py:C901
+    # E221/E222: Think this might actually be a bug, no operators on complaint lines
+    reno/explorer.py:E221,E222

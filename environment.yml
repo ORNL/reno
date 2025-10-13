@@ -1,0 +1,24 @@
+name: reno
+channels:
+- conda-forge
+dependencies:
+- black
+- flake8
+- graphviz
+- isort
+- jupyter
+- jupyterlab
+- matplotlib
+- numpy
+- pandas
+- pre-commit
+- pylint
+- pytest
+- python<3.13
+- tqdm
+- ipyvuetify
+- pymc
+- ipywidgets_bokeh
+- selenium
+- panel
+- xarray

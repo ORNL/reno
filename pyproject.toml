@@ -1,0 +1,74 @@
+[tool.isort]
+profile = "black"
+
+[tool.pylint]
+# W0612: unused-variable (I trust black/flake8's unused variable rules more.)
+# W0613: unused-argument
+# W0511: fixme  (it's okay for some todos to stick around)
+# W0223: abstract-method (tentatively disabling this, complaining about no copy/deepcopy on widget classes
+# W0622: redefined-builtin (Somewhat unavoidable for things like 'sum' and 'abs', but numpy does it so I'm allowed too)
+# W0212: protected-access (I label functions with _ so that code _outside_ the library knows not to use them, internal is fine.)
+# C0103: invalid-name (it doesn't like 'df', but this is convention.)
+# C0301: line-too-long (black will fix line length where necessary.)
+# C0302: too-many-lines (over-splitting code into sep modules leads to circular refs)
+# E1120: no-value-for-parameter (curifactory stages expect not passing function arguments.)
+# I1101: c-extension-no-member (don't penalize not having python source?)
+# R0903: too-few-public-methods (what a BS complaint.)
+# R0914: too-many-locals (I disagree that this is a useful measure of complexity.)
+# R1735: use-dict-literal (strongly disagree, I prefer dict(some="thing") to {"some": "thing"}
+# R0901: too-many-ancestors (can't help it, have to extend widget which has a long chain)
+# R0902: too-many-instance-attributes (vuetify widgets use attributes to comm to js, this is required)
+# R0913: too-many-arguments (look, parameterization has to occur _somewhere_.)
+# W0702: bare-except (flake8 already handles)
+disable = ["W0613", "W0511", "R1735", "C0103", "C0301", "C0302", "E1120", "I1101", "R0903", "W0612", "R0914", "R0901", "R0902", "W0223", "R0913", "W0622", "W0212", "W0702"]
+
+[tool.pylint.MASTER]
+ignore-paths = "^sphinx/.*$,^tests/.*$"
+
+[tool.setuptools]
+packages = ["reno"]
+
+[tool.setuptools.package-data]
+"res"=["res/*.vue", "res/*.js"]
+
+[tool.setuptools.dynamic]
+version = {attr = "reno.__version__"}
+
+[project]
+name = "reno"
+dynamic = ["version"]
+dependencies = [
+    "numpy",
+    "pandas",
+    "xarray",
+    "panel",
+    "pymc",
+    "matplotlib",
+    "selenium",
+    "ipyvuetify",
+    "graphviz"
+]
+requires-python = ">= 3.10"
+readme = "README.md"
+authors = [
+    {name = "Nathan Martindale", email = "martindalena@ornl.gov"},
+    {name = "Jordan Stomps", email = "stompsjr@ornl.gov"},
+    {name = "Birdy Phathanapirom", email = "birdy@ornl.gov"},
+]
+description = "System dynamics modeling with bayesian inference"
+license = "BSD 3-clause"
+license-files = ["LICENSE"]
+keywords = ["system dynamics", "sdm", "simulation", "reno", "pymc", "bayesian"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: Python :: 3"
+]
+
+[project.urls]
+Repository = "https://github.com/ORNL/reno"
+Changelog = "https://github.com/ORNL/reno/blob/main/CHANGELOG.md"
+Issues = "https://github.com/ORNL/reno/issues"

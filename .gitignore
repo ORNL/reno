@@ -1,0 +1,16 @@
+**/.virtual_documents/*
+**/__pycache__/*
+**/.ipynb_checkpoints/*
+
+*.bkp
+*.dtmp
+**/.plotcache/*
+**/.doccache/*
+
+notebooks/data/*
+reno.egg-info/*
+*.pdf
+*.json
+*.html
+
+work_sessions/*
