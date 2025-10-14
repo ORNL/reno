@@ -60,7 +60,7 @@ The stock and flow diagram for this model (obtainable via `m.graph()`) looks
 like this (green boxes are variables, white boxes are stocks, the labels between
 arrows are the flows):
 
-![stock_and_flow_diagram](./images/pedator_prey_model.png)
+![stock_and_flow_diagram](./images/predator_prey_model.png)
 
 Once a model is defined, it can be called like a function, optionally specifying
 any free variables/initial values (any of which otherwise use the default defined
