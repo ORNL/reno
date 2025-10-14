@@ -38,6 +38,7 @@ from reno.components import TimeRef  # noqa: F401
 from reno.components import Variable  # noqa: F401
 from reno.model import Model  # noqa: F401
 from reno.ops import *  # noqa: F401, F403
+from reno.viz import plot_refs  # noqa: F401
 from reno.viz import plot_trace_refs  # noqa: F401
 
 warnings.simplefilter("always", RuntimeWarning)

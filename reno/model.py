@@ -462,7 +462,10 @@ class Model:
         default_args = ""
         arg_strings = []
         for key, value in self.config().items():
-            arg_strings.append(f"{key}={value}")
+            value_to_print = value
+            if isinstance(value, reno.Scalar):
+                value_to_print = value.value
+            arg_strings.append(f"{key}={value_to_print}")
         default_args = ", ".join(arg_strings)
 
         docstring += f"\n\nExample:\n\t{self.name}({default_args})"

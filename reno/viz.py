@@ -424,7 +424,7 @@ def density(data: np.ndarray, smoothing: float = 0.1) -> tuple[np.ndarray, np.nd
     # convert data to floats and add jitter if all the same?
     # if data.var() == 0.0:
     # scale = (data[0] + 1) / 500
-    scale = 0.01 if data[0] < 1.0 else data[0] / 500
+    scale = 0.0001 if data[0] < 1.0 else data[0] / 500
     data = data + np.random.normal(scale=scale, size=data.shape)
 
     dens = gaussian_kde(data)

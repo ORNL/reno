@@ -35,7 +35,7 @@ packages = ["reno"]
 version = {attr = "reno.__version__"}
 
 [project]
-name = "reno"
+name = "reno-sd"
 dynamic = ["version"]
 dependencies = [
     "numpy",
@@ -56,13 +56,12 @@ authors = [
     {name = "Birdy Phathanapirom", email = "birdy@ornl.gov"},
 ]
 description = "System dynamics modeling with bayesian inference"
-license = "BSD 3-clause"
+license = "BSD-3-clause"
 license-files = ["LICENSE"]
 keywords = ["system dynamics", "sdm", "simulation", "reno", "pymc", "bayesian"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3"

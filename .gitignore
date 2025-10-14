@@ -1,6 +1,7 @@
 **/.virtual_documents/*
 **/__pycache__/*
 **/.ipynb_checkpoints/*
+**/*.egg-info/*
 
 *.bkp
 *.dtmp
