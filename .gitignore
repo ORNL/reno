@@ -15,3 +15,4 @@ reno.egg-info/*
 *.html
 
 work_sessions/*
+dist/*

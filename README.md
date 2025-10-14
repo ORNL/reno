@@ -1,4 +1,11 @@
-# Reno
+# Reno System Dynamics (`reno-sd`)
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI version](https://badge.fury.io/py/reno-sd.svg)](https://badge.fury.io/py/reno-sd)
+[![tests](https://github.com/ORNL/reno/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ORNL/reno/actions/workflows/tests.yml)
+[![License](https://img.shields.io/pypi/l/reno-sd)](https://github.com/ORNL/reno/blob/main/LICENSE)
+[![Python versions](https://img.shields.io/pypi/pyversions/reno-sd.svg)](https://github.com/ORNL/reno)
+
 
 Reno is a tool for creating, visualizing, and analyzing system dynamics
 models in Python. It additionally has the ability to convert models to PyMC,
@@ -60,7 +67,7 @@ The stock and flow diagram for this model (obtainable via `m.graph()`) looks
 like this (green boxes are variables, white boxes are stocks, the labels between
 arrows are the flows):
 
-![stock_and_flow_diagram](./images/predator_prey_model.png)
+![stock_and_flow_diagram](https://github.com/ORNL/reno/blob/main/images/predator_prey_model.png?raw=true)
 
 Once a model is defined, it can be called like a function, optionally specifying
 any free variables/initial values (any of which otherwise use the default defined
@@ -90,7 +97,7 @@ m(fox_growth_rate=.002, rabbit_death_rate=.002, rabbits_0=120.0)
 reno.plot_refs([(m.rabbits, m.foxes)])
 ```
 
-![basic_run](./images/predator_prey_basic_run.png)
+![basic_run](https://github.com/ORNL/reno/blob/main/images/predator_prey_basic_run.png?raw=true)
 
 To use Bayesian inference, we define a few metrics that can be observed (can
 have defined likelihoods), for instance, maybe we want to find out what the
@@ -125,7 +132,7 @@ reno.plot_trace_refs(
 )
 ```
 
-![bayes_run](./images/predator_prey_bayes.png)
+![bayes_run](https://github.com/ORNL/reno/blob/main/images/predator_prey_bayes.png?raw=true)
 
 showing that the `rabbit_growth_rate` needs to be around `0.07` in order for
 those observations to be met.

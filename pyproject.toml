@@ -48,12 +48,12 @@ dependencies = [
     "ipyvuetify",
     "graphviz"
 ]
-requires-python = ">= 3.10"
+requires-python = ">=3.10,<3.14"  # pymc/pytensor having issues with 3.14?
 readme = "README.md"
 authors = [
-    {name = "Nathan Martindale", email = "martindalena@ornl.gov"},
-    {name = "Jordan Stomps", email = "stompsjr@ornl.gov"},
-    {name = "Birdy Phathanapirom", email = "birdy@ornl.gov"},
+    {name = "Nathan Martindale, Jordan Stomps, Birdy Phathanapirom", email = "martindalena@ornl.gov"},
+    # {name = "Jordan Stomps", email = "stompsjr@ornl.gov"},  # multiple authors not explicitly supported?
+    # {name = "Birdy Phathanapirom", email = "birdy@ornl.gov"},
 ]
 description = "System dynamics modeling with bayesian inference"
 license = "BSD-3-clause"
@@ -64,7 +64,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
-    "Programming Language :: Python :: 3"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13"
 ]
 
 [project.urls]
