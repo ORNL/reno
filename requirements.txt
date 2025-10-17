@@ -1,3 +1,5 @@
 build
 twine
 pytest
+sphinx
+pydata-sphinx-theme

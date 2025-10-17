@@ -46,3 +46,12 @@ publish: ## build and upload latest version to pypi
 	@python -m build
 	@twine check dist/*
 	@twine upload dist/* --skip-existing
+
+.PHONY: apply-docs
+apply-docs: ## copy current sphinx documentation into version-specific docs/ folder
+	-@unlink docs/stable
+	@echo "Copying documentation to docs/$(VERSION)"
+	-@rm -rf docs/$(VERSION)
+	@cp -r sphinx/build/html docs/$(VERSION)
+	@echo "Linking to docs/stable"
+	@ln -s $(VERSION)/ docs/stable
