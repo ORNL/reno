@@ -64,17 +64,17 @@ m.foxes -= m.fox_deaths
 ```
 
 The stock and flow diagram for this model (obtainable via `m.graph()`) looks
-like this (green boxes are variables, white boxes are stocks, the labels between
-arrows are the flows):
+like this: (green boxes are variables, white boxes are stocks, the labels between
+arrows are the flows)
 
 ![stock_and_flow_diagram](https://github.com/ORNL/reno/blob/main/images/predator_prey_model.png?raw=true)
 
-Once a model is defined, it can be called like a function, optionally specifying
-any free variables/initial values (any of which otherwise use the default defined
-in the model above.), you can print the output of `m.get_docs()` to see a
-docstring showing what this should look like:
+Once a model is defined it can be called like a function, optionally configuring
+any free variables/initial values by passing them as arguments. You can print the
+output of `m.get_docs()` to see a docstring showing all possible arguments and
+what calling it should look like:
 
-```python
+```
 >>> print(m.get_docs())
 Classic predator-prey interaction model example
 
@@ -99,11 +99,13 @@ reno.plot_refs([(m.rabbits, m.foxes)])
 
 ![basic_run](https://github.com/ORNL/reno/blob/main/images/predator_prey_basic_run.png?raw=true)
 
-To use Bayesian inference, we define a few metrics that can be observed (can
-have defined likelihoods), for instance, maybe we want to find out what the
-rabbit population growth rate would need to be for the fox population to
-oscillate somewhere between 20-120. Transpiling into PyMC and running is similar
-to the normal call, but with ``.pymc()``:
+To use Bayesian inference, we define one or more metrics that can be observed (can
+have defined likelihoods.) For instance, we could determine what rabbit population
+growth rate would need to be for the fox population to oscillate somewhere between
+20-120. Transpiling into PyMC and running the inference process is similar to the
+normal model call, but with ``.pymc()``, specifying any free variables (at least
+one will need to be defined as a prior probability distribution), observations
+to target, and any sampling/pymc parameters:
 
 ```python
 m.minimum_foxes = reno.PostMeasurement(reno.series_min(m.foxes))
@@ -138,3 +140,21 @@ showing that the `rabbit_growth_rate` needs to be around `0.07` in order for
 those observations to be met.
 
 For a more in-depth introduction to reno, see the tub example in the `./notebooks` folder.
+
+## Citation
+
+To cite usage of Reno, please use the following bibtex:
+
+
+```bibtex
+@misc{doecode_166929,
+    title = {Reno},
+    author = {Martindale, Nathan and Stomps, Jordan and Phathanapirom, Urairisa B.},
+    abstractNote = {Reno is a tool for creating, visualizing, and analyzing system dynamics models in Python. It additionally has the ability to convert models to PyMC, allowing Bayesian inference on models with variables that include prior probability distributions.},
+    doi = {10.11578/dc.20251015.1},
+    url = {https://doi.org/10.11578/dc.20251015.1},
+    howpublished = {[Computer Software] \url{https://doi.org/10.11578/dc.20251015.1}},
+    year = {2025},
+    month = {oct}
+}
+```
