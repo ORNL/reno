@@ -3,16 +3,10 @@
 **/.ipynb_checkpoints/*
 **/*.egg-info/*
 
-*.bkp
-*.dtmp
 **/.plotcache/*
-**/.doccache/*
 
 notebooks/data/*
 reno.egg-info/*
-*.pdf
-*.json
-*.html
 
 work_sessions/*
 dist/*
