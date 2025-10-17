@@ -2,6 +2,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://badge.fury.io/py/reno-sd.svg)](https://badge.fury.io/py/reno-sd)
+![Conda version](https://img.shields.io/conda/vn/conda-forge/reno-sd)
 [![tests](https://github.com/ORNL/reno/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ORNL/reno/actions/workflows/tests.yml)
 [![License](https://img.shields.io/pypi/l/reno-sd)](https://github.com/ORNL/reno/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/pypi/pyversions/reno-sd.svg)](https://github.com/ORNL/reno)
@@ -26,6 +27,11 @@ difference equations rather than true differential equations.)
 Install from PyPI via:
 ```
 pip install reno-sd
+```
+
+Install from conda-forge with:
+```
+conda install reno-sd
 ```
 
 
