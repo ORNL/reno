@@ -1,0 +1,64 @@
+reno.explorer.BetterAccordion
+=============================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: BetterAccordion
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~BetterAccordion.__init__
+      ~BetterAccordion.clone
+      ~BetterAccordion.controls
+      ~BetterAccordion.embed
+      ~BetterAccordion.get_root
+      ~BetterAccordion.jscallback
+      ~BetterAccordion.jslink
+      ~BetterAccordion.link
+      ~BetterAccordion.on_event
+      ~BetterAccordion.on_msg
+      ~BetterAccordion.save
+      ~BetterAccordion.select
+      ~BetterAccordion.servable
+      ~BetterAccordion.server_doc
+      ~BetterAccordion.show
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~BetterAccordion.align
+      ~BetterAccordion.aspect_ratio
+      ~BetterAccordion.child
+      ~BetterAccordion.css_classes
+      ~BetterAccordion.design
+      ~BetterAccordion.height
+      ~BetterAccordion.height_policy
+      ~BetterAccordion.label
+      ~BetterAccordion.loading
+      ~BetterAccordion.margin
+      ~BetterAccordion.max_height
+      ~BetterAccordion.max_width
+      ~BetterAccordion.min_height
+      ~BetterAccordion.min_width
+      ~BetterAccordion.name
+      ~BetterAccordion.param
+      ~BetterAccordion.sizing_mode
+      ~BetterAccordion.styles
+      ~BetterAccordion.stylesheets
+      ~BetterAccordion.tags
+      ~BetterAccordion.visible
+      ~BetterAccordion.width
+      ~BetterAccordion.width_policy

@@ -75,3 +75,4 @@ classifiers = [
 Repository = "https://github.com/ORNL/reno"
 Changelog = "https://github.com/ORNL/reno/blob/main/CHANGELOG.md"
 Issues = "https://github.com/ORNL/reno/issues"
+Documentation = "https://ornl.github.io/reno/stable"

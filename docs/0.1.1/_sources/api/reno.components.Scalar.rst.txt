@@ -1,0 +1,31 @@
+reno.components.Scalar
+======================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Scalar
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Scalar.__init__
+      ~Scalar.clip
+      ~Scalar.equal
+      ~Scalar.eval
+      ~Scalar.find_refs_of_type
+      ~Scalar.is_static
+      ~Scalar.latex
+      ~Scalar.not_equal
+      ~Scalar.pt
+      ~Scalar.pt_str
+      ~Scalar.seek_refs
+      ~Scalar.series_max
+      ~Scalar.series_min
+      ~Scalar.sum

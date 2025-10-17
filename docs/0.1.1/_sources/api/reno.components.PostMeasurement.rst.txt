@@ -1,0 +1,48 @@
+reno.components.PostMeasurement
+===============================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: PostMeasurement
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~PostMeasurement.__init__
+      ~PostMeasurement.clip
+      ~PostMeasurement.debug_equation
+      ~PostMeasurement.equal
+      ~PostMeasurement.equation
+      ~PostMeasurement.eval
+      ~PostMeasurement.find_refs_of_type
+      ~PostMeasurement.from_dict
+      ~PostMeasurement.is_static
+      ~PostMeasurement.latex
+      ~PostMeasurement.not_equal
+      ~PostMeasurement.pt
+      ~PostMeasurement.pt_str
+      ~PostMeasurement.qual_name
+      ~PostMeasurement.seek_refs
+      ~PostMeasurement.series_max
+      ~PostMeasurement.series_min
+      ~PostMeasurement.sum
+      ~PostMeasurement.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PostMeasurement.model
+      ~PostMeasurement.label
+      ~PostMeasurement.doc

@@ -1,0 +1,31 @@
+reno.explorer.Observable
+========================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: Observable
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Observable.__init__
+      ~Observable.servable
+      ~Observable.show
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Observable.name
+      ~Observable.param

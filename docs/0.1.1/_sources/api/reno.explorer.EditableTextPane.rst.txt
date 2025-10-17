@@ -1,0 +1,69 @@
+reno.explorer.EditableTextPane
+==============================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: EditableTextPane
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~EditableTextPane.__init__
+      ~EditableTextPane.clone
+      ~EditableTextPane.controls
+      ~EditableTextPane.embed
+      ~EditableTextPane.fire_on_cache_invalidated
+      ~EditableTextPane.from_dict
+      ~EditableTextPane.from_param
+      ~EditableTextPane.from_values
+      ~EditableTextPane.get_root
+      ~EditableTextPane.jscallback
+      ~EditableTextPane.jslink
+      ~EditableTextPane.link
+      ~EditableTextPane.on_cache_invalidated
+      ~EditableTextPane.save
+      ~EditableTextPane.select
+      ~EditableTextPane.servable
+      ~EditableTextPane.server_doc
+      ~EditableTextPane.show
+      ~EditableTextPane.to_dict
+      ~EditableTextPane.to_html
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~EditableTextPane.align
+      ~EditableTextPane.aspect_ratio
+      ~EditableTextPane.css_classes
+      ~EditableTextPane.design
+      ~EditableTextPane.height
+      ~EditableTextPane.height_policy
+      ~EditableTextPane.loading
+      ~EditableTextPane.margin
+      ~EditableTextPane.max_height
+      ~EditableTextPane.max_width
+      ~EditableTextPane.min_height
+      ~EditableTextPane.min_width
+      ~EditableTextPane.name
+      ~EditableTextPane.param
+      ~EditableTextPane.rx
+      ~EditableTextPane.sizing_mode
+      ~EditableTextPane.styles
+      ~EditableTextPane.stylesheets
+      ~EditableTextPane.tags
+      ~EditableTextPane.value
+      ~EditableTextPane.visible
+      ~EditableTextPane.width
+      ~EditableTextPane.width_policy

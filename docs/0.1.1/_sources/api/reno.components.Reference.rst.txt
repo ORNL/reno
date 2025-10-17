@@ -1,0 +1,42 @@
+reno.components.Reference
+=========================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Reference
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Reference.__init__
+      ~Reference.clip
+      ~Reference.equal
+      ~Reference.eval
+      ~Reference.find_refs_of_type
+      ~Reference.is_static
+      ~Reference.latex
+      ~Reference.not_equal
+      ~Reference.pt
+      ~Reference.pt_str
+      ~Reference.seek_refs
+      ~Reference.series_max
+      ~Reference.series_min
+      ~Reference.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Reference.label
+      ~Reference.doc

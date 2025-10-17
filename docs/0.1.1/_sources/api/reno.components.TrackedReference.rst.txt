@@ -1,0 +1,54 @@
+reno.components.TrackedReference
+================================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: TrackedReference
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~TrackedReference.__init__
+      ~TrackedReference.clip
+      ~TrackedReference.equal
+      ~TrackedReference.eval
+      ~TrackedReference.find_refs_of_type
+      ~TrackedReference.from_dict
+      ~TrackedReference.history
+      ~TrackedReference.initial_vals
+      ~TrackedReference.is_static
+      ~TrackedReference.latex
+      ~TrackedReference.max_refs
+      ~TrackedReference.min_refs
+      ~TrackedReference.not_equal
+      ~TrackedReference.populate
+      ~TrackedReference.pt
+      ~TrackedReference.pt_str
+      ~TrackedReference.qual_name
+      ~TrackedReference.resolve_init_array
+      ~TrackedReference.seek_refs
+      ~TrackedReference.series_max
+      ~TrackedReference.series_min
+      ~TrackedReference.sum
+      ~TrackedReference.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~TrackedReference.model
+      ~TrackedReference.init
+      ~TrackedReference.static_value_computed
+      ~TrackedReference.label
+      ~TrackedReference.doc

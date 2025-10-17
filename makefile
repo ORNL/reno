@@ -1,3 +1,5 @@
+SHELL=/usr/bin/env bash
+VERSION=$(shell python -c "import reno; print(reno.__version__)")
 MAMBA=micromamba
 ENV_NAME=reno
 

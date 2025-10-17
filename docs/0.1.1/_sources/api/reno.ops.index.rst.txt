@@ -1,0 +1,44 @@
+reno.ops.index
+==============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: index
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~index.__init__
+      ~index.clip
+      ~index.equal
+      ~index.eval
+      ~index.find_refs_of_type
+      ~index.is_static
+      ~index.latex
+      ~index.not_equal
+      ~index.op_eval
+      ~index.op_repr
+      ~index.op_types
+      ~index.pt
+      ~index.pt_str
+      ~index.seek_refs
+      ~index.series_max
+      ~index.series_min
+      ~index.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~index.OP_REPR

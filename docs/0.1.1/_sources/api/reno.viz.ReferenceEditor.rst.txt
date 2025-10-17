@@ -1,0 +1,36 @@
+reno.viz.ReferenceEditor
+========================
+
+.. currentmodule:: reno.viz
+
+.. autoclass:: ReferenceEditor
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ReferenceEditor.__init__
+      ~ReferenceEditor.assign_value_from_control
+      ~ReferenceEditor.get_eq
+      ~ReferenceEditor.get_eq_str
+      ~ReferenceEditor.get_ref
+      ~ReferenceEditor.parse_str_to_eq
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ReferenceEditor.control
+      ~ReferenceEditor.model
+      ~ReferenceEditor.ref_name
+      ~ReferenceEditor.is_init

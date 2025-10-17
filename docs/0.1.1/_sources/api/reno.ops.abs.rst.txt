@@ -1,0 +1,44 @@
+reno.ops.abs
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: abs
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~abs.__init__
+      ~abs.clip
+      ~abs.equal
+      ~abs.eval
+      ~abs.find_refs_of_type
+      ~abs.is_static
+      ~abs.latex
+      ~abs.not_equal
+      ~abs.op_eval
+      ~abs.op_repr
+      ~abs.op_types
+      ~abs.pt
+      ~abs.pt_str
+      ~abs.seek_refs
+      ~abs.series_max
+      ~abs.series_min
+      ~abs.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~abs.OP_REPR

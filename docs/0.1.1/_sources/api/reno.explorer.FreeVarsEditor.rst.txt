@@ -1,0 +1,35 @@
+reno.explorer.FreeVarsEditor
+============================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: FreeVarsEditor
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~FreeVarsEditor.__init__
+      ~FreeVarsEditor.assign_from_controls
+      ~FreeVarsEditor.create_variable_controls
+      ~FreeVarsEditor.fire_on_run_prior_clicked
+      ~FreeVarsEditor.on_run_prior_clicked
+      ~FreeVarsEditor.servable
+      ~FreeVarsEditor.show
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~FreeVarsEditor.name
+      ~FreeVarsEditor.param

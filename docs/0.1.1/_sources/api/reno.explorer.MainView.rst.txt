@@ -1,0 +1,38 @@
+reno.explorer.MainView
+======================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: MainView
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~MainView.__init__
+      ~MainView.create_tab
+      ~MainView.fire_on_new_controls_needed
+      ~MainView.from_dict
+      ~MainView.on_new_controls_needed
+      ~MainView.refresh_tab_contents
+      ~MainView.servable
+      ~MainView.show
+      ~MainView.to_dict
+      ~MainView.update_traces
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~MainView.name
+      ~MainView.param

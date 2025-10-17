@@ -1,0 +1,44 @@
+reno.ops.mod
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: mod
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~mod.__init__
+      ~mod.clip
+      ~mod.equal
+      ~mod.eval
+      ~mod.find_refs_of_type
+      ~mod.is_static
+      ~mod.latex
+      ~mod.not_equal
+      ~mod.op_eval
+      ~mod.op_repr
+      ~mod.op_types
+      ~mod.pt
+      ~mod.pt_str
+      ~mod.seek_refs
+      ~mod.series_max
+      ~mod.series_min
+      ~mod.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~mod.OP_REPR

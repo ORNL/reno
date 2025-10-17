@@ -1,0 +1,44 @@
+reno.explorer.PanesSet
+======================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: PanesSet
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~PanesSet.__init__
+      ~PanesSet.add_diagram_pane
+      ~PanesSet.add_pane
+      ~PanesSet.add_plots_pane
+      ~PanesSet.add_text_pane
+      ~PanesSet.export
+      ~PanesSet.fire_on_name_changed
+      ~PanesSet.fire_on_new_controls_needed
+      ~PanesSet.from_dict
+      ~PanesSet.invalidate_downloads
+      ~PanesSet.on_name_changed
+      ~PanesSet.on_new_controls_needed
+      ~PanesSet.servable
+      ~PanesSet.show
+      ~PanesSet.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PanesSet.name
+      ~PanesSet.param
+      ~PanesSet.tab_name

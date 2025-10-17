@@ -1,0 +1,34 @@
+reno.components.Piecewise
+=========================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Piecewise
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Piecewise.__init__
+      ~Piecewise.clip
+      ~Piecewise.equal
+      ~Piecewise.eval
+      ~Piecewise.find_refs_of_type
+      ~Piecewise.is_static
+      ~Piecewise.latex
+      ~Piecewise.not_equal
+      ~Piecewise.parse
+      ~Piecewise.pt
+      ~Piecewise.pt_condition
+      ~Piecewise.pt_condition_str
+      ~Piecewise.pt_str
+      ~Piecewise.seek_refs
+      ~Piecewise.series_max
+      ~Piecewise.series_min
+      ~Piecewise.sum

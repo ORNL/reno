@@ -1,0 +1,32 @@
+reno.viz.ModelLatex
+===================
+
+.. currentmodule:: reno.viz
+
+.. autoclass:: ModelLatex
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ModelLatex.__init__
+      ~ModelLatex.find_equation_name_from_index
+      ~ModelLatex.fire_on_name_clicked
+      ~ModelLatex.latex_data_with_highlight
+      ~ModelLatex.on_name_clicked
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ModelLatex.widget

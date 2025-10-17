@@ -1,0 +1,38 @@
+reno.explorer.RunsList
+======================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: RunsList
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~RunsList.__init__
+      ~RunsList.add_run
+      ~RunsList.fire_on_selected_runs_changed
+      ~RunsList.from_dict
+      ~RunsList.get_selected_runs
+      ~RunsList.on_selected_runs_changed
+      ~RunsList.refresh_rows
+      ~RunsList.servable
+      ~RunsList.show
+      ~RunsList.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~RunsList.name
+      ~RunsList.param

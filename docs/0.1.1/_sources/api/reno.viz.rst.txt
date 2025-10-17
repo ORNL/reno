@@ -1,0 +1,35 @@
+﻿reno.viz
+========
+
+.. automodule:: reno.viz
+
+
+
+
+
+
+
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+
+      compare_posterior
+      compare_seq
+      density
+      plot_refs
+      plot_trace_refs
+
+
+
+
+
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+
+      ModelLatex
+      ModelViewer
+      ReferenceEditor

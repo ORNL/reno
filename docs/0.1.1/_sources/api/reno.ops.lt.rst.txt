@@ -1,0 +1,44 @@
+reno.ops.lt
+===========
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: lt
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~lt.__init__
+      ~lt.clip
+      ~lt.equal
+      ~lt.eval
+      ~lt.find_refs_of_type
+      ~lt.is_static
+      ~lt.latex
+      ~lt.not_equal
+      ~lt.op_eval
+      ~lt.op_repr
+      ~lt.op_types
+      ~lt.pt
+      ~lt.pt_str
+      ~lt.seek_refs
+      ~lt.series_max
+      ~lt.series_min
+      ~lt.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~lt.OP_REPR

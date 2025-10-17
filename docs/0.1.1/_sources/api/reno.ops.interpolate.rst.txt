@@ -1,0 +1,44 @@
+reno.ops.interpolate
+====================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: interpolate
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~interpolate.__init__
+      ~interpolate.clip
+      ~interpolate.equal
+      ~interpolate.eval
+      ~interpolate.find_refs_of_type
+      ~interpolate.is_static
+      ~interpolate.latex
+      ~interpolate.not_equal
+      ~interpolate.op_eval
+      ~interpolate.op_repr
+      ~interpolate.op_types
+      ~interpolate.pt
+      ~interpolate.pt_str
+      ~interpolate.seek_refs
+      ~interpolate.series_max
+      ~interpolate.series_min
+      ~interpolate.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~interpolate.OP_REPR

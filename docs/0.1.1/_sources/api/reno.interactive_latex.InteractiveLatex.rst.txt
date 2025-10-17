@@ -1,0 +1,89 @@
+reno.interactive\_latex.InteractiveLatex
+========================================
+
+.. currentmodule:: reno.interactive_latex
+
+.. autoclass:: InteractiveLatex
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~InteractiveLatex.__init__
+      ~InteractiveLatex.add_class
+      ~InteractiveLatex.add_traits
+      ~InteractiveLatex.blur
+      ~InteractiveLatex.class_own_trait_events
+      ~InteractiveLatex.class_own_traits
+      ~InteractiveLatex.class_trait_names
+      ~InteractiveLatex.class_traits
+      ~InteractiveLatex.close
+      ~InteractiveLatex.close_all
+      ~InteractiveLatex.fire_on_row_clicked
+      ~InteractiveLatex.focus
+      ~InteractiveLatex.get_manager_state
+      ~InteractiveLatex.get_state
+      ~InteractiveLatex.get_view_spec
+      ~InteractiveLatex.handle_comm_opened
+      ~InteractiveLatex.handle_control_comm_opened
+      ~InteractiveLatex.has_trait
+      ~InteractiveLatex.hold_sync
+      ~InteractiveLatex.hold_trait_notifications
+      ~InteractiveLatex.notify_change
+      ~InteractiveLatex.observe
+      ~InteractiveLatex.on_msg
+      ~InteractiveLatex.on_row_clicked
+      ~InteractiveLatex.on_trait_change
+      ~InteractiveLatex.on_widget_constructed
+      ~InteractiveLatex.open
+      ~InteractiveLatex.refresh_display
+      ~InteractiveLatex.remove_class
+      ~InteractiveLatex.send
+      ~InteractiveLatex.send_state
+      ~InteractiveLatex.set_state
+      ~InteractiveLatex.set_trait
+      ~InteractiveLatex.setup_instance
+      ~InteractiveLatex.trait_defaults
+      ~InteractiveLatex.trait_events
+      ~InteractiveLatex.trait_has_value
+      ~InteractiveLatex.trait_metadata
+      ~InteractiveLatex.trait_names
+      ~InteractiveLatex.trait_values
+      ~InteractiveLatex.traits
+      ~InteractiveLatex.unobserve
+      ~InteractiveLatex.unobserve_all
+      ~InteractiveLatex.vue_fire_on_row_clicked
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~InteractiveLatex.class_component_serialization
+      ~InteractiveLatex.comm
+      ~InteractiveLatex.components
+      ~InteractiveLatex.cross_validation_lock
+      ~InteractiveLatex.css
+      ~InteractiveLatex.data
+      ~InteractiveLatex.events
+      ~InteractiveLatex.keys
+      ~InteractiveLatex.latex_output
+      ~InteractiveLatex.layout
+      ~InteractiveLatex.log
+      ~InteractiveLatex.methods
+      ~InteractiveLatex.model_id
+      ~InteractiveLatex.tabbable
+      ~InteractiveLatex.template
+      ~InteractiveLatex.template_file
+      ~InteractiveLatex.tooltip
+      ~InteractiveLatex.widget_types
+      ~InteractiveLatex.widgets

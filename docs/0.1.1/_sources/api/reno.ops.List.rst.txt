@@ -1,0 +1,32 @@
+reno.ops.List
+=============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: List
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~List.__init__
+      ~List.clip
+      ~List.equal
+      ~List.eval
+      ~List.find_refs_of_type
+      ~List.is_static
+      ~List.latex
+      ~List.not_equal
+      ~List.populate
+      ~List.pt
+      ~List.pt_str
+      ~List.seek_refs
+      ~List.series_max
+      ~List.series_min
+      ~List.sum

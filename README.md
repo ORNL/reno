@@ -20,12 +20,14 @@ and in the `notebooks` folder.
 Currently, models only support discrete timesteps (technically implementing
 difference equations rather than true differential equations.)
 
+
 ## Installation
 
 Install from PyPI via:
 ```
 pip install reno-sd
 ```
+
 
 ## Example
 
@@ -140,6 +142,13 @@ showing that the `rabbit_growth_rate` needs to be around `0.07` in order for
 those observations to be met.
 
 For a more in-depth introduction to reno, see the tub example in the `./notebooks` folder.
+
+
+## Documentation
+
+For the API reference as well as (eventually) the user guide, see
+[https://ornl.github.io/reno/stable](https://ornl.github.io/reno/stable)
+
 
 ## Citation
 

@@ -1,0 +1,32 @@
+reno.ops.Normal
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: Normal
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Normal.__init__
+      ~Normal.clip
+      ~Normal.equal
+      ~Normal.eval
+      ~Normal.find_refs_of_type
+      ~Normal.is_static
+      ~Normal.latex
+      ~Normal.not_equal
+      ~Normal.populate
+      ~Normal.pt
+      ~Normal.pt_str
+      ~Normal.seek_refs
+      ~Normal.series_max
+      ~Normal.series_min
+      ~Normal.sum

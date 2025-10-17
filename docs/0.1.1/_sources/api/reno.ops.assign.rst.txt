@@ -1,0 +1,44 @@
+reno.ops.assign
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: assign
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~assign.__init__
+      ~assign.clip
+      ~assign.equal
+      ~assign.eval
+      ~assign.find_refs_of_type
+      ~assign.is_static
+      ~assign.latex
+      ~assign.not_equal
+      ~assign.op_eval
+      ~assign.op_repr
+      ~assign.op_types
+      ~assign.pt
+      ~assign.pt_str
+      ~assign.seek_refs
+      ~assign.series_max
+      ~assign.series_min
+      ~assign.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~assign.OP_REPR
