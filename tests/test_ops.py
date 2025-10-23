@@ -21,7 +21,7 @@ def test_sum_on_vector():
     v = Variable()
     v.value = np.array([2, 3])
 
-    assert (ops.sum(ops.timeseries(v)).eval(3) == np.array([[8, 12]])).all()
+    assert (ops.sum(ops.orient_timeseries(v)).eval(3) == np.array([[8, 12]])).all()
 
 
 def test_sum_on_matrix_start_stop():

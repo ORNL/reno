@@ -17,7 +17,7 @@ __all__ = [
     "sum",
     "index",
     "slice",
-    "timeseries",
+    "orient_timeseries",
     # -- normal math operations --
     "add",
     "sub",
@@ -278,7 +278,7 @@ class slice(reno.components.Operation):
         return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0}:{self.stop.pt_str(**refs)}]"
 
 
-class timeseries(reno.components.Operation):
+class orient_timeseries(reno.components.Operation):
     """Get the full data of a component/equation as an array over time, allowing aggregate
     operations to operate across the full timeseries, e.g. for metric equations. This is
     in essence "reorienting" the underlying data to include the time dimension.

@@ -153,14 +153,14 @@ class EquationPart:
         return reno.ops.sum(self, axis=axis)
 
     @property
-    def timeseries(self):
-        """Making this a property because despite being an operation,
-        it is in effect just giving a view to an underlying value?"""
+    def timeseries(self) -> "Operation":
+        """Get a timeseries view of the data (includes all historical data across all timesteps.)"""
         # TODO: possibly should be a property of TrackedReference instead
-        return reno.ops.timeseries(self)
+        return reno.ops.orient_timeseries(self)
 
     @property
-    def shape(self):
+    def shape(self) -> int:
+        """The size of the data dimension, 1 by default."""
         try:
             if self._shape is None:
                 self._shape = self.get_shape()
@@ -170,7 +170,8 @@ class EquationPart:
             raise
 
     @property
-    def dtype(self):
+    def dtype(self) -> type:
+        """The type of each underlying value."""
         if self._dtype is None:
             self._dtype = self.get_type()
         return self._dtype
@@ -1648,7 +1649,8 @@ class HistoricalValue(Reference):
         return self.tracked_ref.shape
 
     @property
-    def model(self):
+    def model(self) -> "reno.Model":
+        """Get the model associated with this historical value."""
         return self.tracked_ref.model
 
     def latex(self, **kwargs) -> str:
