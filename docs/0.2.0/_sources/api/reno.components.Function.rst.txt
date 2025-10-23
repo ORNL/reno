@@ -1,0 +1,48 @@
+reno.components.Function
+========================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Function
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Function.__init__
+      ~Function.clip
+      ~Function.equal
+      ~Function.eval
+      ~Function.find_refs_of_type
+      ~Function.get_shape
+      ~Function.get_type
+      ~Function.is_static
+      ~Function.latex
+      ~Function.not_equal
+      ~Function.pt
+      ~Function.pt_str
+      ~Function.seek_refs
+      ~Function.series_max
+      ~Function.series_min
+      ~Function.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Function.dtype
+      ~Function.shape
+      ~Function.timeseries
+      ~Function.label
+      ~Function.doc

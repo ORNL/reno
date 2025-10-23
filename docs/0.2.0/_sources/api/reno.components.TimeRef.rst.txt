@@ -1,0 +1,48 @@
+reno.components.TimeRef
+=======================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: TimeRef
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~TimeRef.__init__
+      ~TimeRef.clip
+      ~TimeRef.equal
+      ~TimeRef.eval
+      ~TimeRef.find_refs_of_type
+      ~TimeRef.get_shape
+      ~TimeRef.get_type
+      ~TimeRef.is_static
+      ~TimeRef.latex
+      ~TimeRef.not_equal
+      ~TimeRef.pt
+      ~TimeRef.pt_str
+      ~TimeRef.seek_refs
+      ~TimeRef.series_max
+      ~TimeRef.series_min
+      ~TimeRef.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~TimeRef.dtype
+      ~TimeRef.shape
+      ~TimeRef.timeseries
+      ~TimeRef.label
+      ~TimeRef.doc

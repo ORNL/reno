@@ -1,0 +1,48 @@
+reno.ops.Observation
+====================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: Observation
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Observation.__init__
+      ~Observation.add_tensors
+      ~Observation.clip
+      ~Observation.equal
+      ~Observation.eval
+      ~Observation.find_refs_of_type
+      ~Observation.get_shape
+      ~Observation.get_type
+      ~Observation.is_static
+      ~Observation.latex
+      ~Observation.not_equal
+      ~Observation.populate
+      ~Observation.pt
+      ~Observation.pt_str
+      ~Observation.seek_refs
+      ~Observation.series_max
+      ~Observation.series_min
+      ~Observation.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Observation.dtype
+      ~Observation.shape
+      ~Observation.timeseries

@@ -1,0 +1,50 @@
+reno.components.ExtendedOperation
+=================================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: ExtendedOperation
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ExtendedOperation.__init__
+      ~ExtendedOperation.clip
+      ~ExtendedOperation.equal
+      ~ExtendedOperation.eval
+      ~ExtendedOperation.find_refs_of_type
+      ~ExtendedOperation.get_shape
+      ~ExtendedOperation.get_type
+      ~ExtendedOperation.is_static
+      ~ExtendedOperation.latex
+      ~ExtendedOperation.not_equal
+      ~ExtendedOperation.op_eval
+      ~ExtendedOperation.op_repr
+      ~ExtendedOperation.op_types
+      ~ExtendedOperation.pt
+      ~ExtendedOperation.pt_str
+      ~ExtendedOperation.seek_refs
+      ~ExtendedOperation.series_max
+      ~ExtendedOperation.series_min
+      ~ExtendedOperation.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ExtendedOperation.OP_REPR
+      ~ExtendedOperation.dtype
+      ~ExtendedOperation.shape
+      ~ExtendedOperation.timeseries

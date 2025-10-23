@@ -1,0 +1,54 @@
+reno.components.Metric
+======================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Metric
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Metric.__init__
+      ~Metric.clip
+      ~Metric.debug_equation
+      ~Metric.equal
+      ~Metric.equation
+      ~Metric.eval
+      ~Metric.find_refs_of_type
+      ~Metric.from_dict
+      ~Metric.get_shape
+      ~Metric.get_type
+      ~Metric.is_static
+      ~Metric.latex
+      ~Metric.not_equal
+      ~Metric.pt
+      ~Metric.pt_str
+      ~Metric.qual_name
+      ~Metric.seek_refs
+      ~Metric.series_max
+      ~Metric.series_min
+      ~Metric.sum
+      ~Metric.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Metric.dtype
+      ~Metric.shape
+      ~Metric.timeseries
+      ~Metric.model
+      ~Metric.label
+      ~Metric.doc

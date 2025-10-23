@@ -1,0 +1,65 @@
+reno.components.Variable
+========================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Variable
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Variable.__init__
+      ~Variable.clip
+      ~Variable.debug_equation
+      ~Variable.equal
+      ~Variable.equation
+      ~Variable.eval
+      ~Variable.find_refs_of_type
+      ~Variable.from_dict
+      ~Variable.get_shape
+      ~Variable.get_type
+      ~Variable.history
+      ~Variable.initial_vals
+      ~Variable.is_static
+      ~Variable.latex
+      ~Variable.max_refs
+      ~Variable.min_refs
+      ~Variable.not_equal
+      ~Variable.populate
+      ~Variable.pt
+      ~Variable.pt_str
+      ~Variable.qual_name
+      ~Variable.resolve_init_array
+      ~Variable.seek_refs
+      ~Variable.series_max
+      ~Variable.series_min
+      ~Variable.sum
+      ~Variable.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Variable.dtype
+      ~Variable.shape
+      ~Variable.timeseries
+      ~Variable.user
+      ~Variable.model
+      ~Variable.init
+      ~Variable.dim
+      ~Variable.implicit
+      ~Variable.computed_mask
+      ~Variable.label
+      ~Variable.doc

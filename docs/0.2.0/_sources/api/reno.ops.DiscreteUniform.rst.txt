@@ -1,0 +1,47 @@
+reno.ops.DiscreteUniform
+========================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: DiscreteUniform
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~DiscreteUniform.__init__
+      ~DiscreteUniform.clip
+      ~DiscreteUniform.equal
+      ~DiscreteUniform.eval
+      ~DiscreteUniform.find_refs_of_type
+      ~DiscreteUniform.get_shape
+      ~DiscreteUniform.get_type
+      ~DiscreteUniform.is_static
+      ~DiscreteUniform.latex
+      ~DiscreteUniform.not_equal
+      ~DiscreteUniform.populate
+      ~DiscreteUniform.pt
+      ~DiscreteUniform.pt_str
+      ~DiscreteUniform.seek_refs
+      ~DiscreteUniform.series_max
+      ~DiscreteUniform.series_min
+      ~DiscreteUniform.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DiscreteUniform.dtype
+      ~DiscreteUniform.shape
+      ~DiscreteUniform.timeseries

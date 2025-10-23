@@ -1,0 +1,50 @@
+reno.ops.sum
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: sum
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~sum.__init__
+      ~sum.clip
+      ~sum.equal
+      ~sum.eval
+      ~sum.find_refs_of_type
+      ~sum.get_shape
+      ~sum.get_type
+      ~sum.is_static
+      ~sum.latex
+      ~sum.not_equal
+      ~sum.op_eval
+      ~sum.op_repr
+      ~sum.op_types
+      ~sum.pt
+      ~sum.pt_str
+      ~sum.seek_refs
+      ~sum.series_max
+      ~sum.series_min
+      ~sum.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~sum.OP_REPR
+      ~sum.dtype
+      ~sum.shape
+      ~sum.timeseries

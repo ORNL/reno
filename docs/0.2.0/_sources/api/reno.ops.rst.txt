@@ -1,0 +1,69 @@
+﻿reno.ops
+========
+
+.. automodule:: reno.ops
+
+
+
+
+
+
+
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+
+      dist_params
+      dist_shape
+
+
+
+
+
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+
+      Bernoulli
+      Categorical
+      DiscreteUniform
+      List
+      Normal
+      Observation
+      Uniform
+      abs
+      add
+      assign
+      bool_and
+      bool_or
+      clip
+      delay1
+      delay3
+      div
+      eq
+      gt
+      gte
+      index
+      interpolate
+      log
+      lt
+      lte
+      maximum
+      minimum
+      mod
+      mul
+      ne
+      orient_timeseries
+      pulse
+      repeated_pulse
+      series_max
+      series_min
+      sin
+      slice
+      smooth
+      step
+      sub
+      sum

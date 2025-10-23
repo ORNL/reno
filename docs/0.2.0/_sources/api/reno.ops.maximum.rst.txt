@@ -1,0 +1,50 @@
+reno.ops.maximum
+================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: maximum
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~maximum.__init__
+      ~maximum.clip
+      ~maximum.equal
+      ~maximum.eval
+      ~maximum.find_refs_of_type
+      ~maximum.get_shape
+      ~maximum.get_type
+      ~maximum.is_static
+      ~maximum.latex
+      ~maximum.not_equal
+      ~maximum.op_eval
+      ~maximum.op_repr
+      ~maximum.op_types
+      ~maximum.pt
+      ~maximum.pt_str
+      ~maximum.seek_refs
+      ~maximum.series_max
+      ~maximum.series_min
+      ~maximum.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~maximum.OP_REPR
+      ~maximum.dtype
+      ~maximum.shape
+      ~maximum.timeseries

@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API Reference &#8212; Reno 0.2.0 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_reference';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ornl.github.io/reno/stable/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="reno.components" href="api/reno.components.html" />
+    <link rel="prev" title="Welcome to Reno’s Documentation!" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <dialog id="pst-search-dialog">
+
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="index.html">
+
+
+
+
+
+
+    <p class="title logo__title">Reno 0.2.0 documentation</p>
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+
+
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+
+
+
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+
+
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.components.html">reno.components</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Distribution.html">reno.components.Distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.EquationPart.html">reno.components.EquationPart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.ExtendedOperation.html">reno.components.ExtendedOperation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Flag.html">reno.components.Flag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Flow.html">reno.components.Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Function.html">reno.components.Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.HistoricalValue.html">reno.components.HistoricalValue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Metric.html">reno.components.Metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Operation.html">reno.components.Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Piecewise.html">reno.components.Piecewise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Reference.html">reno.components.Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Scalar.html">reno.components.Scalar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Stock.html">reno.components.Stock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.TimeRef.html">reno.components.TimeRef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.TrackedReference.html">reno.components.TrackedReference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.components.Variable.html">reno.components.Variable</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.diagrams.html">reno.diagrams</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.DARK_MODE.html">reno.diagrams.DARK_MODE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.SUBGRAPH_COLORS.html">reno.diagrams.SUBGRAPH_COLORS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.NODE_COLOR.html">reno.diagrams.NODE_COLOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_flows.html">reno.diagrams.add_flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_stock_io_edge.html">reno.diagrams.add_stock_io_edge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_stock_limit_edge.html">reno.diagrams.add_stock_limit_edge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_stocks.html">reno.diagrams.add_stocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_to_flow_edge.html">reno.diagrams.add_to_flow_edge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_to_var_edge.html">reno.diagrams.add_to_var_edge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.add_vars.html">reno.diagrams.add_vars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.draw_appropriate_edge.html">reno.diagrams.draw_appropriate_edge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.filter_variables.html">reno.diagrams.filter_variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.set_dark_mode.html">reno.diagrams.set_dark_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.diagrams.stock_flow_diagram.html">reno.diagrams.stock_flow_diagram</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.explorer.html">reno.explorer</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.create_explorer.html">reno.explorer.create_explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.BetterAccordion.html">reno.explorer.BetterAccordion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.ClickablePane.html">reno.explorer.ClickablePane</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.DiagramPane.html">reno.explorer.DiagramPane</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.EditableTextPane.html">reno.explorer.EditableTextPane</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.Explorer.html">reno.explorer.Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.FreeVarsEditor.html">reno.explorer.FreeVarsEditor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.MainView.html">reno.explorer.MainView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.Observable.html">reno.explorer.Observable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.ObservablesList.html">reno.explorer.ObservablesList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.PanesSet.html">reno.explorer.PanesSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.PlotsPane.html">reno.explorer.PlotsPane</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.RunRow.html">reno.explorer.RunRow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.RunsList.html">reno.explorer.RunsList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.explorer.ViewControls.html">reno.explorer.ViewControls</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.interactive_latex.html">reno.interactive_latex</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.interactive_latex.InteractiveLatex.html">reno.interactive_latex.InteractiveLatex</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.model.html">reno.model</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.model.Model.html">reno.model.Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.ops.html">reno.ops</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.dist_params.html">reno.ops.dist_params</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.dist_shape.html">reno.ops.dist_shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.Bernoulli.html">reno.ops.Bernoulli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.Categorical.html">reno.ops.Categorical</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.DiscreteUniform.html">reno.ops.DiscreteUniform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.List.html">reno.ops.List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.Normal.html">reno.ops.Normal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.Observation.html">reno.ops.Observation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.Uniform.html">reno.ops.Uniform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.abs.html">reno.ops.abs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.add.html">reno.ops.add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.assign.html">reno.ops.assign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.bool_and.html">reno.ops.bool_and</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.bool_or.html">reno.ops.bool_or</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.clip.html">reno.ops.clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.delay1.html">reno.ops.delay1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.delay3.html">reno.ops.delay3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.div.html">reno.ops.div</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.eq.html">reno.ops.eq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.gt.html">reno.ops.gt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.gte.html">reno.ops.gte</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.index.html">reno.ops.index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.interpolate.html">reno.ops.interpolate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.log.html">reno.ops.log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.lt.html">reno.ops.lt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.lte.html">reno.ops.lte</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.maximum.html">reno.ops.maximum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.minimum.html">reno.ops.minimum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.mod.html">reno.ops.mod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.mul.html">reno.ops.mul</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.ne.html">reno.ops.ne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.orient_timeseries.html">reno.ops.orient_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.pulse.html">reno.ops.pulse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.repeated_pulse.html">reno.ops.repeated_pulse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.series_max.html">reno.ops.series_max</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.series_min.html">reno.ops.series_min</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.sin.html">reno.ops.sin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.slice.html">reno.ops.slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.smooth.html">reno.ops.smooth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.step.html">reno.ops.step</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.sub.html">reno.ops.sub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.ops.sum.html">reno.ops.sum</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.parser.html">reno.parser</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parse.html">reno.parser.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parse_class_or_scalar.html">reno.parser.parse_class_or_scalar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parse_function_args.html">reno.parser.parse_function_args</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parse_op_str.html">reno.parser.parse_op_str</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parse_value.html">reno.parser.parse_value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.parser.parser_table.html">reno.parser.parser_table</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.pymc.html">reno.pymc</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.expected_pt_scan_arg_names.html">reno.pymc.expected_pt_scan_arg_names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.find_historical_tracked_refs.html">reno.pymc.find_historical_tracked_refs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.pt_sim_step.html">reno.pymc.pt_sim_step</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.pt_sim_step_imports.html">reno.pymc.pt_sim_step_imports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.pt_sim_step_str.html">reno.pymc.pt_sim_step_str</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.pymc_model_imports.html">reno.pymc.pymc_model_imports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.resolve_pt_scan_args.html">reno.pymc.resolve_pt_scan_args</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.to_pymc_model.html">reno.pymc.to_pymc_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.pymc.to_pymc_model_str.html">reno.pymc.to_pymc_model_str</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.tab_exporter.html">reno.tab_exporter</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.tab_exporter.export_bokeh_html.html">reno.tab_exporter.export_bokeh_html</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.tab_exporter.export_clean_html.html">reno.tab_exporter.export_clean_html</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.tab_exporter.export_selenium_pdf.html">reno.tab_exporter.export_selenium_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.tab_exporter.load_pn_panes.html">reno.tab_exporter.load_pn_panes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.utils.html">reno.utils</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.check_for_easy_static_time_eq.html">reno.utils.check_for_easy_static_time_eq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.dependency_compute_order.html">reno.utils.dependency_compute_order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.ensure_scalar.html">reno.utils.ensure_scalar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.find_ref_root_model.html">reno.utils.find_ref_root_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.get_dependency_relevant_equation_part.html">reno.utils.get_dependency_relevant_equation_part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.is_free_var.html">reno.utils.is_free_var</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.is_ref_in_parent_scope.html">reno.utils.is_ref_in_parent_scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.is_static.html">reno.utils.is_static</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.latex_eqline_wrap.html">reno.utils.latex_eqline_wrap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.latex_eqline_wrap_doc.html">reno.utils.latex_eqline_wrap_doc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.latex_name.html">reno.utils.latex_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.range_eq_latex.html">reno.utils.range_eq_latex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.ref_universe.html">reno.utils.ref_universe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.utils.resource_path.html">reno.utils.resource_path</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/reno.viz.html">reno.viz</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.compare_posterior.html">reno.viz.compare_posterior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.compare_seq.html">reno.viz.compare_seq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.density.html">reno.viz.density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.plot_refs.html">reno.viz.plot_refs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.plot_refs_single_axis.html">reno.viz.plot_refs_single_axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.plot_trace_refs.html">reno.viz.plot_trace_refs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.ModelLatex.html">reno.viz.ModelLatex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.ModelViewer.html">reno.viz.ModelViewer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/reno.viz.ReferenceEditor.html">reno.viz.ReferenceEditor</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API Reference</span></li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.components.html#module-reno.components" title="reno.components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.components</span></code></a></p></td>
+<td><p>This module contains the various math and system dynamics object components necessary to make up a model and construct its equations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/reno.diagrams.html#module-reno.diagrams" title="reno.diagrams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.diagrams</span></code></a></p></td>
+<td><p>Functions for generating stock &amp; flow diagrams.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.explorer.html#module-reno.explorer" title="reno.explorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.explorer</span></code></a></p></td>
+<td><p>Interactive panel interface and relevant components to allow exploring models live.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/reno.interactive_latex.html#module-reno.interactive_latex" title="reno.interactive_latex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.interactive_latex</span></code></a></p></td>
+<td><p>IPyVuetify component to wrap a jupyter latex widget with the ability to click on equation lines to highlight everywhere else that equation is used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.model.html#module-reno.model" title="reno.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.model</span></code></a></p></td>
+<td><p>The main system dynamics model, handles tracking and running stock and flow equations to run simulation(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/reno.ops.html#module-reno.ops" title="reno.ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.ops</span></code></a></p></td>
+<td><p>Classes for math operations, these are used to build up symbolic equations, similar in principle to what something like PyTensor is doing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.parser.html#module-reno.parser" title="reno.parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.parser</span></code></a></p></td>
+<td><p>Functions to handle parsing strings of reno ops/equations into the actual reno op objects themselves.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/reno.pymc.html#module-reno.pymc" title="reno.pymc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.pymc</span></code></a></p></td>
+<td><p>Functions for translating a system dynamics model into a PyMC equivalent.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.tab_exporter.html#module-reno.tab_exporter" title="reno.tab_exporter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.tab_exporter</span></code></a></p></td>
+<td><p>Script to export clean copies of interactive explorer visualizations/session tabs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/reno.utils.html#module-reno.utils" title="reno.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.utils</span></code></a></p></td>
+<td><p>Utility functions that are potentially needed in multiple modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/reno.viz.html#module-reno.viz" title="reno.viz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reno.viz</span></code></a></p></td>
+<td><p>Various visualization tools, classes, and functions.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Welcome to Reno’s Documentation!</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api/reno.components.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">reno.components</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api_reference.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2025, UT Battelle, LLC.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

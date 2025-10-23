@@ -1,0 +1,6 @@
+reno.tab\_exporter.load\_pn\_panes
+==================================
+
+.. currentmodule:: reno.tab_exporter
+
+.. autofunction:: load_pn_panes
