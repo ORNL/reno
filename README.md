@@ -117,8 +117,8 @@ one will need to be defined as a prior probability distribution), observations
 to target, and any sampling/pymc parameters:
 
 ```python
-m.minimum_foxes = reno.PostMeasurement(reno.series_min(m.foxes))
-m.maximum_foxes = reno.PostMeasurement(reno.series_max(m.foxes))
+m.minimum_foxes = reno.Metric(reno.series_min(m.foxes))
+m.maximum_foxes = reno.Metric(reno.series_max(m.foxes))
 
 trace = m.pymc(
     n=1000,
