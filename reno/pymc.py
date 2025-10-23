@@ -101,12 +101,22 @@ def pt_sim_step(model: "reno.model.Model") -> Callable:
 
         # dependency ordering for non-static flow/var eqs
         ref_compute_order = model.dependency_compute_order(inits_order=False)
+        # find all the per-timestep distributions because we have to skip those in
+        # several places
+        per_timestep_dist_objs = []
+        for obj in ref_compute_order:
+            if (
+                isinstance(obj, reno.components.Variable)
+                and isinstance(obj.eq, reno.components.Distribution)
+                and obj.eq.per_timestep
+            ):
+                per_timestep_dist_objs.append(obj)
 
         for obj in ref_compute_order:
             if isinstance(obj, reno.components.Stock):
                 # no need to do stocks, already handled above
                 continue
-            if not obj.is_static():
+            if not obj.is_static() and obj not in per_timestep_dist_objs:
                 pt_eq = obj._implied_eq().pt(**refs)
                 other_nexts[obj] = pt_eq
                 refs[obj.qual_name()] = pt_eq
@@ -122,7 +132,7 @@ def pt_sim_step(model: "reno.model.Model") -> Callable:
             if isinstance(obj, reno.components.Stock):
                 # already handled in for loop above
                 continue
-            if not obj.is_static():
+            if not obj.is_static() and obj not in per_timestep_dist_objs:
                 if other_nexts[obj].dtype != original_refs[obj.qual_name()].dtype:
                     other_nexts[obj] = other_nexts[obj].astype(
                         original_refs[obj.qual_name()].dtype
@@ -146,7 +156,6 @@ def pt_sim_step_imports() -> str:
     run correctly."""
     import_strs = [
         "import pytensor.tensor as pt",
-        "from pytensor.ifelse import ifelse",
         "import pymc as pm",
     ]
     return "\n".join(import_strs)
@@ -159,7 +168,6 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
 
     Expected imports for the resulting code to run:
         >>> import pytensor.tensor as pt
-        >>> from pytensor.ifelse import ifelse
         >>> import pymc as pm
 
     (use ``pt_sim_step_imports()`` to get these programatically)
@@ -191,11 +199,22 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
 
     # dependency ordering for non-static flow/var eqs
     ref_compute_order = model.dependency_compute_order(inits_order=False)
+    # find all the per-timestep distributions because we have to skip those in
+    # several places
+    per_timestep_dist_objs = []
+    for obj in ref_compute_order:
+        if (
+            isinstance(obj, reno.components.Variable)
+            and isinstance(obj.eq, reno.components.Distribution)
+            and obj.eq.per_timestep
+        ):
+            per_timestep_dist_objs.append(obj)
     for obj in ref_compute_order:
         if isinstance(obj, reno.components.Stock):
             # no need to do stocks, already handled above
             continue
-        if not obj.is_static():
+        # we also don't compute statics or per-timestep distributions
+        if not obj.is_static() and obj not in per_timestep_dist_objs:
             code += (
                 f"\t{obj.qual_name()}_next = {obj._implied_eq().pt_str(**refs_dict)}\n"
             )
@@ -204,12 +223,16 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
     # type checking
     code += "\n\t# Type checks\n"
     for obj in ref_compute_order:
-        if not obj.is_static():
+        if not obj.is_static() and obj not in per_timestep_dist_objs:
             code += f"\t{obj.qual_name()}_next = {obj.qual_name()}_next.astype({obj.qual_name()}.dtype) if {obj.qual_name()}_next.dtype != {obj.qual_name()}.dtype else {obj.qual_name()}_next\n"
 
     # order returns according to model.stocks + model.flows + model.vars
     return_names = ", ".join(
-        [f"{obj.qual_name()}_next" for obj in model.all_refs() if not obj.is_static()]
+        [
+            f"{obj.qual_name()}_next"
+            for obj in model.all_refs()
+            if not obj.is_static() and obj not in per_timestep_dist_objs
+        ]
     )
 
     code += f"\n\treturn [{return_names}], pm.pytensorf.collect_default_updates(inputs=args, outputs=[{return_names}])\n"
@@ -218,7 +241,9 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
 
 
 def to_pymc_model(
-    model: "reno.model.Model", observations: list["reno.ops.Observation"] = None
+    model: "reno.model.Model",
+    observations: list["reno.ops.Observation"] = None,
+    steps: int = None,
 ) -> pm.model.core.Model:
     """Generate a pymc model for bayesian analysis of this system dynamics model. The general
     idea is that this creates corresponding pymc variables (or distributions as relevant) for
@@ -230,6 +255,7 @@ def to_pymc_model(
     variables and sample from posterior to run bayesian analysis/determine how distributions
     of any other variables may be affected.
     """
+    model._find_all_extended_op_implicit_components()
 
     # general flow is to:
     # 1. set up all initial value computations in pymc deterministics (or
@@ -243,8 +269,12 @@ def to_pymc_model(
     # 3. create a deterministic with dim=timesteps for each output sequence
     #   from the scan operation.
 
-    timesteps = model.steps
-    coords = {"t": range(timesteps)}
+    if steps is None:
+        steps = model.steps
+    coords = {"t": range(steps)}
+    for obj in model.all_refs():
+        if obj.shape > 1:
+            coords[obj.qual_name() + "_vec"] = range(obj.shape)
     with pm.Model(coords=coords) as m:
         ref_compute_order = model.dependency_compute_order(inits_order=True)
 
@@ -261,8 +291,12 @@ def to_pymc_model(
         # any variables that require special treatment for historical
         # values have their starting historical array deterministics
         # stored in here
+        per_step_dists_by_obj = {}
+        # variables that hold a distribution that's per-timestep get special
+        # treatment too - they're already fully computed after initialization
+        # and just need to be passed in to the "sequences" portion of the scan
 
-        refs["__PT_SEQ_LEN__"] = pt.as_tensor(model.steps)
+        refs["__PT_SEQ_LEN__"] = pt.as_tensor(steps)
         # there are a few operations that need to know the total length
         # of the simulation/sequence in order to create the correct
         # pytensor equivalent output, see ops.py
@@ -275,59 +309,131 @@ def to_pymc_model(
 
         # create symbolic computations for all initial values for stocks/flows/vars
         for obj in ref_compute_order:
-            if isinstance(obj, reno.components.Stock) and obj.init is None:
-                pt_eq = pm.Deterministic(
-                    f"{obj.qual_name()}_init", pt.as_tensor(np.array(0.0))
-                )
-                inits_by_obj[obj] = pt_eq
-                refs[obj.qual_name()] = pt_eq
-            elif obj.is_static():
-                if isinstance(obj.eq, reno.components.Distribution):
-                    pt_eq = obj.eq.pt(__PTNAME__=obj.qual_name(), **refs)
-                else:
-                    pt_eq = pm.Deterministic(
-                        obj.qual_name(), obj._implied_eq(obj.eq).pt(**refs)
+            try:
+                dims = None
+                if obj.shape > 1:
+                    dims = f"{obj.qual_name()}_vec"
+                if isinstance(obj, reno.components.Stock) and obj.init is None:
+                    if obj.shape == 1:
+                        pt_eq = pm.Deterministic(
+                            f"{obj.qual_name()}_init", pt.as_tensor(np.array(0.0))
+                        )
+                    else:
+                        pt_eq = pm.Deterministic(
+                            f"{obj.qual_name()}_init",
+                            pt.as_tensor(np.array([0.0] * obj.shape)),
+                            dims=dims,
+                        )
+                    inits_by_obj[obj] = pt_eq
+                    refs[obj.qual_name()] = pt_eq
+                elif obj.is_static():
+                    if isinstance(obj.eq, reno.components.Distribution):
+                        pt_eq = obj.eq.pt(
+                            __PTNAME__=obj.qual_name(),
+                            __DIM__=obj.shape,
+                            __DIMNAME__=obj.qual_name() + "_vec",
+                            **refs,
+                        )
+                    elif obj.shape > obj.eq.shape:
+                        pt_eq = pm.Deterministic(
+                            obj.qual_name(),
+                            obj._implied_eq(obj.eq).pt(**refs).repeat(obj.shape),
+                            dims=dims,
+                        )
+                    else:
+                        pt_eq = pm.Deterministic(
+                            obj.qual_name(),
+                            obj._implied_eq(obj.eq).pt(**refs),
+                            dims=dims,
+                        )
+                    statics_by_obj[obj] = pt_eq
+                    refs[obj.qual_name()] = pt_eq
+                elif (
+                    isinstance(obj, reno.components.Variable)
+                    and isinstance(obj.eq, reno.components.Distribution)
+                    and obj.eq.per_timestep
+                ):
+                    pt_eq = obj.eq.pt(
+                        __PTNAME__=obj.qual_name(),
+                        __DIM__=obj.shape,
+                        __DIMNAME__=obj.qual_name() + "_vec",
+                        **refs,
                     )
-                statics_by_obj[obj] = pt_eq
-                refs[obj.qual_name()] = pt_eq
-            elif obj.init is not None:
-                # stocks, flows, vars with a defined init
-                if isinstance(obj.init, reno.components.Distribution):
-                    pt_eq = obj.init.pt(__PTNAME__=f"{obj.qual_name()}_init", **refs)
+                    per_step_dists_by_obj[obj] = pt_eq
+                    refs[obj.qual_name()] = pt_eq[0]
+                elif obj.init is not None:
+                    # stocks, flows, vars with a defined init
+                    if isinstance(obj.init, reno.components.Distribution):
+                        pt_eq = obj.init.pt(
+                            __PTNAME__=f"{obj.qual_name()}_init",
+                            __DIM__=obj.shape,
+                            __DIMNAME__=obj.qual_name() + "_vec",
+                            **refs,
+                        )
+                    else:
+                        if obj.shape > obj.init.shape:
+                            pt_eq = pm.Deterministic(
+                                f"{obj.qual_name()}_init",
+                                obj._implied_eq(obj.init).pt(**refs).repeat(obj.shape),
+                                dims=dims,
+                            )
+                        else:
+                            pt_eq = pm.Deterministic(
+                                f"{obj.qual_name()}_init",
+                                obj._implied_eq(obj.init).pt(**refs),
+                                dims=dims,
+                            )
+                    inits_by_obj[obj] = pt_eq
+                    refs[obj.qual_name()] = pt_eq
                 else:
-                    pt_eq = pm.Deterministic(
-                        f"{obj.qual_name()}_init",
-                        obj._implied_eq(obj.init).pt(**refs),
-                    )
-                inits_by_obj[obj] = pt_eq
-                refs[obj.qual_name()] = pt_eq
-            else:
-                # flows and vars without a separate init definition
-                # (just run a single normal calculation of their equation)
-                pt_eq = pm.Deterministic(
-                    f"{obj.qual_name()}_init", obj._implied_eq(obj.eq).pt(**refs)
-                )
-                inits_by_obj[obj] = pt_eq
-                refs[obj.qual_name()] = pt_eq
+                    # flows and vars without a separate init definition
+                    # (just run a single normal calculation of their equation)
+                    if obj.shape > obj.eq.shape:
+                        pt_eq = pm.Deterministic(
+                            f"{obj.qual_name()}_init",
+                            obj._implied_eq(obj.eq).pt(**refs).repeat(obj.shape),
+                            dims=dims,
+                        )
+                    else:
+                        pt_eq = pm.Deterministic(
+                            f"{obj.qual_name()}_init",
+                            obj._implied_eq(obj.eq).pt(**refs),
+                            dims=dims,
+                        )
+                    inits_by_obj[obj] = pt_eq
+                    refs[obj.qual_name()] = pt_eq
 
-            # handle initial historical arrays if necessary (but not ones with just -1)
-            if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
-                # TODO: doesn't handle static but still unclear if that
-                # makes sense anyway
-                inner_array = [0.0] * (min(historical_ref_taps[obj]) * -1) + [
-                    inits_by_obj[obj]
-                ]
-                hist_var = pm.Deterministic(
-                    f"{obj.qual_name()}_hist", pt.stack(inner_array)
+                # handle initial historical arrays if necessary (but not ones with just -1)
+                if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+                    # TODO: doesn't handle static but still unclear if that
+                    # makes sense anyway
+                    inner_array_value = 0.0
+                    if obj.shape > 1:
+                        inner_array_value = [0.0] * obj.shape
+                    inner_array = [inner_array_value] * (
+                        min(historical_ref_taps[obj]) * -1
+                    ) + [inits_by_obj[obj]]
+                    hist_var = pm.Deterministic(
+                        f"{obj.qual_name()}_hist", pt.stack(inner_array)
+                    )
+                    hist_vars_by_obj[obj] = hist_var
+            except Exception as e:
+                e.add_note(
+                    f"Was trying to set up initial PYMC equation for {obj.qual_name()}"
                 )
-                hist_vars_by_obj[obj] = hist_var
+                e.add_note(f"\tEquation: {obj.eq}")
+                e.add_note(f"\tType: {obj.dtype}")
+                e.add_note(f"\tShape: {obj.shape}")
+                raise
 
         # set up a timestep sequence to pass to scan if any equations are using a TimeRef
         # e.g. t = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         sequences = []
         if model.find_timeref_name() is not None:
-            timestep_seq = pt.as_tensor(np.arange(1, timesteps))
-            sequences = [timestep_seq]
+            timestep_seq = pt.as_tensor(np.arange(1, steps))
+            sequences.append(timestep_seq)
+        for obj in per_step_dists_by_obj:
+            sequences.append(per_step_dists_by_obj[obj])
 
         # ensure all outputs_info are in correct order
         # NOTE: assumed order of variables whenever they're being passed or returned
@@ -352,7 +458,7 @@ def to_pymc_model(
             non_sequences=statics,
             outputs_info=inits,
             strict=True,
-            n_steps=model.steps - 1,
+            n_steps=steps - 1,
         )
 
         # handle weird error when only a single stock returned (not wrapping
@@ -367,13 +473,16 @@ def to_pymc_model(
             + [
                 obj
                 for obj in model.all_flows() + model.all_vars()
-                if not obj.is_static()
+                if not obj.is_static() and obj not in per_step_dists_by_obj
             ]
         ):
+            dims = "t"
+            if obj.shape > 1:
+                dims = ("t", f"{obj.qual_name()}_vec")
             full_seq = pm.Deterministic(
                 obj.qual_name(),
-                pt.concatenate([pt.as_tensor([inits_by_obj[obj]]), seqs[i].flatten()]),
-                dims="t",
+                pt.concatenate([pt.as_tensor([inits_by_obj[obj]]), seqs[i]]),
+                dims=dims,
             )
 
             # set pt ref to full sequence for any subsequent metric equations
@@ -399,7 +508,6 @@ def pymc_model_imports() -> str:
     import_strs = [
         "import pytensor",
         "import pytensor.tensor as pt",
-        "from pytensor.ifelse import ifelse",
         "import pymc as pm",
         "import numpy as np",
     ]
@@ -410,7 +518,9 @@ def pymc_model_imports() -> str:
 # TODO: option to add in necessary imports
 # TODO: can you run black formatting programmatically on a string?
 def to_pymc_model_str(
-    model: "reno.model.Model", observations: list[reno.ops.Observation] = None
+    model: "reno.model.Model",
+    observations: list[reno.ops.Observation] = None,
+    steps: int = None,
 ) -> str:
     """Construct a string of python code to create a pymc model wrapping this system dynamics
     model. Should be a functional (string) equivalent of the ``to_pymc_model()`` function. Includes
@@ -419,16 +529,24 @@ def to_pymc_model_str(
     Expected imports for the resulting code to run:
         >>> import pytensor
         >>> import pytensor.tensor as pt
-        >>> from pytensor.ifelse import ifelse
         >>> import pymc as pm
         >>> import numpy as np
 
     (Alternatively get the string code for these imports with ``pymc_model_imports()``)
     """
+    model._find_all_extended_op_implicit_components()
+
+    if steps is None:
+        steps = model.steps
+
     name = "pymc_m" if model.name is None else f"{model.name}_pymc_m"
     step_name = "step" if model.name is None else f"{model.name}_step"
     code = pt_sim_step_str(model) + "\n"
-    code += f'coords = {{"t": range({model.steps})}}\n'
+    code += f'coords = {{\n\t"t": range({steps}),\n'
+    for obj in model.all_refs():
+        if obj.shape > 1:
+            code += f'\t"{obj.qual_name()}_vec": range({obj.shape}),\n'
+    code += "}\n"
     code += f"with pm.Model(coords=coords) as {name}:\n"
 
     historical_ref_taps = find_historical_tracked_refs(model)
@@ -437,62 +555,125 @@ def to_pymc_model_str(
     if model.find_timeref_name() is not None:
         initial_refs_dict[model.find_timeref_name()] = "pt.as_tensor(0)"
 
-    initial_refs_dict["__PT_SEQ_LEN__"] = f"pt.as_tensor({model.steps})"
+    initial_refs_dict["__PT_SEQ_LEN__"] = f"pt.as_tensor({steps})"
     # there are a few operations that need to know the total length
     # of the simulation/sequence in order to create the correct
     # pytensor equivalent output, see ops.py
 
+    per_step_dist_names = []
+    # use these in passing seqeunces to scan and ignore them in the others
+
     ref_compute_order = model.dependency_compute_order(inits_order=True)
     code += "\t# Initial values/timestep 0 equations\n"
     for obj in ref_compute_order:
-        if isinstance(obj, reno.components.Stock) and obj.init is None:
-            inner_eq = "pt.as_tensor(np.array(0.0))"
-            code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq})\n'
-            initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
-        elif obj.is_static():
-            if isinstance(obj.eq, reno.components.Distribution):
+        try:
+            dims_text = ""
+            if obj.shape > 1:
+                dims_text = f', dims="{obj.qual_name()}_vec"'
+
+            if isinstance(obj, reno.components.Stock) and obj.init is None:
+                if obj.shape == 1:
+                    inner_eq = "pt.as_tensor(np.array(0.0))"
+                else:
+                    inner_eq = f"pt.as_tensor(np.array([0.0]*{obj.shape}))"
+                code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq}{dims_text})\n'
+                initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
+            elif obj.is_static():
+                if isinstance(obj.eq, reno.components.Distribution):
+                    inner_eq = obj.eq.pt_str(
+                        __PTNAME__=obj.qual_name(),
+                        __DIM__=obj.shape,
+                        __DIMNAME__=obj.qual_name() + "_vec",
+                        **initial_refs_dict,
+                    )
+                    code += f"\t{obj.qual_name()} = {inner_eq}\n"
+                else:
+                    inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
+                    code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", {inner_eq}{dims_text})\n'
+                initial_refs_dict[obj.qual_name()] = obj.qual_name()
+            elif (
+                isinstance(obj, reno.components.Variable)
+                and isinstance(obj.eq, reno.components.Distribution)
+                and obj.eq.per_timestep
+            ):
                 inner_eq = obj.eq.pt_str(
-                    __PTNAME__=obj.qual_name(), **initial_refs_dict
+                    __PTNAME__=obj.qual_name(),
+                    __DIM__=obj.shape,
+                    __DIMNAME__=obj.qual_name() + "_vec",
+                    **initial_refs_dict,
                 )
                 code += f"\t{obj.qual_name()} = {inner_eq}\n"
+                per_step_dist_names.append(obj.qual_name())
+                # note the index 0 below, remember that the init for this
+                # distribution is for the entire sequence, but anytime we'd want to
+                # _use_ it in one of the other init equations would be just for the
+                # first timestep. (the sequence pass to scan handles the rest)
+                initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}[0]"
+            elif obj.init is not None:
+                # stocks, flows, vars with a defined init
+                if isinstance(obj.init, reno.components.Distribution):
+                    inner_eq = obj.init.pt_str(
+                        __PTNAME__=obj.qual_name() + "_init",
+                        __DIM__=obj.shape,
+                        __DIMNAME__=obj.qual_name() + "_vec",
+                        **initial_refs_dict,
+                    )
+                    code += f"\t{obj.qual_name()}_init = {inner_eq}\n"
+                else:
+                    if obj.shape > obj.init.shape:
+                        inner_eq = f"{obj._implied_eq(obj.init).pt_str(**initial_refs_dict)}.repeat({obj.shape})"
+                    else:
+                        inner_eq = obj._implied_eq(obj.init).pt_str(**initial_refs_dict)
+                    code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq}{dims_text})\n'
+                initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
             else:
-                inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
-                code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", {inner_eq})\n'
-            initial_refs_dict[obj.qual_name()] = obj.qual_name()
-        elif obj.init is not None:
-            # stocks, flows, vars with a defined init
-            if isinstance(obj.init, reno.components.Distribution):
-                inner_eq = obj.init.pt_str(
-                    __PTNAME__=obj.qual_name() + "_init", **initial_refs_dict
-                )
-                code += f"\t{obj.qual_name()}_init = {inner_eq}\n"
-            else:
-                inner_eq = obj._implied_eq(obj.init).pt_str(**initial_refs_dict)
-                code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq})\n'
-            initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
-        else:
-            # flows and vars without a separate init definition
-            inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
-            code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq})\n'
-            initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
+                # flows and vars without a separate init definition
+                if obj.shape > obj.eq.shape:
+                    inner_eq = f"{obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)}.repeat({obj.shape})"
+                else:
+                    inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
+                code += f'\t{obj.qual_name()}_init = pm.Deterministic("{obj.qual_name()}_init", {inner_eq}{dims_text})\n'
+                initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
 
-        # handle initial historical arrays if necessary (but not ones with just -1)
-        if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
-            # TODO: doesn't handle static but still unclear if that makes sense anyway
-            inner_array = (
-                ", ".join(["0.0"] * (min(historical_ref_taps[obj]) * -1))
-                + f", {obj.qual_name()}_init"
+            # handle initial historical arrays if necessary (but not ones with just -1)
+            if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+                # TODO: doesn't handle static but still unclear if that makes sense anyway
+                inner_array_value = "0.0"
+                if obj.shape > 1:
+                    inner_array_value = f"[0.0]*{obj.shape}"
+                inner_array = (
+                    ", ".join(
+                        [inner_array_value] * (min(historical_ref_taps[obj]) * -1)
+                    )
+                    + f", {obj.qual_name()}_init"
+                )
+                inner_eq = f"pt.stack([{inner_array}])"
+                code += f'\t{obj.qual_name()}_hist = pm.Deterministic("{obj.qual_name()}_hist", {inner_eq})\n'
+        except Exception as e:
+            e.add_note(
+                f"Was trying to set up initial PYMC equation string for {obj.qual_name()}"
             )
-            inner_eq = f"pt.stack([{inner_array}])"
-            code += f'\t{obj.qual_name()}_hist = pm.Deterministic("{obj.qual_name()}_hist", {inner_eq})\n'
+            e.add_note(f"\tEquation: {obj.eq}")
+            e.add_note(f"\tType: {obj.dtype}")
+            e.add_note(f"\tShape: {obj.shape}")
+            raise
 
     # add timeseries
+    sequences_code_bits = []
     if model.find_timeref_name() is not None:
-        code += f"\ttimestep_seq = pt.as_tensor(np.arange(1, {model.steps}))\n"
+        code += f"\ttimestep_seq = pt.as_tensor(np.arange(1, {steps}))\n"
+        sequences_code_bits.append("timestep_seq")
+    for name in per_step_dist_names:
+        sequences_code_bits.append(name)
+    sequences_code = f"[{','.join(sequences_code_bits)}]"
 
     # call the scan function
     return_names = ", ".join(
-        [f"{obj.qual_name()}_seq" for obj in model.all_refs() if not obj.is_static()]
+        [
+            f"{obj.qual_name()}_seq"
+            for obj in model.all_refs()
+            if not obj.is_static() and obj.qual_name() not in per_step_dist_names
+        ]
     )
     if (
         len(
@@ -514,7 +695,7 @@ def to_pymc_model_str(
             [
                 f"{obj.qual_name()}_init"
                 for obj in model.all_refs()
-                if not obj.is_static()
+                if not obj.is_static() and obj.qual_name() not in per_step_dist_names
             ]
         )
     else:
@@ -527,25 +708,29 @@ def to_pymc_model_str(
             if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
                 taps = historical_ref_taps[obj]
                 init_names.append(f"dict(initial={obj.qual_name()}_hist, taps={taps})")
-            elif not obj.is_static():
+            elif not obj.is_static() and obj.qual_name() not in per_step_dist_names:
                 init_names.append(f"{obj.qual_name()}_init")
         init_names = ", ".join(init_names)
     code += "\n\t# Run autoregressive step function/timestep-wise updates to fill sequences\n"
     code += f"\t{return_names}, updates = pytensor.scan(\n"
     code += f"\t\tfn={step_name},\n"
-    if model.find_timeref_name() is not None:
-        code += "\t\tsequences=[timestep_seq],\n"
+    code += f"\t\tsequences={sequences_code},\n"
     code += f"\t\tnon_sequences=[{', '.join([obj.qual_name() for obj in model.all_flows() + model.all_vars() if reno.utils.is_static(obj)])}],\n"
     code += f"\t\toutputs_info=[{init_names}],\n"
     code += "\t\tstrict=True,\n"
-    code += f"\t\tn_steps={model.steps - 1}\n"
+    code += f"\t\tn_steps={steps - 1}\n"
     code += "\t)\n"
 
     code += "\n\t# Collect full sequence data for all stocks/flows/vars into pymc variables\n"
     for obj in model.all_stocks() + [
-        obj for obj in model.all_flows() + model.all_vars() if not obj.is_static()
+        obj
+        for obj in model.all_flows() + model.all_vars()
+        if not obj.is_static() and not obj.qual_name() in per_step_dist_names
     ]:
-        code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", pt.concatenate([pt.as_tensor([{obj.qual_name()}_init]), {obj.qual_name()}_seq.flatten()]), dims="t")\n'
+        dims = '"t"'
+        if obj.shape > 1:
+            dims = f'("t", "{obj.qual_name()}_vec")'
+        code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", pt.concatenate([pt.as_tensor([{obj.qual_name()}_init]), {obj.qual_name()}_seq]), dims={dims})\n'
 
         # set pt ref to full sequence for any metrics
         initial_refs_dict[obj.qual_name()] = obj.qual_name()
@@ -591,6 +776,19 @@ def find_historical_tracked_refs(
             ref_taps[val.tracked_ref] = []
 
         index_offset = val.index_eq.eval(t=0, force=True)
+        # TODO: this doesn't work yet because of how tap names get resolved.
+        # With multidim, multiple separate tap references need to be used inside
+        # the step function as a single vector, meaning one will have to be
+        # constructed somehow. This is an add later feature. (essentially
+        # between arbitrary history and multidim, the step function will need to
+        # construct a matrix that gets indexed within pymc.)
+        # if isinstance(index_offset, np.ndarray):
+        #     # in this case (multidim) we essentially "flatten" to get
+        #     # all indices that will be required
+        #     ref_taps[val.tracked_ref].extend(list(set(list(index_offset))))  # note we only get unique
+        # else:
+        if isinstance(index_offset, np.ndarray):
+            index_offset = int(index_offset[0])
         ref_taps[val.tracked_ref].append(index_offset)
 
     # remove duplicate taps, ensure -1 is in there (we always want last val
@@ -642,6 +840,10 @@ def expected_pt_scan_arg_names(
     timeref_name = model.find_timeref_name()
     if timeref_name is not None:
         names.append(timeref_name)
+    # find any per-timestep distributions
+    for var in model.all_vars():
+        if isinstance(var.eq, reno.components.Distribution) and var.eq.per_timestep:
+            names.append(var.qual_name())
 
     # -----------------------
     # OUTPUT TAPS (non-static references)
@@ -674,6 +876,9 @@ def expected_pt_scan_arg_names(
             names.append(flow.qual_name())
 
     for var in model.all_vars():
+        # skip vars that are just per-timestep distributions (already handled)
+        if isinstance(var.eq, reno.components.Distribution) and var.eq.per_timestep:
+            continue
         if not var.is_static():
             if var in historical_ref_taps:
                 for tap in historical_ref_taps[var]:

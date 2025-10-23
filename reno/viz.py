@@ -16,8 +16,10 @@ import panel as pn
 import xarray as xr
 from IPython.display import clear_output, display
 from ipywidgets import Layout
+from matplotlib import ticker
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
+from matplotlib.transforms import ScaledTranslation
 from scipy.stats import gaussian_kde
 
 import reno
@@ -188,7 +190,7 @@ def _plot_posterior_values(
         ax.set_xticks(counts.index.values + width * (num_traces_to_plot - 1) / 2)
         ax.set_xticklabels(counts.index.values)
     elif len(values.flatten()) == 1:
-        ax.axvline(x=values.flatten()[0])
+        ax.axvline(x=values.flatten()[0], label=label, color=f"C{trace_index}")
     else:
         domain, densities = density(values.flatten(), smoothing)
         ax.plot(domain, densities, label=label)
@@ -270,6 +272,76 @@ def compare_posterior(
         ax.set_title(title)
 
     return ax.get_figure()
+
+
+def plot_refs_single_axis(
+    trace: az.InferenceData | xr.Dataset,
+    ref_list: list[str | reno.components.Reference],
+    num_ticks: int = 3,
+    # ax = None,
+    **figargs,
+):
+    """I've seen this type of plot in a few SDM textbooks and references at this point,
+    it plots all the specified references on the same plot and scales each one individually.
+
+    This means there's a separate y-axis per reference, and getting the tick labels to not
+    conflict with eachother and be offset was a bit of a trick, so this simplifies that logic.
+    """
+    plt.ioff()
+    fig, ax1 = plt.subplots(**figargs)
+    plt.ion()
+
+    refs = [
+        ref.qual_name() if isinstance(ref, reno.components.Reference) else ref
+        for ref in ref_list
+    ]
+
+    if isinstance(trace, az.InferenceData):
+        ds = trace.posterior
+    else:
+        ds = trace
+
+    def label_offset(n, n_max):
+        """Algorithm to vertically offset each label for a single tick so they
+        don't overlap. n is the index of the current label, n_max is the total
+        number of labels that have to fit."""
+        spacing = 5
+        total = (n_max - 1) * spacing * 2
+        label_n = ((n_max - n) * spacing * 2) - (total / 2)
+        return label_n
+
+    legend_handles = []
+    for i, ref in enumerate(refs):
+        alpha = 0.01 if _get_sample_count(ds[ref]) > 10 else 0.75
+
+        if i == 0:
+            ax = ax1
+        else:
+            ax = ax1.twinx()
+
+        ax.add_collection(
+            _create_seq_line_collection(ds[ref].values, color=f"C{i}", alpha=alpha)
+        )
+        ax.autoscale()
+        ax.yaxis.set_major_locator(ticker.LinearLocator(num_ticks))
+        ax.spines["left"].set_position(("axes", 0.0))
+        ax.spines["left"].set_visible(True)
+        ax.yaxis.set_label_position("left")
+        ax.yaxis.set_ticks_position("left")
+        ax.tick_params(axis="y", colors=f"C{i}")
+
+        for tick in ax.yaxis.get_majorticklabels():
+            tick.set_transform(
+                tick.get_transform()
+                + ScaledTranslation(
+                    0 / 72, label_offset(i + 1, len(refs)) / 72, fig.dpi_scale_trans
+                )
+            )
+
+        legend_handles.append(Line2D([0], [0], label=ref, color=f"C{i}"))
+
+    ax1.legend(handles=legend_handles)
+    return fig
 
 
 def plot_trace_refs(
@@ -657,6 +729,9 @@ class ModelLatex:
             + self.model.all_stocks()
             + self.model.metrics
         ):
+            if hasattr(ref, "implicit") and ref.implicit:
+                continue
+
             # logic to only process within specified "name range"
             if not started:
                 if ref.qual_name() == self.start_name:
@@ -698,6 +773,9 @@ class ModelLatex:
             + self.model.all_stocks()
             + self.model.metrics
         ):
+            if hasattr(ref, "implicit") and ref.implicit:
+                continue
+
             # quick cheat to take start/stop names into account by ensuring
             # they're in the aligned list of names we're taking care of
             if ref.qual_name() not in self._equation_lines_refname_reference():

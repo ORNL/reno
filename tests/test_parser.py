@@ -45,8 +45,8 @@ def test_param_parsing(string, expected_args, expected_kwargs):
 def test_full_op_parse():
     out = parser.parse_class_or_scalar(" Normal(5.0, std =13.2)")
     assert isinstance(out, ops.Normal)
-    assert out.mean == 5.0
-    assert out.std == 13.2
+    assert out.sub_equation_parts[0].value == 5.0
+    assert out.sub_equation_parts[1].value == 13.2
 
 
 def test_blank_parse():
@@ -123,5 +123,4 @@ def test_prefix_mixed_classsyntax():
     """The distribution reprs are formatted like python functions, parsing
     should handle this appropriately."""
     op = parser.parse(str(ops.sum(ops.Bernoulli(0.5))))
-    # go two deep because of the automatic slice insertion
-    assert isinstance(op.sub_equation_parts[0].sub_equation_parts[0], Distribution)
+    assert isinstance(op.sub_equation_parts[0], Distribution)

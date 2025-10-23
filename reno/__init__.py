@@ -30,8 +30,8 @@ import reno.viz  # noqa: F401
 from reno.components import Flag  # noqa: F401
 from reno.components import Flow  # noqa: F401
 from reno.components import Function  # noqa: F401
+from reno.components import Metric  # noqa: F401
 from reno.components import Piecewise  # noqa: F401
-from reno.components import PostMeasurement  # noqa: F401
 from reno.components import Scalar  # noqa: F401
 from reno.components import Stock  # noqa: F401
 from reno.components import TimeRef  # noqa: F401
@@ -39,6 +39,7 @@ from reno.components import Variable  # noqa: F401
 from reno.model import Model  # noqa: F401
 from reno.ops import *  # noqa: F401, F403
 from reno.viz import plot_refs  # noqa: F401
+from reno.viz import plot_refs_single_axis  # noqa: F401
 from reno.viz import plot_trace_refs  # noqa: F401
 
 warnings.simplefilter("always", RuntimeWarning)

@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytensor.tensor as pt
 from IPython.display import Markdown, display
-from pytensor.ifelse import ifelse
 
 import reno
 from reno.utils import ensure_scalar, is_static, latex_name, range_eq_latex
@@ -54,6 +53,8 @@ class EquationPart:
             sub_equation_parts[i] = ensure_scalar(part)
         self.value = None
         self.sub_equation_parts = sub_equation_parts
+        self._shape = None  # remember, for now only the data dim
+        self._dtype = None
 
     # ---- MATH OPERATION OVERLOADING/EQUATION PART REPLACEMENT ----
 
@@ -148,8 +149,31 @@ class EquationPart:
         # See note in ops.py, not using 'min' because of TrackedReference
         return reno.ops.series_min(self)
 
-    def sum(self):
-        return reno.ops.sum(self)
+    def sum(self, axis=0):
+        return reno.ops.sum(self, axis=axis)
+
+    @property
+    def timeseries(self):
+        """Making this a property because despite being an operation,
+        it is in effect just giving a view to an underlying value?"""
+        # TODO: possibly should be a property of TrackedReference instead
+        return reno.ops.timeseries(self)
+
+    @property
+    def shape(self):
+        try:
+            if self._shape is None:
+                self._shape = self.get_shape()
+            return self._shape
+        except Exception as e:
+            e.add_note(f"Was trying to get shape of {self.qual_name()}")
+            raise
+
+    @property
+    def dtype(self):
+        if self._dtype is None:
+            self._dtype = self.get_type()
+        return self._dtype
 
     def equal(self, obj):
         return reno.ops.eq(self, obj)
@@ -164,9 +188,8 @@ class EquationPart:
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
@@ -182,10 +205,6 @@ class EquationPart:
                 matrix. This is really only applicable to ``TrackedReference``s,
                 but given recursive nature of this function, needs to always be
                 passed down through all subsequent calls.
-            row_indices (list[int] | np.ndarray): The list of rows to evaluate
-                and return. Similar to save, this is mostly only applicable to
-                references that are actual matrices TODO: expand, mention piecewise.
-                None means to evaluate all rows
             force (bool): Whether to ignore a previously cached value and compute
                 regardless.
         """
@@ -242,6 +261,20 @@ class EquationPart:
             #         refs.extend(part.max.seek_refs())
         # be sure to remove duplicates
         return list(set(refs))
+
+    def get_shape(self) -> int:
+        """For now this is returning an integer because we only allow a single
+        additional dimension. Note that this shape _does not_ incoporate time or
+        batch dimensions, only the "data" dimension if applicable.
+        This should be overridden by subclasses, e.g. operations which would
+        change the shape."""
+        return 1
+
+    def get_type(self) -> type:
+        """Similar to shape, this gets computed recursively, used to automatically
+        determine if the value needs to be initialized with a certain numpy type."""
+        # None means type doesn't matter/shouldn't influence anything upstream
+        return None
 
     def find_refs_of_type(self, search_type, already_checked: list = None) -> list:
         """Actually recursive as opposed to seek_refs, returns a list of all equation
@@ -314,11 +347,29 @@ class Scalar(EquationPart):
             value = np.array(value)
         self.value = value
 
+    def get_shape(self) -> int:
+        if isinstance(self.value, np.ndarray):
+            return self.value.shape[0]
+        return 1
+
+    def get_type(self) -> type:
+        # TODO: this doesn't handle a value with a np array with shape > 1
+        if isinstance(self.value, np.ndarray):
+            if isinstance(self.value[0], np.floating):
+                return float
+            elif isinstance(self.value[0], np.integer):
+                return int
+            elif isinstance(self.value[0], np.bool):
+                return bool
+            else:
+                # TODO: possibly raise warning here?
+                return None
+        return type(self.value)
+
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
@@ -351,35 +402,69 @@ class Distribution(EquationPart):
     variable.)
 
     Args:
-        func (Callable): The function that will be used to draw from.
+        per_timestep (bool): Whether to draw a different value from the
+            distribution for each timestep.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *operands, per_timestep: bool = False):
+        super().__init__(list(operands))
+        self.per_timestep = per_timestep
 
-    def populate(self, n: int):
-        """Generate n samples based on this probability distribution, assigns
-        as a vector to ``self.value``.
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        """Generate n x dim samples based on this probability distribution, assigns
+        as a vector/matrix to ``self.value``.
 
         Args:
             n (int): Number of samples to draw.
+            steps (int): Number of timesteps for which to draw samples for, only
+                relevant if ``per_timestep`` is ``True``.
+            dim (int): If > 1, draw samples into a vector of this size for each n.
         """
         # should be implemented in child classes
 
+    # NOTE: arguably a distribution could directly inherit from operation and
+    # work as expected?
+    def get_shape(self) -> int:
+        # by _default_, use a simple broadcast if all parts but one are just one
+        # TODO: prob need to do similar to op_repr and have an op_get_shape
+        try:
+            # print(f"Getting shape for {self}")
+            non_one_shapes = []
+            for sub_equation_part in self.sub_equation_parts:
+                shape = sub_equation_part.shape
+                # print(f"Looking at {sub_equation_part}, shape {shape}")
+                if shape > 1:
+                    non_one_shapes.append(shape)
+            non_one_shapes = non_one_shapes
+            if len(set(non_one_shapes)) > 1:
+                raise Exception("Non-matching shapes, can't broadcast")
+            if len(non_one_shapes) > 0:
+                # if we hit this point there's only one non-one shape, so
+                # it's okay to just grab first one
+                return non_one_shapes[0]
+            return 1  # no data dims involved
+        except Exception as e:
+            e.add_note(
+                f'Was trying to compute shape for operation "{self.__class__}" ({self.op_repr()}) with sub equation parts:'
+            )
+            for sub_eq in self.sub_equation_parts:
+                e.add_note(f"\t{sub_eq}: {sub_eq._shape}")
+            raise
+
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> np.ndarray:
         """Get the vector of samples pulled from the probability distribution.
 
         Note that this expects ``populate()`` to already have been called."""
-        if row_indices is None:
+        if not self.per_timestep:
             return self.value
-        return self.value[row_indices]
+        else:
+            return self.value[:, t]
 
 
 class Operation(EquationPart):
@@ -403,17 +488,14 @@ class Operation(EquationPart):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
         """'wrap' all operation eval functions so we get better error handling."""
         try:
-            return self.op_eval(
-                t=t, save=save, row_indices=row_indices, force=force, **kwargs
-            )
+            return self.op_eval(t=t, save=save, force=force, **kwargs)
         except Exception as e:
             e.add_note(
                 f'Was evaluating operation "{self.__class__}" ({self.op_repr()}) with sub equation parts:'
@@ -421,6 +503,46 @@ class Operation(EquationPart):
             for sub_eq in self.sub_equation_parts:
                 e.add_note(f"\t{sub_eq}")
             raise
+
+    def get_shape(self) -> int:
+        # by _default_, use a simple broadcast if all parts but one are just one
+        # TODO: prob need to do similar to op_repr and have an op_get_shape
+        try:
+            # print(f"Getting shape for {self}")
+            non_one_shapes = []
+            for sub_equation_part in self.sub_equation_parts:
+                shape = sub_equation_part.shape
+                # print(f"Looking at {sub_equation_part}, shape {shape}")
+                if shape > 1:
+                    non_one_shapes.append(shape)
+            non_one_shapes = non_one_shapes
+            if len(set(non_one_shapes)) > 1:
+                raise Exception("Non-matching shapes, can't broadcast")
+            if len(non_one_shapes) > 0:
+                # if we hit this point there's only one non-one shape, so
+                # it's okay to just grab first one
+                return non_one_shapes[0]
+            return 1  # no data dims involved
+        except Exception as e:
+            e.add_note(
+                f'Was trying to compute shape for operation "{self.__class__}" ({self.op_repr()}) with sub equation parts:'
+            )
+            for sub_eq in self.sub_equation_parts:
+                e.add_note(f"\t{sub_eq}: {sub_eq._shape}")
+            raise
+
+    def get_type(self) -> type:
+        types = []
+        for sub_equation_part in self.sub_equation_parts:
+            types.append(sub_equation_part.dtype)
+        # order of precedence, no idea if this is the correct way or not
+        if float in types:
+            return float
+        if int in types:
+            return int
+        if bool in types:
+            return bool
+        return None
 
     def op_eval(self, **kwargs) -> int | float | np.ndarray:
         """Any new operations should implement this method. (Put all evaluation
@@ -460,6 +582,24 @@ class Operation(EquationPart):
         return f"({self.op_repr()} {sub_parts_string})"
 
 
+class ExtendedOperation(Operation):
+    """An operation defined in terms of other operations, and may require population
+    before use.
+
+    Defining this as a separate type to make it easier to search for in equation trees.
+    """
+
+    def __init__(self, operands: list, implicit_components: dict):
+        super().__init__(*operands + list(implicit_components.values()))
+        self.implicit_components = implicit_components
+        for name, component in self.implicit_components.items():
+            component.implicit = True
+
+    # NOTE: not needed, since should be directly handled by the model
+    # def populate(self, n: int, steps: int):
+    #     pass
+
+
 class Reference(EquationPart):
     """A symbolic reference to some other equation component, e.g. a
     stock, flow, or variable.
@@ -474,6 +614,7 @@ class Reference(EquationPart):
     Args:
         label (str): The visual label for the reference. In the context of a model,
             is set to the name assigned on the model if not explicitly provided.
+        doc (str): A docstring/description explaining what this component is.
     """
 
     def __init__(self, label: str = None, doc: str = None):
@@ -496,6 +637,9 @@ class Reference(EquationPart):
             out_value = self.eval(t)
             if isinstance(out_value, (list, np.ndarray)):
                 out_value = out_value[sample]
+            # handle multidim case, for now just use first
+            if isinstance(out_value, np.ndarray):
+                out_value = out_value[0]
 
             latex_str += (
                 "{\\color{grey}\\{}{\\color{red}"
@@ -554,55 +698,59 @@ class Piecewise(EquationPart):
         self.equations = equations
         self.conditions = conditions
 
-        assert len(self.equations) == len(self.conditions)
+        assert len(self.equations) == len(
+            self.conditions
+        ), "Number of equations and number of conditions must match"
+
+    def eval_condition(self, i, *args, **kwargs):
+        """Recursively build nested np.where to handle all conditions. Note
+        that this does evaluate all equations and all conditions, there are
+        likely ways to improve efficiency/reduce unnecessary compute (e.g. this
+        used to use np.piecewise, but adding data dimensions significantly
+        increased complexity)"""
+        condition = self.conditions[i].eval(*args, **kwargs)
+        eqn1 = self.equations[i].eval(*args, **kwargs)
+        if i < len(self.conditions) - 2:
+            eqn2 = self.eval_condition(i + 1, *args, **kwargs)
+        else:
+            eqn2 = self.equations[i + 1].eval(*args, **kwargs)
+        return np.where(condition, eqn1, eqn2)
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
         """Evaluate condition equations/functions until a ``True`` is returned,
         and then evaluate and return the corresponding equation."""
 
-        condition_bools = [
-            condition.eval(t, save, row_indices, force, **kwargs)
-            for condition in self.conditions
-        ]
+        # NOTE: leaving this here because this is a low-fruit optimization
+        # to add, we'd simply need to remove condition _evaluation_ from
+        # eval_condition, and just store the condition eval results for it to
+        # use in the np.where
+        # condition_bools = [
+        #     condition.eval(t, save, force, **kwargs)
+        #     for condition in self.conditions
+        # ]
+        #
+        # shapes = [
+        #     condition_bool.shape[0] if hasattr(condition_bool, "shape") else 1
+        #     for condition_bool in condition_bools
+        # ]
+        # max_shape = max(shapes)
+        #
+        # # handle basic case where we're dealing with simple booleans
+        # if max_shape == 1:
+        #     for index, condition_bool in enumerate(condition_bools):
+        #         if condition_bool:
+        #             return self.equations[index].eval(
+        #                 t, save, force, **kwargs
+        #             )
+        # else:
 
-        shapes = [
-            condition_bool.shape[0] if hasattr(condition_bool, "shape") else 1
-            for condition_bool in condition_bools
-        ]
-        max_shape = max(shapes)
-
-        # handle basic case where we're dealing with simple booleans
-        if max_shape == 1:
-            for index, condition_bool in enumerate(condition_bools):
-                if condition_bool:
-                    return self.equations[index].eval(
-                        t, save, row_indices, force, **kwargs
-                    )
-        else:
-            if row_indices is None:
-                indices_array = np.arange(0.0, max_shape, 1.0)
-            else:
-                indices_array = np.asarray(row_indices).astype("float")
-
-            funcs = []
-            for equation in self.equations:
-                # NOTE: we need the eqn=equation so that equation isn't just
-                # always pointing to the last one in the list
-                # https://stackoverflow.com/questions/7546285/creating-lambda-inside-a-loop
-                funcs.append(
-                    lambda x, eqn=equation: eqn.eval(
-                        t, save, x.astype("int"), force, **kwargs
-                    )
-                )
-
-            return np.piecewise(indices_array, condition_bools, funcs)
+        return self.eval_condition(0, t=t, save=save, force=force, **kwargs)
 
         raise Exception(  # pylint: disable=W0719
             f"Piecewise function {self.value} had no valid conditions."
@@ -643,7 +791,7 @@ class Piecewise(EquationPart):
             eqn1 = eqn1.astype("float64")
         if eqn2.dtype == "float32":
             eqn2 = eqn2.astype("float64")
-        return ifelse(condition, eqn1, eqn2)
+        return pt.switch(condition, eqn1, eqn2)
 
     def pt_condition_str(self, i, refs) -> str:
         """Get the string for the pytensor code for the ith condition (using ifelse).
@@ -661,13 +809,50 @@ class Piecewise(EquationPart):
             eqn1_str += '.astype("float64")'
         if eqn2.dtype == "float32":
             eqn2_str += '.astype("float64")'
-        return f"ifelse({condition_str}, {eqn1_str}, {eqn2_str})"
+        return f"pt.switch({condition_str}, {eqn1_str}, {eqn2_str})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.pt_condition(0, refs)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return self.pt_condition_str(0, refs)
+
+    def get_shape(self) -> int:
+        # by _default_, use a simple broadcast if all parts but one are just one
+        # TODO: prob need to do similar to op_repr and have an op_get_shape
+        try:
+            non_one_shapes = []
+            for equation in self.equations + self.conditions:
+                shape = equation.shape
+                if shape > 1:
+                    non_one_shapes.append(shape)
+            if len(set(non_one_shapes)) > 1:
+                raise Exception("Non-matching shapes, can't broadcast")
+            if len(non_one_shapes) > 0:
+                # if we hit this point there's only one non-one shape, so
+                # it's okay to just grab first one
+                return non_one_shapes[0]
+            return 1  # no data dims involved
+        except Exception as e:
+            e.add_note(
+                f'Was trying to compute shape for operation "{self.__class__}" with sub equation parts:'
+            )
+            for sub_eq in self.sub_equation_parts:
+                e.add_note(f"\t{sub_eq}: {sub_eq._shape}")
+            raise
+
+    def get_type(self) -> type:
+        types = []
+        for equation in self.equations:
+            types.append(equation.dtype)
+        # order of precedence, no idea if this is the correct way or not
+        if float in types:
+            return float
+        if int in types:
+            return int
+        if bool in types:
+            return bool
+        return None
 
     @staticmethod
     def parse(arg_strs: list[str], refs: dict[str, Reference]):
@@ -779,9 +964,8 @@ class Function(Reference):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
@@ -802,12 +986,12 @@ class Function(Reference):
         # resolve any arguments that are EquationParts
         for arg in self.args:
             if isinstance(arg, EquationPart):
-                pass_args.append(arg.eval(t, save, row_indices, force, **kwargs))
+                pass_args.append(arg.eval(t, save, force, **kwargs))
             else:
                 pass_args.append(arg)
         for key, arg in self.kwargs.items():
             if isinstance(arg, EquationPart):
-                pass_kwargs[key] = arg.eval(t, save, row_indices, force, **kwargs)
+                pass_kwargs[key] = arg.eval(t, save, force, **kwargs)
             else:
                 pass_kwargs[key] = arg
 
@@ -906,9 +1090,8 @@ class TimeRef(Reference):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int:
@@ -958,6 +1141,42 @@ class TrackedReference(Reference):
     As opposed to stocks, whose update equations are based on timestep t-1.
     This means that flows and vars should not have circular references (causing
     infinite recursion errors.)
+
+    Args:
+        eq (EquationPart): The equation that describes this reference.
+        label (str): Visual label for the reference. In the context of a model,
+            is set to the name assigned on the model if not explicitly provided.
+        doc (str): A docstring/description explaining what this component is.
+        min (EquationPart): An equation describing the minimum value of this reference.
+        max (EquationPart): An equation describing the maximum value of this reference.
+        init (int | float | Distribution | Scalar | EquationPart): The initial value
+            for this component at ``t = 0``.
+        dim (int): Size of an optional extra dimension, allowing a given reference
+            to describe a vector of values at every timestep. Default is 1 implying no
+            extra dimension.
+        group (str): An optional string to help group related references together,
+            primarily only used for visually tightening up elements in the stock/flow
+            graphs.
+
+    Note:
+        The shape of the value of a tracked reference depends on _sample_dim and
+        _static with the following cases:
+
+        1. if _static and not _sample_dim:
+            * raw value     (float or int)
+            * (dim,)        (when dim > 1)
+        2. if _static and _sample_dim:
+            * (sample,)
+            * (sample, dim) (when dim > 1)
+        3. if not _static:
+            * (sample, t)
+            * (sample, t, dim)  (when dim > 1)
+
+        computed_mask similarly varies based on these cases:
+
+        1. bool
+        2. numpy array of bools with shape (sample,)
+        3. numpy array of bools with shape (sample, timesteps)
     """
 
     def __init__(
@@ -968,7 +1187,9 @@ class TrackedReference(Reference):
         min: EquationPart = None,  # pylint: disable=W0622
         max: EquationPart = None,  # pylint: disable=W0622
         init: int | float | Distribution | Scalar | EquationPart = None,
+        dim: int = 1,
         group: str = "",
+        dtype: type = None,
     ):
         super().__init__(label, doc)
         self.eq = eq
@@ -976,6 +1197,8 @@ class TrackedReference(Reference):
 
         self.min = ensure_scalar(min)
         self.max = ensure_scalar(max)
+
+        self._dtype = dtype
 
         # use this to prevent infinite recursion in the case of historical
         # values being used.
@@ -990,7 +1213,14 @@ class TrackedReference(Reference):
         )
         """Initial value/equation for initial value for stock/flow/var at t=0"""
 
-        self._static: bool = False
+        self.dim: int = dim
+        """Size of an optional extra dimension, allowing a given reference to describe
+        a vector of values at every timestep. A value of 1 implying no extra dimension."""
+        # NOTE: in general this is only meant to allow user to specify a
+        # _requested_ shape, in almost every case internally we should be
+        # checking .shape rather than .dim
+
+        self._static: bool = None
         """If this is a reference that only needs to have a value calculated once and
         then never changes, don't track a full matrix for it.
 
@@ -1002,11 +1232,29 @@ class TrackedReference(Reference):
         NOTE: _static is only meant for internal use for efficiency (to avoid constant
         round trips to utils.is_static()) during eval(), use is_static for all other
         cases.
+
+        None is the default value to indicate staticness hasn't been assigned yet, was
+        running into an issue in utils.is_static for variables with non-static _distribution_
         """
-        self.static_value_computed: bool = False
-        """If this is a static reference, we need to make sure the computation has
-        run at least once, so flip this after the first time to signify that future
-        evals can short-circuit."""
+
+        self.implicit: bool = False
+        """Implicit components (normally created as subcomponents of more advanced operations)
+        don't show up in diagrams, latex, or output JSON, since they are created
+        by operations."""
+
+        self.computed_mask: np.ndarray | bool = False
+        """Follows same shape as value (up through first two dimensions), set of booleans
+        indicating which values have already been evaluated and saved."""
+
+        self._sample_dim: bool = True
+        """Only used for statics, if a static equation has no row-index relevant
+        operations, no need to separately store an instance for every sample (the
+        batch dimension.)"""
+
+        self._computing_shape: bool = False
+        """Use to avoid infinite recursion on get_shape in a stock etc."""
+        self._computing_type: bool = False
+        """Use to avoid infinite recursion on get_type in a stock etc."""
 
     def min_refs(self) -> list:
         """Get any references found in the min constraint equation. Currently mostly
@@ -1049,6 +1297,41 @@ class TrackedReference(Reference):
             return f"{self.model.name}{delim}{self.name}"
         return self.name
 
+    def get_shape(self) -> int:
+        if self._computing_shape:
+            # acts as a placeholder in recursive instances
+            return 1
+
+        self._computing_shape = True
+        eq = self._implied_eq()
+        # print(f"{self.qual_name()} eq shape: {eq.shape}")
+
+        if self.dim > 1 and eq.shape == 1:
+            # we'd explicitly set a shape but not inherent in the equation
+            self._computing_shape = False
+            # print(f"{self.qual_name()} requested dim actually larger, so {self.dim}")
+            return self.dim
+        elif self.dim > 1 and eq.shape != self.dim:
+            # We'd explicitly set a shape but the one inherent in the equation
+            # is different
+            raise Exception(f"Was expecting shape {self.dim} and got {eq.shape}")
+        else:
+            # No explicit shape requested, set it and use the one from the
+            # equation
+            self.dim = eq.shape
+            # print(f"{self.qual_name()} setting dim to {eq.shape}")
+            self._computing_shape = False
+            return eq.shape
+
+    def get_type(self) -> type:
+        if self._computing_type:
+            # acts as a placeholder in recursive instances
+            return None
+
+        self._computing_type = True
+        eq = self._implied_eq()
+        return eq.dtype
+
     def populate(self, n: int, steps: int):
         """Initialize the matrix of values with size ``n x steps``. All
         values initially nan to indicate they need to be computed still
@@ -1059,14 +1342,37 @@ class TrackedReference(Reference):
         """
         # TODO: not sure if auto checking for staticness _here_ is the correct
         # place
-        self.static_value_computed = False
         self._determine_if_static()
-        if self._static:
-            self.value = np.empty((n,))
-        else:
-            self.value = np.empty((n, steps))
-        self.value.fill(np.nan)
-        self.initial_vals()
+        dtype = self.dtype
+        if dtype is None:
+            dtype = float
+
+        # TODO: not technically sure if this is necessary
+        self.dim = self.shape  # ensure shape computation has run
+
+        # value shape cases, see note in TrackedReference docstring
+        try:
+            if self._static and not self._sample_dim:
+                # case 1, skip value, because assignment completely replaces value
+                self.computed_mask = False
+            elif self._static and self._sample_dim:
+                # case 2
+                self.computed_mask = np.zeros((n,), dtype=bool)
+                if self.dim == 1:
+                    self.value = np.zeros((n,), dtype=dtype)
+                else:
+                    self.value = np.zeros((n, self.dim), dtype=dtype)
+            else:
+                # case 3, non-static, always uses both sample and time dims
+                self.computed_mask = np.zeros((n, steps), dtype=bool)
+                if self.dim == 1:
+                    self.value = np.zeros((n, steps), dtype=dtype)
+                else:
+                    self.value = np.zeros((n, steps, self.dim), dtype=dtype)
+            self.initial_vals()
+        except Exception as e:
+            e.add_note(f"Was trying to populate {self.qual_name()}")
+            raise
 
     def _determine_if_static(self):
         """Used to help improve efficiency of static checks since done every
@@ -1077,15 +1383,31 @@ class TrackedReference(Reference):
             and is_static(self.min)
             and is_static(self.max)
         )
+        # TODO: unclear if I'm missing other potential conditions here
+        # TODO: check to make sure this is actually true when directly assigned
+        # a distribution, e.g. Variable(ops.Normal())
+        self._sample_dim = (
+            len(self.find_refs_of_type(Distribution)) > 0
+            or len(self.find_refs_of_type(Piecewise)) > 0
+            or not self._static
+        )
+        # including self._static condition for completeness, technically
+        # sample dim always exists when not static
 
     def resolve_init_array(self, obj_or_eq):
         """Convert a number or scalar/distribution into correct
         starting array. Can be used within initial_vals subclass
         definition."""
         if isinstance(obj_or_eq, (int, float)):
+            # technically redundant? Covered by case outside of conditionals
             return obj_or_eq
         if isinstance(obj_or_eq, Distribution):
-            obj_or_eq.populate(self.value.shape[0])
+            if obj_or_eq.per_timestep:
+                obj_or_eq.populate(
+                    self.value.shape[0], steps=self.value.shape[1], dim=self.dim
+                )
+            else:
+                obj_or_eq.populate(self.value.shape[0], dim=self.dim)
             return obj_or_eq.eval(0)
         if isinstance(obj_or_eq, EquationPart):
             # this covers Scalar
@@ -1099,11 +1421,11 @@ class TrackedReference(Reference):
         """
         # define in subclass if relevant
 
-    def eval(
+    def eval(  # noqa: C901
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
+        compute_mask: np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
@@ -1116,24 +1438,37 @@ class TrackedReference(Reference):
         passed through all other ``.eval()`` methods.
         """
         try:
+            # dims = [slice(None, None), t]  # value[:, t]
+            # # if self.dim > 1:
+            # #     dims = [slice(None, None), t, slice(None, None)]  # value[:, :, t]
+            # if row_indices is not None:
+            #     dims[0] = row_indices  # value[row_indices, t] or value[row_indices, :, t]
+            # if self._static:
+            #     dims = dims[:-1]  # value[row_indices] or value[row_indices, :]
+            # dims = tuple(dims)
+            # print(self.qual_name(), dims, t, save)
+            # if isinstance(self, Stock):
+            #     print(":", self.value[dims])
+
+            # instead of samples_dim, we want the initial value to simply be _all_
+            # samples_dim = slice(None, None) if row_indices is None else row_indices
+
             # check to see if we can short-circuit computation as long as
             # a re-compute wasn't explicitly requested
-            if not force:
-                # short-circuit if this is a static vector value. (No computation necessary)
-                if self._static and self.static_value_computed:
-                    if row_indices is not None and len(self.value) > 1:
-                        return self.value[row_indices]
-                    return self.value
+            if not force and self.value is not None:
+                # value/computed_mask shape cases
+                if self._static and not self._sample_dim:
+                    # case 1, raw or (dim,)
+                    if self.computed_mask:
+                        return self.value
+                if self._static and self._sample_dim:
+                    # case 2, (sample,) or (sample, dim)
+                    if self.computed_mask.all():
+                        return self.value[:]
 
-                # check to see if we've already computed this and short circuit if
-                # so (we can do this now because we're basing uncomputed status
-                # based on np.nan value rather than an internal step counter)
-                # if not self.static: #and self.static_value_computed:
-                if not self._static and self.value is not None:
-                    if row_indices is not None:
-                        if not np.isnan(self.value[row_indices, t]).any():
-                            return self.value[row_indices, t]
-                    if not np.isnan(self.value[:, t]).any():
+                if not self._static:
+                    # case 3, (sample, t) or (sample, t, dim)
+                    if self.computed_mask[:, t].all():
                         return self.value[:, t]
 
             # short-circuit not appropriate, run actual compute
@@ -1142,31 +1477,62 @@ class TrackedReference(Reference):
                 # Reminder that stocks are always the end value at t-1, while
                 # flows and variables are current timestep computations. See
                 # docstring of this class.
-                val = self._implied_eq().eval(t - 1, save, row_indices, force, **kwargs)
+                val = self._implied_eq().eval(t - 1, save, force, **kwargs)
                 # TODO: if self is stock, don't pass save on down?
                 # (should only be calling eval from model which is already handling
                 # saving everything?)
             else:
-                val = self._implied_eq().eval(t, save, row_indices, force, **kwargs)
+                val = self._implied_eq().eval(t, save, force, **kwargs)
+
+            # handle broadcasting value to correct size if necessary, this is
+            # really only so that the first eval call returns the same thing as
+            # the second in cases where there's an implicit broadcast requested
+            # (e.g. Variable(5, dim=6) needs to return [5, 5, 5, 5, 5, 5] both
+            # times)
+            if self.dim > 1:
+                if not isinstance(val, np.ndarray):
+                    val = np.array([val])
+                if val.shape[-1] == 1:
+                    val = np.repeat(val, repeats=self.dim, axis=-1)
+
+            # handle caching/storing result on the internal value for future
+            # short-circuting and post-run analysis/dataset collection
             if save and not force:
-                # if this is a static ref, now that we've computed the value we
-                # can mark it for future short-circuiting.
-                if self._static:
-                    self.static_value_computed = True
-                    if row_indices is not None:
-                        self.value[row_indices] = val
-                    else:
-                        if not isinstance(val, np.ndarray):
-                            self.value = np.array([val])
-                        else:
-                            self.value = val
+                # value shape cases for value _assignment_
+                if self._static and not self._sample_dim:
+                    # case 1, simplest, just replace
+                    # TODO: NOTE: that before we were always converting to a
+                    # numpy array if was a static value - will not doing that
+                    # break things? I don't think so because of how initial_vals
+                    # used to work, which was directly setting value
+                    self.value = val
+                    self.computed_mask = True
+                elif self._static and self._sample_dim:
+                    # case 2, sample dimension is assigned to
+                    assignment_dims = [slice(None, None)]
+                    if self.dim > 1:
+                        # this is only necessary because if val is a numpy array
+                        # and we're assigning to specific rows, it's not going
+                        # to automatically broadcast the full array, it'll prob
+                        # shape error.
+                        assignment_dims.append(slice(None, None))
+                    self.value[*assignment_dims] = val
+                    self.computed_mask[:] = True
                 else:
-                    if row_indices is None:
-                        self.value[:, t] = val
-                    else:
-                        self.value[row_indices, t] = val
+                    # case 3, non-statics
+                    assignment_dims = [slice(None, None), t]
+                    if self.dim > 1:
+                        # this is only necessary because if val is a numpy array
+                        # and we're assigning to specific rows, it's not going
+                        # to automatically broadcast the full array, it'll prob
+                        # shape error.
+                        assignment_dims.append(slice(None, None))
+                    self.value[*assignment_dims] = val
+                    self.computed_mask[:, t] = True
+
             self._computing.remove(t)
             return val
+            # return val
         except Exception as e:
             e.add_note(f'Was evaluating "{self.name}": {self._implied_eq()}')
             if self._implied_eq() is None:
@@ -1236,9 +1602,8 @@ class HistoricalValue(Reference):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force=False,
         **kwargs,
     ):
@@ -1251,22 +1616,33 @@ class HistoricalValue(Reference):
             # the variable itself (at timestep t) is never used)
             # So, make sure that the actual output of the actual flow/variable
             # is always "up to date"
-            self.tracked_ref.eval(t, save, row_indices, force, **kwargs)
+            self.tracked_ref.eval(t, save, force, **kwargs)
 
         # we ensure the reference has actually evaluated because otherwise
         # you might have a bunch of random zeros near the end of a simulation
 
-        index = self.index_eq.eval(t, save, row_indices, force, **kwargs)
+        index = self.index_eq.eval(t, save, force, **kwargs)
+        # TODO: TODO: eventually need to actually handle vector indexing
+        # print(self.qual_name(), index)
+        if isinstance(index, np.ndarray):
+            index = int(index[0])
         if index < 0:
             return 0  # TODO: TODO: TODO: or initial condition?
 
         if self.tracked_ref._static:
-            if row_indices is None:
-                return self.tracked_ref.value
-            return self.tracked_ref.value[row_indices]
-        if row_indices is None:
-            return self.tracked_ref.value[:, index]
-        return self.tracked_ref.value[row_indices, index]
+            return self.tracked_ref.value
+        return self.tracked_ref.value[:, index]
+
+    def qual_name(self):
+        # TODO: 2025.09.09, is this reasonable?
+        return self.tracked_ref.qual_name()
+
+    def get_shape(self) -> int:
+        return self.tracked_ref.shape
+
+    @property
+    def model(self):
+        return self.tracked_ref.model
 
     def latex(self, **kwargs) -> str:
         """Get the string representation for referring to this reference, italicized
@@ -1280,6 +1656,9 @@ class HistoricalValue(Reference):
             out_value = self.eval(t)
             if isinstance(out_value, (list, np.ndarray)):
                 out_value = out_value[sample]
+            # handle multidim case, for now just use first
+            if isinstance(out_value, np.ndarray):
+                out_value = out_value[0]
             latex_str += (
                 "{\\color{grey}\\{}{\\color{red}"
                 + f"{out_value:.2f}"
@@ -1296,14 +1675,20 @@ class HistoricalValue(Reference):
             if refs[name].name is None:
                 refs[name].name = name
             return refs[name]
-        return pt.as_tensor(0.0)  # ???
+        if self.shape == 1:
+            return pt.as_tensor(0.0)
+        else:
+            return pt.as_tensor(0.0).repeat(self.shape)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         simple_index = self.index_eq.eval(t=0, force=True) * -1
         name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
         if name in refs:
             return refs[name]
-        return "pt.as_tensor(0.0)"  # ???
+        if self.shape == 1:
+            return "pt.as_tensor(0.0)"
+        else:
+            return f"pt.as_tensor(0.0).repeat({self.shape})"
 
     @staticmethod
     def parse(arg_strs: list[str], refs: dict[str, Reference]):
@@ -1338,29 +1723,50 @@ class Flow(TrackedReference):
         doc: str = None,
         min: EquationPart = None,
         max: EquationPart = None,
+        dim: int = 1,
         group: str = "",
+        dtype: type = None,
     ):
-        super().__init__(eq, label, doc, min=min, max=max, group=group)
+        super().__init__(
+            eq, label, doc, min=min, max=max, dim=dim, group=group, dtype=dtype
+        )
 
     def initial_vals(self):
         """Variables can be set to distributions, so the inital vals
         in that case will be a population sampled from the eq distribution."""
         try:
-            if self.init is not None:
-                self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
-            elif isinstance(self.eq, (Distribution, Scalar, int, float)):
-                if self._static:
-                    self.value = self.resolve_init_array(self._implied_eq(self.eq))
-                else:
-                    self.value[:, 0] = self.resolve_init_array(
-                        self._implied_eq(self.eq)
+            init_eq = self._implied_eq(self.init)
+            if init_eq is None:
+                init_eq = self._implied_eq()
+            resolved_init_value = self.resolve_init_array(init_eq)
+
+            # value shape cases for value assignment
+            if self._static and not self._sample_dim:
+                # case 1, simplest, raw value or (dim,)
+                if self.dim > 1 and not isinstance(resolved_init_value, np.ndarray):
+                    resolved_init_value = np.repeat(
+                        [resolved_init_value], repeats=self.dim
                     )
+                self.value = resolved_init_value
+                self.computed_mask = True
+            elif self._static and self._sample_dim:
+                # case 2, sample dimension, (sample,) or (sample, dim)
+                assignment_dims = [slice(None, None)]
+                if self.dim > 1:
+                    # see note about why this is necessary in
+                    # TrackedReference.eval assignment section
+                    assignment_dims.append(slice(None, None))
+                self.value[*assignment_dims] = resolved_init_value
+                self.computed_mask[:] = True
             else:
-                if self._static:
-                    # self.value = np.array(0)
-                    self.value = self.resolve_init_array(self._implied_eq())
-                else:
-                    self.value[:, 0] = self.resolve_init_array(self._implied_eq())
+                # case 3, non-statics
+                assignment_dims = [slice(None, None), 0]
+                if self.dim > 1:
+                    # see note about why this is necessary in
+                    # TrackedReference.eval assignment section
+                    assignment_dims.append(slice(None, None))
+                self.value[*assignment_dims] = resolved_init_value
+                self.computed_mask[:, 0] = True
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
@@ -1394,6 +1800,9 @@ class Flow(TrackedReference):
             out_value = self.eval(t)
             if isinstance(out_value, (list, np.ndarray)):
                 out_value = out_value[sample]
+            # handle multidim case, for now just use first
+            if isinstance(out_value, np.ndarray):
+                out_value = out_value[0]
             latex_str += (
                 "{\\color{grey}\\{}{\\color{red}"
                 + f"{out_value:.2f}"
@@ -1446,9 +1855,12 @@ class Variable(TrackedReference):
         doc: str = None,
         min: EquationPart = None,
         max: EquationPart = None,
+        dim: int = 1,
         user: bool = False,
         group: str = "",
+        dtype: type = None,
     ):
+        # TODO: missing init parameter?
         self.user = user
         """If True, use visual interface to allow changing it via widgets."""
         # TODO: we're not currently using this in explorer, add that.
@@ -1456,29 +1868,52 @@ class Variable(TrackedReference):
         if isinstance(eq, (float, int)):
             eq = Scalar(eq)
 
-        super().__init__(eq, label, doc, min=min, max=max, group=group)
+        super().__init__(
+            eq, label, doc, min=min, max=max, dim=dim, group=group, dtype=dtype
+        )
 
     def initial_vals(self):
         """Variables can be set to distributions, so the inital vals
         in that case will be a population samled from the eq distribution."""
         try:
-            if self.init is not None:
-                self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
-            elif isinstance(self.eq, (Distribution, Scalar, int, float)):
-                if self._static:
-                    self.value = self.resolve_init_array(self._implied_eq(self.eq))
-                else:
-                    self.value[:, 0] = self.resolve_init_array(
-                        self._implied_eq(self.eq)
+            init_eq = self._implied_eq(self.init)
+            if init_eq is None:
+                init_eq = self._implied_eq()
+            resolved_init_value = self.resolve_init_array(init_eq)
+
+            # TODO: should eventually move type to equation part instead of here
+            # exclusively
+
+            # value shape cases for value assignment
+            if self._static and not self._sample_dim:
+                # case 1, simplest, raw value or (dim,)
+                if self.dim > 1 and not isinstance(resolved_init_value, np.ndarray):
+                    resolved_init_value = np.repeat(
+                        [resolved_init_value], repeats=self.dim
                     )
+                self.value = resolved_init_value
+                self.computed_mask = True
+            elif self._static and self._sample_dim:
+                # case 2, sample dimension, (sample,) or (sample, dim)
+                assignment_dims = [slice(None, None)]
+                if self.dim > 1:
+                    # see note about why this is necessary in
+                    # TrackedReference.eval assignment section
+                    assignment_dims.append(slice(None, None))
+                self.value[*assignment_dims] = resolved_init_value
+                self.computed_mask[:] = True
             else:
-                if self._static:
-                    # self.value = np.array(0)
-                    self.value = self.resolve_init_array(self._implied_eq())
-                else:
-                    self.value[:, 0] = self.resolve_init_array(self._implied_eq())
+                # case 3, non-statics
+                assignment_dims = [slice(None, None), 0]
+                if self.dim > 1:
+                    # see note about why this is necessary in
+                    # TrackedReference.eval assignment section
+                    assignment_dims.append(slice(None, None))
+                self.value[*assignment_dims] = resolved_init_value
+                self.computed_mask[:, 0] = True
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
+            raise
 
     def equation(self, **kwargs) -> str:
         """Get the representation of the full equation for a variable as a latex
@@ -1538,9 +1973,20 @@ class Stock(TrackedReference):
         doc: str = None,
         min: EquationPart = None,
         max: EquationPart = None,
+        dim: int = 1,
         group: str = "",
+        dtype: type = None,
     ):
-        super().__init__(label, doc=doc, min=min, max=max, init=init, group=group)
+        super().__init__(
+            label,
+            doc=doc,
+            min=min,
+            max=max,
+            dim=dim,
+            init=init,
+            group=group,
+            dtype=dtype,
+        )
 
         self.in_flows: list[Flow] = []
         self.out_flows: list[Flow] = []
@@ -1564,10 +2010,14 @@ class Stock(TrackedReference):
 
     def initial_vals(self):
         try:
+            # dims = (slice(None, None), 0)
+            # if self.dim > 1:
+            #     dims = (slice(None, None), slice(None, None), 0)
             if self.init is not None:
                 self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
             else:
                 self.value[:, 0] = 0
+            self.computed_mask[:, 0] = True
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
@@ -1627,6 +2077,11 @@ class Stock(TrackedReference):
         inflows = self.combine_eqs(self.in_flows)
         outflows = self.combine_eqs(self.out_flows)
 
+        if len(self.in_flows) == 0:
+            return -outflows
+        if len(self.out_flows) == 0:
+            return inflows
+
         return inflows - outflows
 
     def _implied_eq(self, eq=None):
@@ -1673,6 +2128,13 @@ class Stock(TrackedReference):
         # TODO: this is mostly the same across all tracked refs, can prob move
         # to parent class
         if name == "min" or name == "max" or name == "init":
+            # assign ops are necessary when setting to a single 'thing' rather
+            # than an equation. Without this, seek_refs becomes almost
+            # impossible to implement correctly.
+            # TODO: very likely this needs to be applied to min/max as well, and
+            # for variable/flow too.
+            if name == "init" and value is not None:
+                value = reno.ops.assign(value)
             value = ensure_scalar(value)
         object.__setattr__(self, name, value)
 
@@ -1683,7 +2145,9 @@ class Stock(TrackedReference):
 
 
 class Metric(Reference):
-    """Metrics run in a separate after-simulation analysis."""
+    """Metrics run in a separate after-simulation analysis. Generally intended to be
+    a series aggregate type equation (e.g. using series_min/series_max/sum on
+    slices of values across time from references computed during the simulation etc."""
 
     def __init__(self, eq: EquationPart = None, label: str = None):
         super().__init__(label)
@@ -1733,12 +2197,6 @@ class Metric(Reference):
     def __repr__(self):
         return f'"{self.qual_name()}"'
 
-
-class PostMeasurement(Metric):
-    """An equation to run after a simulation has complete, generally intended to
-    be a series aggregate type equation (e.g. using series_min/series_max/sum on slices
-    of values across time from references computed during the simulation etc."""
-
     def __setattr__(self, name, value):
         if name == "eq" and value is not None:
             if isinstance(value, (Variable, Flow, Stock, HistoricalValue)):
@@ -1748,14 +2206,13 @@ class PostMeasurement(Metric):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ):
         try:
-            value = self.eq.eval(t, save, row_indices, force, **kwargs)
+            value = self.eq.eval(t, save, force, **kwargs)
             if save:
                 self.value = value
             return value
@@ -1781,6 +2238,10 @@ class PostMeasurement(Metric):
 class Flag(Metric):
     """Boolean value tracked for each step and sample in the simulation."""
 
+    # NOTE: is this even necessary? You could achieve presumably the same thing
+    # by having a variable store the same values based on a piecewise throughout
+    # the sim itself.
+
     def __init__(self, eq: EquationPart = None, label: str = None):
         super().__init__(eq, label)
         self.internal_step = 0
@@ -1790,9 +2251,7 @@ class Flag(Metric):
 
         # TODO: need to update first function to support pt as well
         self.first = Reference(f"{self.label}.first")
-        self.first.eval = lambda t, save, row_indices, force: self.first.eq.eval(
-            t, save, row_indices, force
-        )
+        self.first.eval = lambda t, save, force: self.first.eq.eval(t, save, force)
         self.first.eq = Function(self.first_event)
 
     def populate(self, n: int, steps: int):
@@ -1803,9 +2262,8 @@ class Flag(Metric):
 
     def eval(
         self,
-        t: int,
+        t: int = 0,
         save: bool = False,
-        row_indices: list[int] | np.ndarray = None,
         force: bool = False,
         **kwargs,
     ) -> int | float | np.ndarray:
@@ -1829,17 +2287,18 @@ class Flag(Metric):
         # if self.internal_step > t:
         #     self._computing.remove(t)
         #     return self.value[:, t]
-        val = self.eq.eval(t, save, row_indices, force, **kwargs).astype(int)
+        val = self.eq.eval(t, save, force, **kwargs).astype(int)
         if save:
             self.internal_step = t
-            if row_indices is None:
-                self.value[:, t] = val
-            else:
-                self.value[row_indices, t] = val
+            self.value[:, t] = val
             self.internal_step += 1
         self._computing.remove(t)
         return val
 
+    # TODO: need pt/pt_str
+
+    # TODO: the below probably need to be actual operations so that they can
+    # work in pytensor as well
     def indices(self):
         """Get the timesteps where the value changes from 0 to 1."""
         sample_indices, t_indices = np.where(np.diff(self.value) == 1)

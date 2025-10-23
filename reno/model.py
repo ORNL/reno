@@ -12,6 +12,7 @@ import numpy as np
 import pymc as pm
 import xarray as xr
 from graphviz import Digraph, set_jupyter_format
+from pytensor import compile
 from tqdm.auto import tqdm
 
 import reno
@@ -69,7 +70,7 @@ class Model:
         """
         self.metrics: list[reno.components.Metric] = []
         """List of all metrics associated with this model - don't modify directly,
-        assign metrics as attributes directly on model (e.g. ``model.my_metric = reno.PostMeasurement()``)
+        assign metrics as attributes directly on model (e.g. ``model.my_metric = reno.Metric()``)
         """
         self.models: list[reno.Model] = []
         """List of submodels of this model - don't modify directly, assign submodels as
@@ -248,12 +249,44 @@ class Model:
     def _populate(self, n: int, steps: int):
         """Initialize all tracked references with appropriately sized numpy
         matrices."""
+        self._find_all_extended_op_implicit_components()
         self._recursive_sub_populate_n_steps(n, steps)
 
         ref_compute_order = self.dependency_compute_order(inits_order=True)
 
         for ref in ref_compute_order:
             ref.populate(n, steps)
+
+    def _find_all_extended_op_implicit_components(self):
+        """Go through every equation and assign any implicit components from
+        extended operations."""
+        extended_ops = []
+        assoc_refs = []  # parallel list with which ref the correspo op came from
+        # (not necessarily accurate, but we need an easy way to be able to name
+        # separately)
+        assoc_ref_counter = {}  # parallel list with how many times this ref is used
+        # (useful for indexing the sub components to ensure no name conflicts)
+        for ref in self.flows + self.vars:
+            found_ops = ref.find_refs_of_type(reno.components.ExtendedOperation)
+            for op in found_ops:
+                if op not in extended_ops:
+                    extended_ops.append(op)
+                    assoc_refs.append(ref)
+                    assoc_ref_counter[ref] = 0
+
+        for i, op in enumerate(extended_ops):
+            # NOTE: keep this above, we don't want the name to be _0 or we get
+            # bad things because that would otherwise reference an init
+            assoc_ref_counter[assoc_refs[i]] += 1
+            for key, component in op.implicit_components.items():
+                name = f"{assoc_refs[i].qual_name()}_{key}_{assoc_ref_counter[assoc_refs[i]]}"
+                if hasattr(self, name):
+                    delattr(self, name)
+                self.add(name, component)
+
+        # recursively do this for submodels too
+        for model in self.models:
+            model._find_all_extended_op_implicit_components()
 
     def simulator(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
@@ -265,7 +298,10 @@ class Model:
         if steps is None:
             steps = self.steps
 
-        self._recursive_sub_populate_n_steps(n, steps)
+        self._recursive_sub_populate_n_steps(
+            n, steps
+        )  # TODO: (2025.07.28) isn't this redundant?
+        # (should already be being handled in _populate?)
         self._populate(n, steps)
 
         # note that dependency_compute_order includes all submodels' refs
@@ -311,7 +347,7 @@ class Model:
 
         # run any postmeasurement equations, usually 1 per sample
         for metric in metrics:
-            if isinstance(metric, reno.components.PostMeasurement):
+            if isinstance(metric, reno.components.Metric):
                 metric.eval(steps - 1, True)
                 # TODO: is - 1 correct? I don't think it is
 
@@ -621,30 +657,91 @@ class Model:
             for model in self.models:
                 sub_dses[model.name] = model.dataset()
 
-        # add base refs (stocks, flows, vars)
+        # add non-static non-dim base refs (stocks, flows, vars)
+        # partial case 1, (sample, t)  (see TrackedReference for cases
+        # explanation)
         all_refs = self.stocks + self.flows + self.vars
+        all_refs = [ref for ref in all_refs if not ref.implicit]
         ds = xr.Dataset(
             {
                 ref.name: (["sample", "step"], ref.value)
                 for ref in all_refs
-                if not ref.is_static()
+                if not ref.is_static() and ref.dim == 1
             },
             coords={
                 "sample": (["sample"], list(range(self.last_n))),
                 "step": (["step"], list(range(self.last_steps))),
+                # "vec": (["vec"], []),
             },
             attrs=self.get_nonrecursive_config(),
         )
+
+        # handle any multi-dim refs
+        multidim_vars = {}
+        for ref in all_refs:
+            if ref.dim > 1:
+                vec_name = f"{ref.qual_name()}_vec"
+                if ref.is_static():
+                    if ref._sample_dim:
+                        # case 2, (sample, dim)
+                        dims = ["sample", vec_name]
+                        coords = {
+                            "sample": (["sample"], list(range(self.last_n))),
+                            vec_name: ([vec_name], list(range(ref.dim))),
+                        }
+                        val = ref.value
+                        if ref.value.shape[0] != self.last_n:
+                            val = np.broadcast_to(ref.value, (self.last_n, ref.dim))
+                    else:
+                        # case 1, (dim,)
+                        dims = ["sample", vec_name]
+                        coords = {
+                            "sample": (["sample"], list(range(self.last_n))),
+                            vec_name: ([vec_name], list(range(ref.dim))),
+                        }
+                        val = ref.value
+                        # TODO: I'm pretty sure this needs a repeat per last_n
+                        # with axis=0...a broadcast may not work
+                        val = np.broadcast_to(val, (self.last_n, ref.dim))
+                else:
+                    # partial case 1, (sample, t, dim)
+                    dims = ["sample", "step", vec_name]
+                    coords = {
+                        "sample": (["sample"], list(range(self.last_n))),
+                        "step": (["step"], list(range(self.last_steps))),
+                        vec_name: ([vec_name], list(range(ref.dim))),
+                    }
+                    val = ref.value
+
+                da = xr.DataArray(data=val, dims=dims, coords=coords)
+                multidim_vars[ref.name] = da
+        ds = ds.assign(multidim_vars)
 
         # handle any static refs (don't change wrt to step)
         # NOTE: this is only dealing with vectors right now, not single nums?
         static_refs = {}
         for ref in all_refs:
-            if ref.is_static():
+            if ref.is_static() and ref.dim == 1:
                 val = ref.value
-                if isinstance(ref.value, (int, float)):
+                # print(
+                #     "(dataset)",
+                #     ref.qual_name(),
+                #     type(ref.value),
+                #     ref.value.shape,
+                #     ref.value,
+                #     ref._static,
+                #     ref._sample_dim,
+                # )
+                # TODO: geeeez there's got to be a better way?? np.min/max etc.
+                # will return a numpy.int even if the inputs are not numpy
+                # types (e.g. python int)
+                if isinstance(ref.value, (int, float)) or (
+                    isinstance(ref.value, np.ndarray) and len(ref.value.shape) == 0
+                ):
                     val = np.broadcast_to(ref.value, (self.last_n,))
-                elif ref.value.shape[0] != self.last_n:
+                elif len(ref.value.shape) > 0 and ref.value.shape[0] != self.last_n:
+                    val = np.broadcast_to(ref.value, (self.last_n,))
+                elif len(ref.value.shape) == 0:
                     val = np.broadcast_to(ref.value, (self.last_n,))
                 static_refs[ref.name] = (["sample"], val)
         ds = ds.assign(static_refs)
@@ -678,6 +775,7 @@ class Model:
                 name: f"{sub_ds_name}_{name}" for name in list(sub_ds.keys())
             }
             sub_ds = sub_ds.rename_vars(renamed_vars)
+            sub_dses[sub_ds_name] = sub_ds  # TODO: how was this not necessary before??
 
         ds_to_merge = [ds]  # , *list(sub_dses.values())]
         ds_to_merge.extend(sub_dses.values())
@@ -765,6 +863,8 @@ class Model:
             The dependency-ordered list of reno TrackedReferences for this model.
         """
         compute_order = []
+        # TODO: do we need to ensure _find_all_extended_op_implicit_components
+        # is called here?
 
         if not inits_order:
             # if this isn't an initial case, we assume stocks are always
@@ -785,7 +885,7 @@ class Model:
         return compute_order
 
     def pymc_model(
-        self, observations: list["reno.ops.Observation"] = None
+        self, observations: list["reno.ops.Observation"] = None, steps: int = None
     ) -> pm.model.core.Model:
         """Generate a pymc model for bayesian analysis of this system dynamics model. The general
         idea is that this creates corresponding pymc variables (or distributions as relevant) for
@@ -797,12 +897,14 @@ class Model:
         variables and sample from posterior predictive to run bayesian analysis/determine how
         distributions of any other variables may be affected.
         """
-        return reno.pymc.to_pymc_model(self, observations)
+        return reno.pymc.to_pymc_model(self, observations, steps)
 
     # TODO: wrap in function option (string function would return model)
     # TODO: option to add in necessary imports
     # TODO: can you run black formatting programmatically on a string?
-    def pymc_str(self, observations: list["reno.ops.Observation"] = None) -> str:
+    def pymc_str(
+        self, observations: list["reno.ops.Observation"] = None, steps: int = None
+    ) -> str:
         """Construct a string of python code to create a pymc model wrapping this system dynamics
         model. Should be a functional (string) equivalent of the ``pymc_model()`` function. Includes
         the output from ``pymc.pt_sim_step_str(self)``.
@@ -814,13 +916,15 @@ class Model:
             >>> import pymc as pm
             >>> import numpy as np
         """
-        return reno.pymc.to_pymc_model_str(self, observations)
+        return reno.pymc.to_pymc_model_str(self, observations, steps)
 
-    def pymc(
+    def pymc(  # noqa: C901
         self,
         n: int = None,
         steps: int = None,
         sampling_kwargs: dict[str, Any] = None,
+        compile_kwargs: dict[str, Any] = None,
+        compile_faster: bool = False,
         observations: list["reno.ops.Observation"] = None,
         smc: bool = True,
         trace_prior: az.InferenceData = None,
@@ -839,6 +943,15 @@ class Model:
             sampling_kwargs (dict): Arguments to pass to the PyMC sampler. Uses ``sample_smc`` by
                 default unless the ``smc`` argument is ``False``, in which case it lets PyMC choose
                 sampler (NUTS for continuous variables, some variant of Metropolis for discrete.)
+            compile_kwargs (dict): Arguments to pass along to the compiler through PyMC. E.g. ``mode``,
+                which, if function compilation is taking forever, can for instance be set to
+                ``FAST_COMPILE``.
+            compile_faster (bool): For some large/complex models, the PyMC/pytensor compilation step can
+                take excessively long as it tries to apply a high level of optimizations. Set this to
+                ``True`` to bump down the optimization level by one, which should dramatically speed this
+                step up. Alternatively you can have more granular control over this by passing a ``mode``
+                key to the ``compile_kwargs`` dictionary parameter, see pytensor's documentation for more
+                details: https://pytensor.readthedocs.io/en/latest/tutorial/modes.html
             observations (list[reno.Observation]): Observed values (data/evidence) to use for computing
                 posteriors, at least one should be specified if not exclusively running priors.
             smc (bool): Whether to use the sequential monte carlo sampler or not, the default is to
@@ -875,7 +988,15 @@ class Model:
         if "draws" not in sampling_kwargs:
             sampling_kwargs["draws"] = math.ceil(n / sampling_kwargs["cores"])
 
-        with self.pymc_model() as m:
+        if compile_kwargs is None:
+            compile_kwargs = dict()
+
+        if compile_faster and "mode" not in compile_kwargs:
+            compile_kwargs["mode"] = compile.mode.Mode(
+                linker="cvm_nogc", optimizer="o3"
+            )
+
+        with self.pymc_model(steps=steps) as m:
             # add any observation likelihood variables
             if observations is not None:
                 for obs in observations:
@@ -887,9 +1008,20 @@ class Model:
                 sample_func = pm.sample_prior_predictive
                 sampling_kwargs = dict(draws=n)
             if trace_prior is None:
-                trace_prior = pm.sample_prior_predictive(n)
+                trace_prior = pm.sample_prior_predictive(
+                    n, compile_kwargs=compile_kwargs
+                )
             if not compute_prior_only:
-                trace = sample_func(**sampling_kwargs)
+                # sample_smc throws a fit with extremely few samples and the
+                # exception it raises isn't obviously talking about this (a 0-d
+                # iteration error), sometimes a recursion error, so raise our
+                # own more informative error
+                if observations is not None and n < sampling_kwargs["cores"] * 4:
+                    raise Exception(
+                        f"{n} is too few samples, run with a higher n parameter, e.g. ``.pymc(n=1000)``"
+                    )
+
+                trace = sample_func(**sampling_kwargs, compile_kwargs=compile_kwargs)
                 if observations is None:
                     trace.add_groups(posterior=trace.prior)
 
@@ -957,8 +1089,8 @@ class Model:
             var = getattr(self, var_name)
             building_refs[var.qual_name()] = var
         for metric_name, metric_type in data["metrics_list"]:
-            if metric_type == "PostMeasurement":
-                setattr(self, metric_name, reno.components.PostMeasurement())
+            if metric_type == "Metric":
+                setattr(self, metric_name, reno.components.Metric())
             elif metric_type == "Flag":
                 setattr(self, metric_name, reno.components.Flag())
             else:

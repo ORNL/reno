@@ -113,7 +113,14 @@ def is_free_var(eq: "reno.components.EquationPart") -> bool:
     """
     if (
         isinstance(
-            eq, (reno.components.Scalar, reno.components.Distribution, int, float)
+            eq,
+            (
+                reno.components.Scalar,
+                reno.components.Distribution,
+                int,
+                float,
+                np.ndarray,
+            ),
         )
         or eq is None
     ):
@@ -151,8 +158,10 @@ def is_static(
         checked (list[Reference]): Used internally to avoid infinite recursion in checking,
             don't manually pass.
     """
+    # print("Called is_static on", eq)
     if eq is None:
         # really?? I guess this makes sense, none isn't going to change if it even runs.
+        # print("No eq, so not static")
         return True
     if checked is None:
         checked = []
@@ -160,14 +169,16 @@ def is_static(
     # isinstance type is because you could theoretically have an eq of
     # e.g. Scalar(4) + Scalar(5) which is obviously still static
     for ref in eq.seek_refs():
+        # print("Checking", ref)
         # the hasattr is to check for already non-tracked references (e.g. TimeRef)
         if not hasattr(ref, "_static"):
+            # print("No _static, so not static")
             return False
 
         # TODO: TODO: TODO: WHAT A MESS. CLEAN THIS UP.
 
         # if ref.eq is not None:
-        if ref not in checked:
+        if ref not in checked or ref._static is None:
             checked.append(ref)
             if not is_static(ref, checked):
                 return False
@@ -180,6 +191,7 @@ def is_static(
             # It feels really weird to be using a piece of state for what
             # should likely be a stateless check?
             if not ref._static:
+                # print("Ref's _static is false, so not static")
                 return False
 
         # if ref.eq is not None and ref not in checked:
@@ -198,10 +210,15 @@ def is_static(
         #     continue
         # if ref.eq is not None and not is_static(ref.eq):
         #     return False
+    if isinstance(eq, reno.components.Distribution) and eq.per_timestep:
+        # print("Is distribution with per_timestep, not static")
+        return False
     if isinstance(
-        eq, (reno.components.Scalar, reno.components.Distribution, int, float)
+        eq,
+        (reno.components.Scalar, int, float, np.ndarray),
     ):
         # keeping this explicitly to make it obvious
+        # print("Equation is a scalar, int, float, or array, is static!")
         return True
     if isinstance(
         eq,
@@ -213,6 +230,7 @@ def is_static(
     ):
         # anything dealing with a stock (inherently updated every timestep) or
         # is time itself, is obv not static
+        # print("Explicit time-based thing included, not static")
         return False
     if isinstance(eq, reno.ops.slice):
         # slices can potentially index time-based things (if stop is None or explicitly a
@@ -222,7 +240,23 @@ def is_static(
             or (eq.stop is not None and not eq.stop.is_static())
             or (eq.start is not None and not eq.start.is_static())
         ):
+            # print("Slice with non-static start/stop, not static")
             return False
+    # UGH. I'm just playing whackamole (wow that word looks like guacamole) with
+    # weird edgecases I keep accidentally adding.
+    if (
+        hasattr(eq, "eq")
+        and isinstance(eq.eq, reno.components.Distribution)
+        and eq.eq.per_timestep
+    ):
+        # print("Sub equation is a per_timestep distribution, not static")
+        return False
+    # this was really only created for one specific use-case, a technically
+    # non-static distribution (with per_timestep specified) doesn't trigger any
+    # of the above when you're calling is_static on _the containing reference_.
+    # if isinstance(eq, (reno.components.Variable, reno.components.Flow)):
+    #     return is_static(eq.eq, checked)
+    # print("Nothing else triggered, is static")
     return True
 
 

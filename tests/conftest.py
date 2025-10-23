@@ -4,15 +4,7 @@ import shutil
 import pytest
 
 from reno import ops
-from reno.components import (
-    Flow,
-    Piecewise,
-    PostMeasurement,
-    Scalar,
-    Stock,
-    TimeRef,
-    Variable,
-)
+from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
 from reno.model import Model
 
 
@@ -53,7 +45,7 @@ def tub_model():
     m.water_level += m.faucet
     m.water_level -= m.drain
 
-    m.final_water_level = PostMeasurement(ops.index(m.water_level, -1))
+    m.final_water_level = Metric(ops.index(m.water_level, -1))
 
     return m
 
@@ -76,3 +68,49 @@ def tub_multimodel(tub_model):
     whole_system.after_drain.intake.eq = whole_system.tub.drain
 
     return whole_system
+
+
+@pytest.fixture
+def multidim_model():
+    t = TimeRef()
+    m = Model()
+    m.v1 = Flow(ops.Categorical([0.25, 0.25, 0.25, 0.25]), dim=4)
+    m.v2 = Flow(5)
+    m.v3 = Variable(m.v1 + 10 + t, dim=4)
+    m.v4 = Variable(ops.Categorical([0.25, 0.25, 0.25, 0.25]), dim=6)
+
+    m.s = Stock(dim=4)
+    m.s += m.v1
+    m.s += m.v2
+
+    return m
+
+
+@pytest.fixture
+def multidim_model_determ():
+    t = TimeRef()
+    m = Model()
+    m.v1 = Flow([0.25, 0.35, 0.45, 0.55], dim=4)
+    m.v2 = Flow(5)
+    m.v3 = Variable(m.v1 + 10 + t, dim=4)
+
+    m.s = Stock(dim=4)
+    m.s += m.v1
+    m.s += m.v2
+
+    return m
+
+
+@pytest.fixture
+def multidim_model_determ_implicit():
+    t = TimeRef()
+    m = Model()
+    m.v1 = Flow([0.25, 0.35, 0.45, 0.55])
+    m.v2 = Flow(5)
+    m.v3 = Variable(m.v1 + 10 + t)
+
+    m.s = Stock()
+    m.s += m.v1
+    m.s += m.v2
+
+    return m

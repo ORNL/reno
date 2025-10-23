@@ -2,7 +2,6 @@
 
 import os
 
-import numpy as np
 import pytest
 
 from reno.components import Flow, Piecewise, Scalar, Stock, TimeRef, Variable
@@ -84,26 +83,40 @@ def test_multiple_multimodel_consecutive_runs(tub_multimodel):
     """Running a multimodel multiple times should work the same each time/each
     consecutive run starting from scratch"""
     run1 = tub_multimodel(n=10, faucet_volume=6)
-    assert isinstance(tub_multimodel.after_drain.loss_multiplier.value, np.ndarray)
-    assert isinstance(tub_multimodel.after_drain.loss.value, np.ndarray)
+    # NOTE: (2025-09-22) Taking these assertions out at least for now because tentatively
+    # allowing variable values to be the raw values themselves if no sample
+    # dimension required.
+    # assert isinstance(tub_multimodel.after_drain.loss_multiplier.value, np.ndarray)
+    # assert isinstance(tub_multimodel.after_drain.loss.value, np.ndarray)
     run2 = tub_multimodel(n=10, faucet_volume=6)
-    assert isinstance(tub_multimodel.after_drain.loss_multiplier.value, np.ndarray)
-    assert isinstance(tub_multimodel.after_drain.loss.value, np.ndarray)
+    # assert isinstance(tub_multimodel.after_drain.loss_multiplier.value, np.ndarray)
+    # assert isinstance(tub_multimodel.after_drain.loss.value, np.ndarray)
 
     for variable in run1.keys():
         assert (run1[variable].values == run2[variable].values).all()
 
 
-def test_consecutive_scalar_collapse():
-    """For unknown reasons, an evaluated scalar variable after a run seems to return a
-    raw float instead of a numpy array with a single value."""
-    m = Model()
-    m.v = Variable(1.0)
+def test_multimodel_dataset_uses_submodel_prefixes(tub_multimodel):
+    """The keys in the dataset from a multimodel run should prefix submodel names
+    for each submodel reference."""
+    run = tub_multimodel()
+    assert "after_drain_intake" in run.keys()
+    assert "tub_water_level" in run.keys()
 
-    m()
-    assert isinstance(m.v.value, np.ndarray)
-    m()
-    assert isinstance(m.v.value, np.ndarray)
+
+# NOTE: (2025-09-20) Taking this test out at least for now because tentatively
+# allowing variable values to be the raw values themselves if no sample
+# dimension required.
+# def test_consecutive_scalar_collapse():
+#     """For unknown reasons, an evaluated scalar variable after a run seems to return a
+#     raw float instead of a numpy array with a single value."""
+#     m = Model()
+#     m.v = Variable(1.0)
+#
+#     m()
+#     assert isinstance(m.v.value, np.ndarray)
+#     m()
+#     assert isinstance(m.v.value, np.ndarray)
 
 
 def test_subsequent_pymc_prior_calls(tub_model):
@@ -172,3 +185,31 @@ def test_save_load(data_file_loc, tub_multimodel):
 
     for variable in run1.keys():
         assert (run1[variable].values == run2[variable].values).all()
+
+
+def test_multidim_model_runs(multidim_model):
+    """A model with stocks and flows with a vector dimension should run without errors
+    and all outputs in dataset should have correct shape."""
+
+    ds = multidim_model()
+    assert len(ds.coords) == 6
+    assert "s_vec" in ds.coords
+    assert "v1_vec" in ds.coords
+    assert "v3_vec" in ds.coords
+    assert "v4_vec" in ds.coords
+
+    assert ds.s.shape == (1, 10, 4)
+    assert ds.v1.shape == (1, 4)
+    assert ds.v2.shape == (1,)
+    assert ds.v3.shape == (1, 10, 4)
+    assert ds.v4.shape == (1, 6)
+
+
+def test_multidim_model_w_vectors_runs(multidim_model_determ):
+    """A multidim model with a static vector should still run correctly and have correct dims in the dataset output."""
+    ds = multidim_model_determ()
+    assert (ds.v1.values == [[0.25, 0.35, 0.45, 0.55]]).all()
+    assert ds.v1.shape == (1, 4)
+    assert ds.v2.shape == (1,)
+    assert ds.v3.shape == (1, 10, 4)
+    assert ds.s.shape == (1, 10, 4)

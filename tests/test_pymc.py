@@ -9,15 +9,7 @@ import pytest  # noqa: F401
 from pytensor.ifelse import ifelse  # noqa: F401
 
 from reno import ops
-from reno.components import (
-    Flow,
-    Piecewise,
-    PostMeasurement,
-    Scalar,
-    Stock,
-    TimeRef,
-    Variable,
-)
+from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
 from reno.model import Model
 
 
@@ -52,6 +44,18 @@ def test_tub_against_base_reno():
         idata.prior.faucet.sel(chain=0).values.tolist()[0]
         == ds.faucet.values.tolist()[0]
     )
+
+
+def test_multidim_model_against_base_reno(multidim_model_determ):
+    """A model with stuff with vector dimensions should be equivalent to the reno version."""
+
+    ds1 = multidim_model_determ()
+    ds2 = multidim_model_determ.pymc(1)
+
+    assert (ds1.s.values == ds2.prior.s.sel(chain=0).values).all()
+    assert (ds1.v1.values == ds2.prior.v1.sel(chain=0).values).all()
+    assert (ds1.v2.values == ds2.prior.v2.sel(chain=0).values).all()
+    assert (ds1.v3.values == ds2.prior.v3.sel(chain=0).values).all()
 
 
 def test_pymc_str_equiv_to_pymc_model():
@@ -127,10 +131,33 @@ def test_bernoulli_updates_with_obs_op():
     m.s = Stock()
     m.s += m.f
 
-    m.final_s = PostMeasurement(ops.index(m.s, Scalar(-1)))
+    m.final_s = Metric(ops.index(m.s, Scalar(-1)))
 
     with m.pymc_model([ops.Observation(m.final_s, 100, [900])]):
         posterior = pm.sample(100)
+    assert (posterior.posterior.decision.values == 1).all()
+
+
+def test_bernoulli_updates_faster_compile():
+    """Similar to test_bernoulli_updates_with_obs_op, but ensuring 'lesser compile optimization'
+    doesn't break."""
+
+    m = Model()
+    m.decision = Variable(ops.Bernoulli(0.5))
+    m.f = Flow(
+        Piecewise(
+            [Scalar(100), Scalar(0)],
+            [ops.eq(m.decision, Scalar(1)), ops.eq(m.decision, Scalar(0))],
+        )
+    )
+    m.s = Stock()
+    m.s += m.f
+
+    m.final_s = Metric(ops.index(m.s, Scalar(-1)))
+
+    posterior = m.pymc(
+        100, compile_faster=True, observations=[ops.Observation(m.final_s, 100, [900])]
+    )
     assert (posterior.posterior.decision.values == 1).all()
 
 
@@ -254,7 +281,7 @@ def test_pymc_slice_in_metric():
     t = TimeRef()
     m = Model()
     m.v0 = Variable(t + 1)
-    m.m0 = PostMeasurement(m.v0[-4:-1].sum())
+    m.m0 = Metric(m.v0[-4:-1].sum())
 
     run_reno = m()
     run_pymc = m.pymc()
@@ -267,7 +294,7 @@ def test_pymc_slice_in_metric_no_upper_bound():
     t = TimeRef()
     m = Model()
     m.v0 = Variable(t + 1)
-    m.m0 = PostMeasurement(m.v0[-4:].sum())
+    m.m0 = Metric(m.v0[-4:].sum())
 
     run_reno = m()
     run_pymc = m.pymc()
@@ -281,9 +308,49 @@ def test_pymc_slice_with_vars_in_metric():
     m = Model()
     m.v0 = Variable(t + 1)
     m.v1 = Variable(Scalar(5))
-    m.m0 = PostMeasurement(m.v0[m.v1 :].sum())
+    m.m0 = Metric(m.v0.timeseries[m.v1 :].sum())
 
     run_reno = m()
     run_pymc = m.pymc()
     assert (run_pymc.prior.v0.sel(chain=0).values == run_reno.v0.values).all()
     assert (run_pymc.prior.m0.sel(chain=0).values == run_reno.m0.values).all()
+
+
+def test_pymc_historical_of_multidim():
+    """The init should correctly initialize multidim zero vectors for a historical val
+    of a multidim variable"""
+    t = TimeRef()
+    m = Model()
+    m.v0 = Variable([2, 3])
+    m.v1 = Variable(t * m.v0)
+    m.v2 = Variable(m.v1.history(t - 1))
+    m.s = Stock()
+    m.s += m.v2
+
+    assert m.v0.shape == 2
+    assert m.v1.shape == 2
+    assert m.v2.shape == 2
+    assert m.s.shape == 2
+
+    run = m.pymc(compute_prior_only=True)
+    assert (run.prior.s.values[0][0][-1] == [56, 84]).all()
+
+
+def test_pymc_historical_of_multidim_w_taps():
+    """The init should correctly initialize multidim zero vectors for a historical val
+    of a multidim variable. (This one actually uses taps)"""
+    t = TimeRef()
+    m = Model()
+    m.v0 = Variable([2, 3])
+    m.v1 = Variable(t * m.v0)
+    m.v2 = Variable(m.v1.history(t - 2))
+    m.s = Stock()
+    m.s += m.v2
+
+    assert m.v0.shape == 2
+    assert m.v1.shape == 2
+    assert m.v2.shape == 2
+    assert m.s.shape == 2
+
+    run = m.pymc(compute_prior_only=True)
+    assert (run.prior.s.values[0][0][-1] == [42, 63]).all()

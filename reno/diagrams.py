@@ -119,11 +119,17 @@ def stock_flow_diagram(
         exclude_var_names = []
 
     g, out_of_scope_stock_connections = add_stocks(
-        g, model.stocks, sparklines=sparklines, traces=traces, universe=universe
+        g,
+        [stock for stock in model.stocks if not stock.implicit],
+        sparklines=sparklines,
+        traces=traces,
+        universe=universe,
     )
     out_of_scope_var_connections = []
     if show_vars:
-        variables = filter_variables(model.vars, exclude_var_names)
+        variables = filter_variables(
+            [var for var in model.vars if not var.implicit], exclude_var_names
+        )
         g, out_of_scope_var_connections = add_vars(
             g,
             variables,
@@ -136,7 +142,12 @@ def stock_flow_diagram(
     else:
         variables = []
     g, out_of_scope_flow_connections = add_flows(
-        g, model.flows, variables, sparkall, traces, universe=universe
+        g,
+        [flow for flow in model.flows if not flow.implicit],
+        variables,
+        sparkall,
+        traces,
+        universe=universe,
     )
 
     missing_connections = (
@@ -307,7 +318,7 @@ def add_stocks(
         else:
             # to force the sparkline graph image node to render right next to
             # its stock node, put them both in a subgraph with rank=same
-            with g.subgraph(graph_attr={"rank": "same"}) as c:
+            with g.subgraph(graph_attr={"rank": "same", "cluster": "true"}) as c:
                 c.node(
                     name=stock.qual_name(),
                     label=stock.label,
@@ -349,7 +360,8 @@ def add_stocks(
                     stock.qual_name(),
                     f"{stock.qual_name()}_fig",
                     constraint="true",
-                    weight="20",
+                    # weight="20",
+                    # weight="200",
                     dir="none",
                 )
 
@@ -470,10 +482,15 @@ def add_vars(
         # add any edges between variables
         # -- unclear if correct --
         for ref in variable.seek_refs():
-            if universe is not None and ref not in universe:
+            if (
+                universe is not None
+                and ref not in universe
+                or (hasattr(ref, "implicit") and ref.implicit)
+            ):
                 continue
             if (
-                ref.name not in exclude_vars
+                not isinstance(ref, reno.components.TimeRef)
+                and ref.name not in exclude_vars
                 and (ref.qual_name(), variable.qual_name()) not in rendered_edges
             ):
                 # don't render connections to things in parent model - parent
@@ -566,7 +583,11 @@ def add_flows(
                 )
 
         for ref in flow.seek_refs():
-            if universe is not None and ref not in universe:
+            if (
+                universe is not None
+                and ref not in universe
+                or (hasattr(ref, "implicit") and ref.implicit)
+            ):
                 continue
             if (
                 (

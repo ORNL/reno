@@ -3,7 +3,7 @@
 import pytest
 
 from reno import ops, utils
-from reno.components import Flow, PostMeasurement, Scalar, Stock, TimeRef, Variable
+from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
 from reno.model import Model
 
 
@@ -168,6 +168,22 @@ def test_static_check_eq_with_historical_value():
     assert not f0.is_static()
 
 
+def test_seq_normal_not_static():
+    """A normal distribution with per_timestep should not be considered static."""
+    m = Model()
+    m.v0 = Variable(ops.Normal(1, 2, per_timestep=True))
+    assert not m.v0.is_static()
+
+
+def test_interpolate_on_static_still_static():
+    """An interpolate call on a static variable should still be static."""
+    m = Model()
+    m.v0 = Variable(Scalar([0, 1, 1.5, 2.72, 3.14]))
+    m.v1 = Variable(ops.interpolate(m.v0, [1, 2, 3], [3, 2, 0]))
+    assert m.v0.is_static()
+    assert m.v1.is_static()
+
+
 def test_single_ref_eq_appears_in_seek_refs():
     """An equation that is just another reference, e.g. flow1 = var1, should
     correctly return var1 when seek_refs is called on flow1.eq"""
@@ -192,14 +208,25 @@ def test_depencency_ordering_metrics():
     m.s0 = Stock()
     m.s0 += m.f0
 
-    m.metric1 = PostMeasurement()
-    m.metric2 = PostMeasurement()
+    m.metric1 = Metric()
+    m.metric2 = Metric()
 
     m.metric1.eq = m.metric2 + m.f0
     m.metric2.eq = m.s0
 
     ordered = utils.dependency_compute_order([m.metric1, m.metric2])
     assert ordered == [m.metric2, m.metric1]
+
+
+def test_dependency_ordering_w_inits():
+    """An init equation that is just another reference should correctly gather it as a seek_refs and compute order"""
+    m = Model()
+    m.v0 = Variable(1)
+    m.s = Stock(init=m.v0)
+    m.s += m.v0
+
+    assert m.s.init.seek_refs() == [m.v0]
+    assert m.dependency_compute_order(inits_order=True) == [m.v0, m.s]
 
 
 def test_submodel_getattrs():
@@ -223,15 +250,15 @@ def test_min_max_respected():
     m.change = Variable(6)
     m.limited.eq = m.change
     m()
-    assert m.limited.value[0] == 5
+    assert m.limited.value == 5
 
     m.change.eq = -1
     m()
-    assert m.limited.value[0] == 0
+    assert m.limited.value == 0
 
     m.limited.min = -2
     m()
-    assert m.limited.value[0] == -1
+    assert m.limited.value == -1
 
 
 def test_init_without_explicit_scalar():
@@ -243,3 +270,244 @@ def test_init_without_explicit_scalar():
     m.thing += m.inflow
     ds = m()
     assert ds.thing.values[-1][-1] == 14.0
+
+
+def test_populate_scalar_w_dims():
+    """Populating a variable that is assigned a static single value but provided a dim > 1 should
+    correctly broadcast to a full dim sized repeat of that value."""
+    thing = Variable(5, dim=4)
+    thing.populate(1, 5)
+    print(thing.value)
+    assert thing.value.shape == (4,)
+
+
+def test_multidim_scalar_eval():
+    """Running eval on a static scalar with additional dim should return the expanded array I think."""
+    thing1 = Variable([1, 2, 3, 4], dim=4)
+    thing2 = Variable(2, dim=4)
+    thing1.populate(1, 1)
+    thing2.populate(1, 1)
+
+    assert (thing1.value == [1, 2, 3, 4]).all()
+    assert (thing1.eval(0) == [1, 2, 3, 4]).all()
+
+    assert (thing2.value == [2, 2, 2, 2]).all()
+    assert (thing2.eval(0) == [2, 2, 2, 2]).all()
+
+
+def test_multidim_component_shapes(multidim_model_determ):
+    """Getting the shapes of all the components in a multidim model should be correct"""
+    assert multidim_model_determ.v1.shape == 4
+    assert multidim_model_determ.v2.shape == 1
+    assert multidim_model_determ.v3.shape == 4
+    assert multidim_model_determ.s.shape == 4
+
+
+def test_multidim_component_shapes_implicit(multidim_model_determ_implicit):
+    """Getting the shapes of all the components in a multidim model should be correct"""
+    assert multidim_model_determ_implicit.v1.shape == 4
+    assert multidim_model_determ_implicit.v2.shape == 1
+    assert multidim_model_determ_implicit.v3.shape == 4
+    assert multidim_model_determ_implicit.s.shape == 4
+
+
+def test_unexpected_dim_throws_error():
+    """Assigning a dim to a thing with a shape not of that dim should throw an exception."""
+    v = Variable([4, 4, 4], dim=7)
+    with pytest.raises(Exception):
+        v.shape
+
+
+def test_list_dist_shapes():
+    v0 = Variable(ops.List([20.0, 18.0, 16.0, 14.0]))
+    v1 = Variable(ops.List([[20, 19], [18, 17], [16, 15], [14, 13]]))
+    assert v0.shape == 1
+    assert v0.dtype == float
+    assert v1.shape == 2
+    assert v1.dtype == int
+
+
+def test_dtype_transfer():
+    """Type information should transfer through the equations correctly."""
+    v0 = Variable(1)
+    v1 = Variable(2.0)
+    v2 = Variable([1.0, 2.0])
+    v3 = Variable(v0 + v1)
+    v4 = Variable(v0 + v2)
+    v5 = Variable(v2 > 1.0)
+    v6 = Variable(1, dtype=float)
+    v7 = Variable(v1, dtype=int)
+
+    assert v0.dtype == int
+    assert v1.dtype == float
+    assert v2.dtype == float
+    assert v3.dtype == float
+    assert v4.dtype == float
+    assert v5.dtype == bool
+    assert v6.dtype == float
+
+    v1.populate(1, 1)
+    v7.populate(1, 1)
+    assert v7.dtype == int
+    assert v7.value == 2
+
+
+def test_piecewise_shape_multidim_eq():
+    """Piecewise dimensions of multidim equations should be multidim"""
+    v0 = Variable(0)
+    assert Piecewise([0, 5], [v0 < 2, v0 >= 2]).shape == 1
+    assert Piecewise([[0, 0, 0, 0], 5], [v0 < 2, v0 >= 2]).shape == 4
+    assert Piecewise([Variable(0, dim=4), 5], [v0 < 2, v0 >= 2]).shape == 4
+
+    assert (
+        Piecewise([Variable(0, dim=4), 5], [v0 < 2, v0 >= 2]).eval() == [0, 0, 0, 0]
+    ).all()
+
+
+def test_piecewise_shape_multidim_condition():
+    """Piecewise dimensions of multidim conditions should be multidim"""
+    v0 = Variable([0, 1, 2, 3])
+    assert (v0 < 2).shape == 4
+    assert Piecewise([0, 5], [v0 < 2, v0 >= 2]).shape == 4
+    assert Piecewise([[0, 0, 0, 0], 5], [v0 < 2, v0 >= 2]).shape == 4
+    assert Piecewise([Variable(0, dim=4), 5], [v0 < 2, v0 >= 2]).shape == 4
+
+    assert (Piecewise([0, 5], [v0 < 2, v0 >= 2]).eval() == [0, 0, 5, 5]).all()
+
+
+def test_multidim_piecewise():
+    """Evaluating a piecewise with a data dimension should operate across
+    all dimensions."""
+
+    m = Model()
+    m.v0 = Variable([0, 1, 2, 3])
+    m.v1 = Variable(Piecewise([0, 5], [m.v0 < 2, m.v0 >= 2]))
+    ds = m(n=1, steps=1)
+    assert (ds.v1.values == [[0, 0, 5, 5]]).all()
+
+
+def test_multidim_piecewise_timeseries():
+    """Piecewise should still work with a data dim and also the time dim."""
+    m = Model()
+    t = TimeRef()
+    m.v0 = Variable([0, 1, 2, 3])
+    m.v1 = Variable(m.v0 + t)
+    m.v2 = Variable(Piecewise([0, 5], [m.v1 < 3, m.v1 >= 3]))
+
+    ds = m(1, 3)
+    assert (ds.v2.values == [[[0, 0, 0, 5], [0, 0, 5, 5], [0, 5, 5, 5]]]).all()
+
+
+def test_multidim_piecewise_assignment():
+    """A piecewise assignment from a matrix should still work."""
+    m = Model()
+    t = TimeRef()
+    m.v0_b = Variable(ops.List([[20, 19], [16, 15]]))
+    m.v0 = Variable(m.v0_b - t)
+    m.v1_b = Variable(ops.List([[0, 1], [4, 5]]))
+    m.v1 = Variable(m.v1_b + t)
+
+    m.v2 = Variable(Piecewise([0, m.v0], [m.v1 < 5, m.v1 >= 5]))
+
+    ds = m(2, 2)
+
+    assert (ds.v2.values == [[[0, 0], [0, 0]], [[0, 15], [15, 14]]]).all()
+
+
+def test_nested_piecewise_statics():
+    """A piecewise with another piecewise inside of it should still work."""
+    m = Model()
+    m.v0 = Variable(ops.List([0, 1, 2, 3, 4]))
+    m.v1 = Variable(
+        Piecewise(
+            [0, Piecewise([1, 2], [m.v0 < 3, m.v0 >= 3])],
+            [m.v0 < 1, m.v0 >= 1],
+        )
+    )
+    ds = m(5, 1)
+    assert (ds.v1.values == [[0, 1, 1, 2, 2]]).all()
+
+
+# TODO: skip this until multidim/arbitrary taps in pymc and multidim static time refs
+# supported in reno
+@pytest.mark.skip
+def test_multidim_historical_value():
+    """A multidim vector used to index a historical of a multidim value should correctly pick
+    up the right timestep on an individual data dim entry level"""
+    m = Model()
+    t = TimeRef()
+    m.v0 = Variable(ops.List([0, 1, 2], [10, 11, 12]))
+    m.v1 = Variable(m.v0 + t + 1)
+    m.index = Variable([1, 2, 1])
+    m.v2 = Variable(m.v1.history(t - m.index))
+
+    ds = m(2, 3)
+
+    assert (
+        ds.v1.values
+        == [
+            [[1, 2, 3], [2, 3, 4], [5, 6, 7]],
+            [[11, 12, 13], [12, 13, 14], [13, 14, 15]],
+        ]
+    ).all()
+    assert (
+        ds.v2.values
+        == [[[0, 0, 0], [1, 0, 3], [2, 2, 4]], [[0, 0, 0], [11, 0, 13], [12, 12, 14]]]
+    ).all()
+
+
+# TODO: temp doing away with compute_masks/row_indices, too much complexity
+# right now for too little gain
+# def test_compute_mask_basic_and_rows():
+#     """Evalling with a compute mask requesting specific rows should only return requested rows."""
+#     m = Model()
+#     m.v0 = Variable()
+#     m.v0._static = False
+#     m.v0._sample_dim = True
+#     m.v0.value = np.array([[0, 1, 2, 3, 4], [10, 11, 12, 13, 14]])
+#     m.v0.computed_mask = np.array([[True, True, True, True, True]])
+#     print(m.v0.eval(0))
+#     assert (m.v0.eval(0) == [0, 10]).all()
+#
+#     assert (m.v0.eval(0, np.array([False, True])) == [10]).all()
+#
+#
+# def test_compute_mask_datadim():
+#     """Evalling with a compute mask requesting specific rows and specific entries in data dimension should only return requested data."""
+#     m = Model()
+#     m.v0 = Variable()
+#     m.v0._static = False
+#     m.v0._sample_dim = True
+#     m.v0.value = np.array([[[0, 1], [2, 3]], [[10, 11], [12, 13]]])
+#     m.v0.computed_mask = np.array([[True, True]])
+#     print(m.v0.eval(0))
+#     assert (m.v0.eval(0) == [[0, 1], [10, 11]]).all()
+#
+#     assert (m.v0.eval(0, np.array([[False, True], [True, True]])) == [1, 10, 11]).all()
+
+
+def test_multidim_stock_w_singledim_init():
+    """A stock with requested extra dim should extend that dim to the init equation, even
+    if the init equation has no specified dim."""
+    m = Model()
+    m.s = Stock(init=100, dim=5)
+    ds = m(n=1, steps=3)
+    assert ds.s.values[0][0].shape == (5,)
+
+
+def test_multidim_stock_w_singledim_init_pymc():
+    """A stock with requested extra dim should extend that dim to the init equation, even
+    if the init equation has no specified dim."""
+    m = Model()
+    m.s = Stock(init=100, dim=5)
+    ds = m.pymc(n=1, steps=3)
+    assert ds.prior.s.values[0][0][0].shape == (5,)
+
+
+def test_multidim_var_w_singledim_eq_pymc():
+    """A variable with requested extra dim should extend that dim to the equation's first eval, even
+    if the equation itself has no specified dim."""
+    m = Model()
+    m.v = Variable(4, dim=5)
+    ds = m.pymc(n=1, steps=3)
+    assert ds.prior.v.values[0][0].shape == (5,)

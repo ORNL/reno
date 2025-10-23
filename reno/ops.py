@@ -17,6 +17,7 @@ __all__ = [
     "sum",
     "index",
     "slice",
+    "timeseries",
     # -- normal math operations --
     "add",
     "sub",
@@ -39,6 +40,13 @@ __all__ = [
     "sin",
     "interpolate",
     "assign",
+    # -- "higher order" --
+    "pulse",
+    "repeated_pulse",
+    "step",
+    "delay1",
+    "delay3",
+    "smooth",
     # -- distributions --
     "Normal",
     "Uniform",
@@ -72,11 +80,17 @@ class series_max(reno.components.Operation):
     def latex(self, **kwargs):
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
+    def get_shape(self) -> int:
+        return 1
+
     def op_eval(self, **kwargs):
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
-        return np.max(value, axis=1)
+        axis = 0
+        if len(value.shape) != 1:
+            axis += 1
+        return np.max(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.max(self.sub_equation_parts[0].pt(**refs))
@@ -98,11 +112,17 @@ class series_min(reno.components.Operation):
     def latex(self, **kwargs):
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
+    def get_shape(self) -> int:
+        return 1
+
     def op_eval(self, **kwargs):
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
-        return np.min(value, axis=1)
+        axis = 0
+        if len(value.shape) != 1:
+            axis += 1
+        return np.min(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.min(self.sub_equation_parts[0].pt(**refs))
@@ -123,28 +143,34 @@ class sum(reno.components.Operation):
     # Remember that this operation is really only meant for metrics, use history components
     # for equations within the stocks/flows
 
-    def __init__(self, a):
-        if a.is_static() and not isinstance(a, reno.ops.slice):
-            super().__init__(reno.ops.slice(a))
-        else:
-            super().__init__(a)
+    def __init__(self, a, axis=0):
+        self.axis = axis
+        super().__init__(a)
+        # if a.is_static() and not isinstance(a, reno.ops.time_slice):
+        #     super().__init__(reno.ops.time_slice(a))
+        # else:
+        #     super().__init__(a)
 
     def latex(self, **kwargs):
         return f"\\Sigma {self.sub_equation_parts[0].latex(**kwargs)}"
 
+    def get_shape(self) -> int:
+        return 1
+
     def op_eval(self, **kwargs):
-        value = self.sub_equation_parts[0].value
-        if value is None:
-            value = self.sub_equation_parts[0].eval(**kwargs)
-        # a 2d input is assumed at this point because of the slice insertion in
-        # init for statics
-        return np.sum(value, axis=1)
+        # value = self.sub_equation_parts[0].value
+        # if value is None:
+        value = self.sub_equation_parts[0].eval(**kwargs)
+        axis = self.axis
+        if len(value.shape) != 1:
+            axis = self.axis + 1  # to account for "batch"/n dimension
+        return np.sum(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        return pt.sum(self.sub_equation_parts[0].pt(**refs))
+        return pt.sum(self.sub_equation_parts[0].pt(**refs), axis=self.axis)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        return f"pt.sum({self.sub_equation_parts[0].pt_str(**refs)})"
+        return f"pt.sum({self.sub_equation_parts[0].pt_str(**refs)}, axis={self.axis})"
 
 
 # TODO: figure out how to make this work with history instead?
@@ -158,11 +184,15 @@ class index(reno.components.Operation):
     def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
+    def get_shape(self) -> int:
+        return 1
+
     def op_eval(self, **kwargs):
         # TODO: support for static?
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
+        # TODO: this is going to cause an issue if non-sample-dim statics used
         return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -175,8 +205,8 @@ class index(reno.components.Operation):
 
 
 class slice(reno.components.Operation):
-    """Get a slice (range from index start to index stop) of values from timeseries.
-    NOTE: only works for tracked references inside of equations for metrics."""
+    """Can be applied along with timeseries op in metrics for getting specific time segments, or
+    can be applied generally in equations when dealing with vector data."""
 
     def __init__(self, a, start=None, stop=None):
         self.start = start
@@ -203,70 +233,107 @@ class slice(reno.components.Operation):
         stop = "" if self.stop is None else self.stop.latex(**kwargs)
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{start}:{stop}]"
 
-    # TODO: this probably won't work for row_indices?
-    def op_eval(self, t, **kwargs):
-        t_0 = 0 if self.start is None else self.start.eval(t, **kwargs)
-        t_n = t + 1 if self.stop is None else self.stop.eval(t, **kwargs)
-        # we need t + 1 because otherwise .eval(0) of a static with no stop
-        # would be an empty array
+    # TODO: (2025.09.22) will need to think about how best to implement a
+    # get_shape for this
 
-        # when we have to calculate the indices, they result in arrays
-        if isinstance(t_0, np.ndarray):
-            t_0 = t_0[0]
-        if isinstance(t_n, np.ndarray):
-            t_n = t_n[0]
-        count = t_n - t_0
+    def op_eval(self, t, **kwargs):
+        start = self.start.eval(t, **kwargs) if self.start is not None else None
+        stop = self.stop.eval(t, **kwargs) if self.stop is not None else None
+
+        if isinstance(start, np.ndarray):
+            start = start[0]
+        if isinstance(stop, np.ndarray):
+            stop = stop[0]
 
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(t, **kwargs)
 
-        # if it's static/vector instead of matrix, we just repeat by timesteps
-        if isinstance(value, (float, int)):
-            return np.array([np.array([value]).repeat(count)])
-        if len(value.shape) == 1:
-            return value[:, None].repeat(count, axis=1)
-        return value[:, t_0:t_n]
+        # dims = []
+        # Note we don't have explicit handling for statics, use of .timeseries
+        # op is assumed where necessary.
+        # TODO: is it cleaner to use ellipsis? https://stackoverflow.com/questions/12116830/numpy-slice-of-arbitrary-dimensions
+        # for i, dim in enumerate(value.shape):
+        #     if i == len(value.shape) - 1:
+        #         dims.append(slice(start, stop))
+        #     else:
+        #         dims.append(slice(None, None))
+        # print(dims)
+        return value[..., start:stop]
 
-    # NOTE: generally dealing with arrays instead of matrices throughout
-    # pytensor because backend is dealing with whatever optimizations for sample
-    # math, rather than Reno's math system doing batch math on matrices.
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        if self.sub_equation_parts[0].is_static():
-            seq_length = refs["__PT_SEQ_LEN__"]
-
-            t_0 = 0 if self.start is None else self.start.pt(**refs)
-            t_n = seq_length if self.stop is None else self.stop.pt(**refs)
-            count = t_n - t_0
-
-            return pt.repeat(self.sub_equation_parts[0].pt(**refs), count)
-
         if self.start is None and self.stop is None:
             return self.sub_equation_parts[0].pt(**refs)
         t_0 = pt.as_tensor(0) if self.start is None else self.start.pt(**refs)
         if self.stop is None:
-            return self.sub_equation_parts[0].pt(**refs)[t_0:]
-        return self.sub_equation_parts[0].pt(**refs)[t_0 : self.stop.pt(**refs)]
+            return self.sub_equation_parts[0].pt(**refs)[..., t_0:]
+        return self.sub_equation_parts[0].pt(**refs)[..., t_0 : self.stop.pt(**refs)]
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        if self.sub_equation_parts[0].is_static():
-            seq_length = refs["__PT_SEQ_LEN__"]
-
-            count_str = (
-                str(seq_length) if self.stop is None else self.stop.pt_str(**refs)
-            )
-            if self.start is not None:
-                count_str = f"({count_str} - {self.start.pt_str(**refs)})"
-
-            return (
-                f"(pt.repeat({self.sub_equation_parts[0].pt_str(**refs)}, {count_str})"
-            )
         if self.start is None and self.stop is None:
             return f"{self.sub_equation_parts[0].pt_str(**refs)}"
         t0 = "pt.as_tensor(0)" if self.start is None else self.start.pt_str(**refs)
         if self.stop is None:
-            return f"{self.sub_equation_parts[0].pt_str(**refs)}[{t0}:]"
-        return f"{self.sub_equation_parts[0].pt_str(**refs)}[{t0}:{self.stop.pt_str(**refs)}]"
+            return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0}:]"
+        return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0}:{self.stop.pt_str(**refs)}]"
+
+
+class timeseries(reno.components.Operation):
+    """Get the full data of a component/equation as an array over time, allowing aggregate
+    operations to operate across the full timeseries, e.g. for metric equations. This is
+    in essence "reorienting" the underlying data to include the time dimension.
+
+    NOTE: for pytensor I suspect this will only work in metric equations. pt/pt_str are dependent
+    on whether the refs are populated with the full series or not, which will only occur
+    within the metrics section?
+    TODO: we can _eventually_ make this work within pytensor by the approach to solving general
+    history time equations - if a timeseries op detected within non-metric context, include the full
+    stops of the relevant variables
+
+    TODO: it probably doesn't make sense to call this on anything except a trackedreference,
+    may want to add checks for this.
+    """
+
+    def __init__(self, a):
+        super().__init__(a)
+
+    def latex(self, **kwargs) -> str:
+        return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{timeseries}}"
+
+    # TODO: how best to get timeseries length for get_shape?
+
+    def op_eval(self, t, **kwargs):
+        value = self.sub_equation_parts[0].value
+        if value is None:
+            value = self.sub_equation_parts[0].eval(
+                t, **kwargs
+            )  # TODO: is this right?? This isn't the same as getting .value because may not include full time series...
+            # do I instead need to ensure the save is true and then get .value?
+            # this will only be relevant to solve when the pytensor general
+            # history approach is solved
+
+        count = t + 1
+        if self.sub_equation_parts[0].is_static():
+            if isinstance(value, (float, int)):
+                return np.array([np.array([value]).repeat(count)])
+            if len(value.shape) == 1:
+                return value[:, None].repeat(count, axis=1)
+        return value
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        if self.sub_equation_parts[0].is_static():
+            seq_length = refs["__PT_SEQ_LEN__"]
+            return pt.repeat(self.sub_equation_parts[0].pt(**refs), seq_length)
+        return self.sub_equation_parts[0].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        if self.sub_equation_parts[0].is_static():
+            seq_length = refs["__PT_SEQ_LEN__"]
+            return (
+                f"pt.repeat({self.sub_equation_parts[0].pt_str(**refs)}, {seq_length})"
+            )
+        else:
+            return self.sub_equation_parts[0].pt_str(**refs)
 
 
 # ==================================================
@@ -429,6 +496,9 @@ class lt(reno.components.Operation):
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} < {self.sub_equation_parts[1].latex(**kwargs)}"
 
+    def get_type(self) -> type:
+        return bool
+
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) < self.sub_equation_parts[
             1
@@ -453,6 +523,9 @@ class lte(reno.components.Operation):
 
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\leq {self.sub_equation_parts[1].latex(**kwargs)}"
+
+    def get_type(self) -> type:
+        return bool
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) <= self.sub_equation_parts[
@@ -479,6 +552,9 @@ class gt(reno.components.Operation):
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} > {self.sub_equation_parts[1].latex(**kwargs)}"
 
+    def get_type(self) -> type:
+        return bool
+
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) > self.sub_equation_parts[
             1
@@ -503,6 +579,9 @@ class gte(reno.components.Operation):
 
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\geq {self.sub_equation_parts[1].latex(**kwargs)}"
+
+    def get_type(self) -> type:
+        return bool
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) >= self.sub_equation_parts[
@@ -529,6 +608,9 @@ class eq(reno.components.Operation):
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} = {self.sub_equation_parts[1].latex(**kwargs)}"
 
+    def get_type(self) -> type:
+        return bool
+
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) == self.sub_equation_parts[
             1
@@ -554,6 +636,9 @@ class ne(reno.components.Operation):
 
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\neq {self.sub_equation_parts[1].latex(**kwargs)}"
+
+    def get_type(self) -> type:
+        return bool
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) != self.sub_equation_parts[
@@ -582,6 +667,9 @@ class bool_and(reno.components.Operation):
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ and }} {self.sub_equation_parts[1].latex(**kwargs)}"
 
+    def get_type(self) -> type:
+        return bool
+
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) & self.sub_equation_parts[
             1
@@ -607,6 +695,9 @@ class bool_or(reno.components.Operation):
 
     def latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ or }} {self.sub_equation_parts[1].latex(**kwargs)}"
+
+    def get_type(self) -> type:
+        return bool
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[0].eval(**kwargs) | self.sub_equation_parts[
@@ -654,7 +745,7 @@ class maximum(reno.components.Operation):
         super().__init__(a, b)
 
     def latex(self, **kwargs):
-        return f"\\text{{maximum}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+        return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
         return np.maximum(
@@ -753,6 +844,10 @@ class interpolate(reno.components.Operation):
     def __init__(self, x, x_data: list | np.ndarray, y_data: list | np.ndarray):
         super().__init__(x, x_data, y_data)
 
+    def get_shape(self) -> int:
+        """The shapes of x_data and y_data don't matter, should be same as input."""
+        return self.sub_equation_parts[0].shape
+
     def latex(self, **kwargs):
         return f"\\text{{interpolate}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
@@ -798,36 +893,282 @@ class assign(reno.components.Operation):
 
 
 # ==================================================
+# "HIGHER ORDER"
+# ==================================================
+
+
+class pulse(reno.components.Operation):
+    """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``.
+    Returns 0 at all other timesteps."""
+
+    def __init__(self, start, width=1):
+        t = reno.components.TimeRef()
+        self.sub_eq = reno.components.Piecewise(
+            [0, 1],
+            [
+                (t < start) | (t >= (start + width)),
+                (t >= start) & (t < (start + width)),
+            ],
+        )
+        super().__init__(start, width, self.sub_eq)
+
+    def latex(self, **kwargs):
+        return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[2].eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[2].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.sub_equation_parts[2].pt_str(**refs)
+
+
+class repeated_pulse(reno.components.Operation):
+    """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``,
+    with ``interval`` number of timesteps between each subsequent leading edge. Returns 0
+    at all other timesteps."""
+
+    def __init__(self, start, interval, width=1):
+        t = reno.components.TimeRef()
+        self.sub_eq = reno.components.Piecewise(
+            [0, 1],
+            [
+                (t < start) | ((t - start) % interval >= width),
+                (t >= start) & ((t - start) % interval < width),
+            ],
+        )
+        super().__init__(start, interval, width, self.sub_eq)
+
+    def latex(self, **kwargs):
+        return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[3].eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[3].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.sub_equation_parts[3].pt_str(**refs)
+
+
+class step(reno.components.Operation):
+    """Return a specified value after a specified number of timesteps, otherwise 0."""
+
+    def __init__(self, value, timesteps):
+        t = reno.components.TimeRef()
+        self.sub_eq = reno.components.Piecewise(
+            [0, value], [t < timesteps, t >= timesteps]
+        )
+        super().__init__(value, timesteps, self.sub_eq)
+
+    def latex(self, **kwargs):
+        return f"\\text{{step}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[2].eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[2].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.sub_equation_parts[2].pt_str(**refs)
+
+
+class delay1(reno.components.ExtendedOperation):
+    def __init__(self, input, delay_time):
+        self.inflow = reno.Flow(input)
+        self.delay_stock = reno.Stock()
+        self.outflow = reno.Flow(self.delay_stock / delay_time)
+        self.delay_stock += self.inflow
+        self.delay_stock -= self.outflow
+        super().__init__(
+            [input, delay_time],
+            {
+                "inflow": self.inflow,
+                "delay_stock": self.delay_stock,
+                "outflow": self.outflow,
+            },
+        )
+
+    def latex(self, **kwargs):
+        return f"\\text{{delay1}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+
+    def op_eval(self, **kwargs):
+        return self.outflow.eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.outflow.pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.outflow.pt_str(**refs)
+
+
+class delay3(reno.components.ExtendedOperation):
+    def __init__(self, input, delay_time):
+        self.delay1 = delay1(input, delay_time / 3)
+        self.delay2 = delay1(self.delay1, delay_time / 3)
+        self.delay3 = delay1(self.delay2, delay_time / 3)
+        super().__init__([input, delay_time, self.delay3], {})
+        # don't need to pass any implicit components up because the individual
+        # delays should handle that.
+
+    def latex(self, **kwargs):
+        return f"\\text{{delay3}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+
+    # TODO: does this work just as delay3 or do we need to explicitly reference
+    # outflow?
+    def op_eval(self, **kwargs):
+        return self.delay3.eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.delay3.pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.delay3.pt_str(**refs)
+
+
+class smooth(reno.components.ExtendedOperation):
+    """An information delay, material isn't necessarily preserved but the range is?"""
+
+    def __init__(self, input, adjustment_time, initial_value=0):
+        self.actual_value = reno.Variable(input, dtype=float)
+        self.output = reno.Stock(init=initial_value, dtype=float)  # "perceived" value
+        self.gap = reno.Variable(self.actual_value - self.output, dtype=float)
+        self.adjustment = reno.Flow(self.gap / adjustment_time, dtype=float)
+        self.output += self.adjustment
+        super().__init__(
+            [input, adjustment_time, initial_value],
+            {
+                "actual_value": self.actual_value,
+                "output": self.output,
+                "gap": self.gap,
+                "adjustment": self.adjustment,
+            },
+        )
+
+    def latex(self, **kwargs):
+        return f"\\text{{smooth}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
+
+    def op_eval(self, **kwargs):
+        return self.output.eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.output.pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.output.pt_str(**refs)
+
+
+# ==================================================
 # DISTRIBUTIONS
 # ==================================================
 
 
+def dist_shape(
+    dist: reno.components.Distribution, n: int, steps: int, dim: int
+) -> int | tuple:
+    """Compute the shape/dimensions needed to populate the passed distribution"""
+    if not dist.per_timestep and dim == 1:
+        shape = n
+    elif dist.per_timestep and dim == 1:
+        shape = (n, steps)
+    elif dist.per_timestep and dim > 1:
+        shape = (n, steps, dim)
+    else:
+        shape = (n, dim)
+    return shape
+
+
+def dist_params(
+    dist: reno.components.Distribution, refs: dict
+) -> tuple[str, int, str, int]:
+    """Extract any dunder variables in the refs passed from pymc.py for setting up parameters
+    for the pymc converted distribution."""
+    name = "dist" + str(id(dist))
+    if "__PTNAME__" in refs:
+        name = refs["__PTNAME__"]
+    dim = 1
+    if "__DIM__" in refs:
+        dim = refs["__DIM__"]
+    dim_name = "vec"
+    if "__DIMNAME__" in refs:
+        dim_name = refs["__DIMNAME__"]
+    seq = 0
+    if "__PT_SEQ_LEN__" in refs:
+        seq = refs["__PT_SEQ_LEN__"]
+    return name, dim, dim_name, seq
+
+
 class Normal(reno.components.Distribution):
-    def __init__(self, mean, std=1.0):
-        super().__init__()
-        self.mean = mean
-        self.std = std
+    def __init__(self, mean, std=1.0, per_timestep: bool = False):
+        # super().__init__()
+        # self.mean = mean
+        # self.std = std
+        super().__init__(mean, std, per_timestep=per_timestep)
 
     def latex(self, **kwargs):
-        return f"\\mathcal{{N}}({self.mean}, {self.std}^2)"
+        return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
 
-    def populate(self, n):
-        self.value = np.random.normal(self.mean, self.std, size=(n,))
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        dims = dist_shape(self, n, steps, dim)
+        self.value = np.random.normal(
+            self.sub_equation_parts[0].eval(0),
+            self.sub_equation_parts[1].eval(0),
+            size=dims,
+        )
+
+    def get_type(self) -> type:
+        return float
 
     def __repr__(self):
-        return f"Normal({self.mean}, {self.std})"
+        return f"Normal({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        return pm.Normal(name, self.mean, self.std)
+        name, dim, dim_name, seq = dist_params(self, refs)
+        if not self.per_timestep and dim == 1:
+            return pm.Normal(
+                name,
+                self.sub_equation_parts[0].pt(**refs),
+                self.sub_equation_parts[1].pt(**refs),
+            )
+        elif self.per_timestep and dim == 1:
+            return pm.Normal(
+                name,
+                self.sub_equation_parts[0].pt(**refs),
+                self.sub_equation_parts[1].pt(**refs),
+                shape=(seq,),
+                dims="t",
+            )
+        elif self.per_timestep and dim > 1:
+            return pm.Normal(
+                name,
+                self.sub_equation_parts[0].pt(**refs),
+                self.sub_equation_parts[1].pt(**refs),
+                shape=(seq, dim),
+                dims=("t", dim_name),
+            )
+        else:
+            return pm.Normal(
+                name,
+                self.sub_equation_parts[0].pt(**refs),
+                self.sub_equation_parts[1].pt(**refs),
+                shape=(dim,),
+                dims=dim_name,
+            )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        return f'pm.Normal("{name}", {self.mean}, {self.std})'
+        name, dim, dim_name, seq = dist_params(self, refs)
+        if not self.per_timestep and dim == 1:
+            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)})'
+        elif self.per_timestep and dim == 1:
+            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({seq},), dims="t")'
+        elif self.per_timestep and dim > 1:
+            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({seq}, {dim}), dims=("t", "{dim_name}"))'
+        else:
+            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({dim},), dims="{dim_name}")'
 
 
 class Uniform(reno.components.Distribution):
@@ -839,8 +1180,12 @@ class Uniform(reno.components.Distribution):
     def latex(self, **kwargs):
         return f"\\mathcal{{U}}({self.low}, {self.high})"
 
-    def populate(self, n):
-        self.value = np.random.uniform(self.low, self.high, size=(n,))
+    def get_type(self) -> type:
+        return float
+
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        dims = n if dim == 1 else (n, dim)
+        self.value = np.random.uniform(self.low, self.high, size=dims)
 
     def __repr__(self):
         return f"Uniform({self.low}, {self.high})"
@@ -849,12 +1194,28 @@ class Uniform(reno.components.Distribution):
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
+        if dim > 1:
+            return pm.Uniform(name, self.low, self.high, shape=(dim,), dims=dim_name)
         return pm.Uniform(name, self.low, self.high)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
+        if dim > 1:
+            return f'pm.Uniform("{name}", {self.low}, {self.high}, shape=({dim},), dims="{dim_name}")'
         return f'pm.Uniform("{name}", {self.low}, {self.high})'
 
 
@@ -869,8 +1230,9 @@ class DiscreteUniform(reno.components.Distribution):
     def latex(self, **kwargs):
         return f"\\text{{DiscreteUniform}}({self.low}, {self.high})"
 
-    def populate(self, n: int):
-        self.value = np.random.randint(self.low, self.high, n)
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        dims = n if dim == 1 else (n, dim)
+        self.value = np.random.randint(self.low, self.high, size=dims)
 
     def __repr__(self):
         return f"DiscreteUniform({self.low}, {self.high})"
@@ -879,12 +1241,30 @@ class DiscreteUniform(reno.components.Distribution):
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
+        if dim > 1:
+            return pm.DiscreteUniform(
+                name, self.low, self.high, shape=(dim,), dims=dim_name
+            )
         return pm.DiscreteUniform(name, self.low, self.high)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
+        if dim > 1:
+            return f'pm.DiscreteUniform("{name}", {self.low}, {self.high}, shape=({dim},), dims="{dim_name}")'
         return f'pm.DiscreteUniform("{name}", {self.low}, {self.high})'
 
 
@@ -899,8 +1279,9 @@ class Bernoulli(reno.components.Distribution):
     def latex(self, **kwargs):
         return f"\\text{{Bernoulli}}({self.p})"
 
-    def populate(self, n):
-        self.value = np.random.binomial(1, self.p, n)
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        dims = n if dim == 1 else (n, dim)
+        self.value = np.random.binomial(1, self.p, dims)
 
     def __repr__(self):
         return f"Bernoulli({self.p})"
@@ -909,6 +1290,12 @@ class Bernoulli(reno.components.Distribution):
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
         inner_dist = self.p
         if self.use_p_dist:
             inner_dist = pm.Interpolated(
@@ -916,19 +1303,32 @@ class Bernoulli(reno.components.Distribution):
                 x_points=np.array([0.0, 1.0]),
                 pdf_points=np.array([1 - self.p, self.p]),
             )
+        if dim > 1:
+            return pm.Bernoulli(name, inner_dist, shape=(dim,), dims=dim_name)
         return pm.Bernoulli(name, inner_dist)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
         inner_dist = self.p
         if self.use_p_dist:
             inner_dist = f'pm.Interpolated("{name}_p", x_points=np.array([0.0, 1.0]), pdf_points=np.array([{1 - self.p}, {self.p}]))'
+        if dim > 1:
+            return f'pm.Bernoulli("{name}", {inner_dist}, shape=({dim},), dims="{dim_name}")'
         return f'pm.Bernoulli("{name}", {inner_dist})'
 
 
 class Categorical(reno.components.Distribution):
+    """Random categorical distribution - you specify the probability per category,
+    and the output is a set of category indices."""
+
     def __init__(self, p: list[float], use_p_dist: bool = False):
         super().__init__()
         self.p = p
@@ -937,8 +1337,10 @@ class Categorical(reno.components.Distribution):
     def latex(self, **kwargs):
         return f"\\text{{Categorical}}({self.p})"
 
-    def populate(self, n):
-        self.value = np.argmax(np.random.multinomial(1, self.p, n), axis=1)
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
+        dims = n if dim == 1 else (n, dim)
+        # TODO: how would p_dist apply here? Should it?
+        self.value = np.argmax(np.random.multinomial(1, self.p, dims), axis=-1)
 
     def __repr__(self):
         return f"Categorical({self.p})"
@@ -947,18 +1349,34 @@ class Categorical(reno.components.Distribution):
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
         inner_dist = self.p
         if self.use_p_dist:
             inner_dist = pm.Dirichlet(f"{name}_p", self.p)
+        if dim > 1:
+            return pm.Categorical(name, inner_dist, shape=(dim,), dims=dim_name)
         return pm.Categorical(name, inner_dist)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name = "dist" + str(id(self))
         if "__PTNAME__" in refs:
             name = refs["__PTNAME__"]
+        dim = 1
+        if "__DIM__" in refs:
+            dim = refs["__DIM__"]
+        dim_name = "vec"
+        if "__DIMNAME__" in refs:
+            dim_name = refs["__DIMNAME__"]
         inner_dist = self.p
         if self.use_p_dist:
             inner_dist = f'pm.Dirichlet("{name}_p", {self.p})'
+        if dim > 1:
+            return f'pm.Categorical("{name}", {inner_dist}, shape=({dim},), dims="{dim_name}")'
         return f'pm.Categorical("{name}", {inner_dist})'
 
 
@@ -973,7 +1391,31 @@ class List(reno.components.Distribution):
     def latex(self, **kwargs):
         return f"{self.values}"
 
-    def populate(self, n):
+    def get_shape(self):
+        if isinstance(self.values, np.ndarray) and len(self.values.shape) == 2:
+            return self.values.shape[1]
+        if isinstance(self.values[0], (set, list)):
+            return len(self.values[0])
+        return 1
+
+    def get_type(self) -> type:
+        # TODO: this doesn't handle a value with a np array with shape > 2
+        value = self.values
+        # get to the first real value so we can determine type
+        while isinstance(value, np.ndarray):
+            value = value[0]
+        while isinstance(value, (list, set)):
+            value = value[0]
+
+        if isinstance(value, np.floating):
+            return float
+        elif isinstance(value, np.integer):
+            return int
+        elif isinstance(value, np.bool):
+            return bool
+        return type(value)
+
+    def populate(self, n: int, steps: int = 0, dim: int = 1):
         repetitions = n / len(self.values)
         # if the specified value is _larger_ than the samples, we have to
         # truncate (and warn, does the user know this is what's happening?)
@@ -986,6 +1428,11 @@ class List(reno.components.Distribution):
         else:
             expanded = np.tile(self.values, math.ceil(repetitions))
         self.value = expanded[:n]
+        if dim > 1:
+            if (
+                isinstance(self.values, np.ndarray) and len(self.values.shape) == 1
+            ) or not isinstance(self.values[0], (list, set)):
+                self.value = np.repeat(np.expand_dims(self.value, axis=1), dim, axis=1)
 
     def __repr__(self):
         return f"List({self.values})"
