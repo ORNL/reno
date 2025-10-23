@@ -318,7 +318,7 @@ def add_stocks(
         else:
             # to force the sparkline graph image node to render right next to
             # its stock node, put them both in a subgraph with rank=same
-            with g.subgraph(graph_attr={"rank": "same", "cluster": "true"}) as c:
+            with g.subgraph(graph_attr={"rank": "same", "cluster": "false"}) as c:
                 c.node(
                     name=stock.qual_name(),
                     label=stock.label,

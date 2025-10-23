@@ -352,6 +352,19 @@ def test_dtype_transfer():
     assert v7.value == 2
 
 
+def test_dtype_otf_config_diff_type():
+    """A variable that initially has one type, but is then run passed in something
+    of a different type, it should be that different type for that different run."""
+
+    m = Model()
+    m.v0 = Variable(1)
+
+    m()
+    assert m.v0.dtype == int
+    m(v0=ops.Normal(10, 5), keep_config=True)
+    assert m.v0.dtype == float
+
+
 def test_piecewise_shape_multidim_eq():
     """Piecewise dimensions of multidim equations should be multidim"""
     v0 = Variable(0)

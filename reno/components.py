@@ -1157,6 +1157,7 @@ class TrackedReference(Reference):
         group (str): An optional string to help group related references together,
             primarily only used for visually tightening up elements in the stock/flow
             graphs.
+        dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
 
     Note:
         The shape of the value of a tracked reference depends on _sample_dim and
@@ -1198,6 +1199,7 @@ class TrackedReference(Reference):
         self.min = ensure_scalar(min)
         self.max = ensure_scalar(max)
 
+        self._requested_dtype = dtype
         self._dtype = dtype
 
         # use this to prevent infinite recursion in the case of historical
@@ -1324,13 +1326,18 @@ class TrackedReference(Reference):
             return eq.shape
 
     def get_type(self) -> type:
+        if self._requested_dtype:
+            return self._requested_dtype
+
         if self._computing_type:
             # acts as a placeholder in recursive instances
             return None
 
         self._computing_type = True
         eq = self._implied_eq()
-        return eq.dtype
+        type_ = eq.dtype
+        self._computing_type = False
+        return type_
 
     def populate(self, n: int, steps: int):
         """Initialize the matrix of values with size ``n x steps``. All

@@ -796,6 +796,9 @@ class log(reno.components.Operation):
     def __init__(self, a):
         super().__init__(a)
 
+    def get_type(self) -> type:
+        return float
+
     def latex(self, **kwargs):
         return f"\\text{{ln}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
@@ -814,6 +817,9 @@ class sin(reno.components.Operation):
 
     def __init__(self, a):
         super().__init__(reno.utils.ensure_scalar(a))
+
+    def get_type(self) -> type:
+        return float
 
     def latex(self, **kwargs):
         return f"\\text{{sin}}({self.sub_equation_parts[0].latex(**kwargs)})"

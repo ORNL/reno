@@ -236,6 +236,11 @@ class Model:
             full_list.extend(submodel.all_metrics())
         return full_list
 
+    def _reset_type_and_shape_info(self):
+        for ref in self.all_refs():
+            ref._shape = None
+            ref._dtype = None
+
     def _recursive_sub_populate_n_steps(self, n: int, steps: int):
         """Recursively populate all submodel's n/steps settings."""
         # TODO: this feels like it shouldn't be necessary and also doesn't
@@ -249,6 +254,7 @@ class Model:
     def _populate(self, n: int, steps: int):
         """Initialize all tracked references with appropriately sized numpy
         matrices."""
+        self._reset_type_and_shape_info()
         self._find_all_extended_op_implicit_components()
         self._recursive_sub_populate_n_steps(n, steps)
 
@@ -969,6 +975,8 @@ class Model:
             **free_refs: Definitions for equations or values for any variables or initial conditions
                 in the system.
         """
+        self._reset_type_and_shape_info()
+
         # TODO: observations, expect dict(ref, sigma, data)
         # store previous config vals
         previous = self.config()  # noqa: F841
