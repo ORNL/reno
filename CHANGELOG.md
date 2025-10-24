@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [0.2.0] - 2025-10-23
+## [0.2.0] - 2025-10-24
 
 ### Added
 
@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 *  Model's `.pymc` function not correctly using the passed number of timesteps
 * Reference values incorrectly being converted to floats when didn't start off
   as floats
+
+### Removed
+
+* Support for python 3.10 (exception `add_note()` functionality is only in >=3.11)
 
 
 
