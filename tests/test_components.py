@@ -524,3 +524,35 @@ def test_multidim_var_w_singledim_eq_pymc():
     m.v = Variable(4, dim=5)
     ds = m.pymc(n=1, steps=3)
     assert ds.prior.v.values[0][0].shape == (5,)
+
+
+def test_non_basic_historical_index():
+    """A historical index equation that isn't simply "t - static_var" should still work correctly.
+    Specifically, a static integer historial index equation should be zero until that integer
+    timestep is reached and should then be the same value for the remainder of the sim.
+    """
+    m = Model()
+    t = TimeRef()
+    m.v = Variable(t + 2)
+    m.f = Flow(m.v.history(3))
+    m.s = Stock()
+    m.s += m.f
+
+    ds = m()
+    assert (ds.f.values == [[0, 0, 0, 5, 5, 5, 5, 5, 5, 5]]).all()
+
+
+def test_non_basic_historical_index_pymc():
+    """A historical index equation that isn't simply "t - static_var" should still work correctly.
+    Specifically, a static integer historial index equation should be zero until that integer
+    timestep is reached and should then be the same value for the remainder of the sim.
+    """
+    m = Model()
+    t = TimeRef()
+    m.v = Variable(t + 2)
+    m.f = Flow(m.v.history(3))
+    m.s = Stock()
+    m.s += m.f
+
+    ds = m.pymc(compute_prior_only=True)
+    assert (ds.prior.f.values[0] == [[0, 0, 0, 5, 5, 5, 5, 5, 5, 5]]).all()

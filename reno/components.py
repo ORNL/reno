@@ -224,44 +224,50 @@ class EquationPart:
         # heavily impacts quality of graph viz rendering/determining how
         # flows connect to what stocks and eachother etc. (can be implicit
         # connections if equations are set up weird.)
-        refs = []
-        check_parts = [*self.sub_equation_parts]
-        if isinstance(self.value, EquationPart):
-            # TODO: I think this handles cases where you've directly assigned a
-            # scalar as a value to something?
-            check_parts.append(self.value)
-        if isinstance(self, TrackedReference):
-            if self.min is not None:
-                check_parts.append(self.min)
-            if self.max is not None:
-                check_parts.append(self.max)
-        for part in check_parts:
-            if isinstance(part, Function):
-                refs.extend(part.seek_refs())
-            elif isinstance(part, Operation):
-                refs.extend(part.seek_refs())
-            elif isinstance(part, Piecewise):
-                refs.extend(part.seek_refs())
+        try:
+            refs = []
+            check_parts = [*self.sub_equation_parts]
+            if isinstance(self.value, EquationPart):
+                # TODO: I think this handles cases where you've directly assigned a
+                # scalar as a value to something?
+                check_parts.append(self.value)
+            if isinstance(self, TrackedReference):
+                if self.min is not None:
+                    check_parts.append(self.min)
+                if self.max is not None:
+                    check_parts.append(self.max)
+            for part in check_parts:
+                if isinstance(part, Function):
+                    refs.extend(part.seek_refs())
+                elif isinstance(part, Operation):
+                    refs.extend(part.seek_refs())
+                elif isinstance(part, Piecewise):
+                    refs.extend(part.seek_refs())
 
-            elif isinstance(part, HistoricalValue):
-                refs.append(part.tracked_ref)
-                refs.append(part)  # TODO: (2025.02.03) ?????
-                # I feel like I'm still missing something between eq setting, assign op, seek_refs and static checks, but test_static_check_eq_with_historical_value breaks without this
-                refs.extend(part.index_eq.seek_refs())
-            elif isinstance(part, Reference):
-                refs.append(part)
+                elif isinstance(part, HistoricalValue):
+                    refs.append(part.tracked_ref)
+                    refs.append(part)  # TODO: (2025.02.03) ?????
+                    # I feel like I'm still missing something between eq setting, assign op, seek_refs and static checks, but test_static_check_eq_with_historical_value breaks without this
+                    refs.extend(part.index_eq.seek_refs())
+                elif isinstance(part, Reference):
+                    refs.append(part)
 
-            # make sure anything with limits counts stuff in those?
-            # (not sure if this is actually necessary?)
-            # if isinstance(part, Variable) or isinstance(part, Flow):
-            #     if part.min is not None:
-            #         print("Adding min refs")
-            #         refs.extend(part.min.seek_refs())
-            #     if part.max is not None:
-            #         print("Adding min refs")
-            #         refs.extend(part.max.seek_refs())
-        # be sure to remove duplicates
-        return list(set(refs))
+                # make sure anything with limits counts stuff in those?
+                # (not sure if this is actually necessary?)
+                # if isinstance(part, Variable) or isinstance(part, Flow):
+                #     if part.min is not None:
+                #         print("Adding min refs")
+                #         refs.extend(part.min.seek_refs())
+                #     if part.max is not None:
+                #         print("Adding min refs")
+                #         refs.extend(part.max.seek_refs())
+            # be sure to remove duplicates
+            return list(set(refs))
+        except Exception as e:
+            e.add_note(f"Was trying to find sub-references of {self}")
+            for part in check_parts:
+                e.add_note(f"\tWas checking part: {part}")
+            raise
 
     def get_shape(self) -> int:
         """For now this is returning an integer because we only allow a single
@@ -1605,7 +1611,7 @@ class HistoricalValue(Reference):
 
     def __init__(self, tracked_ref: TrackedReference, index_eq: EquationPart):
         super().__init__(label=tracked_ref.label)
-        self.index_eq = index_eq
+        self.index_eq = ensure_scalar(index_eq)
         self.tracked_ref = tracked_ref
 
     def eval(
