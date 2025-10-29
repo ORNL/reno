@@ -10,7 +10,13 @@ import pytensor.tensor as pt
 from IPython.display import Markdown, display
 
 import reno
-from reno.utils import ensure_scalar, is_static, latex_name, range_eq_latex
+from reno.utils import (
+    check_for_easy_static_time_eq,
+    ensure_scalar,
+    is_static,
+    latex_name,
+    range_eq_latex,
+)
 
 # ==================================================
 # EQUATION BASE CLASS
@@ -1684,19 +1690,29 @@ class HistoricalValue(Reference):
         return latex_str
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        simple_index = self.index_eq.eval(t=0, force=True) * -1
-        name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
+        force_array_index = (
+            "__FORCE_ARRAY_INDEX__" in refs and refs["__FORCE_ARRAY_INDEX__"]
+        )
+        is_simple = check_for_easy_static_time_eq(self.index_eq)
+        if is_simple and not force_array_index:
+            simple_index = self.index_eq.eval(force=True) * -1
+            name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
+        else:
+            name = f"{self.tracked_ref.qual_name()}_h"
         if name in refs:
             if refs[name].name is None:
                 refs[name].name = name
-            return refs[name]
+            if is_simple and not force_array_index:
+                return refs[name]
+            else:
+                return refs[name][self.index_eq.pt(**refs)]
         if self.shape == 1:
             return pt.as_tensor(0.0)
         else:
             return pt.as_tensor(0.0).repeat(self.shape)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        simple_index = self.index_eq.eval(t=0, force=True) * -1
+        simple_index = self.index_eq.eval(force=True) * -1
         name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
         if name in refs:
             return refs[name]

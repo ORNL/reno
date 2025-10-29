@@ -65,7 +65,7 @@ import pytensor.tensor as pt
 import reno
 
 
-def pt_sim_step(model: "reno.model.Model") -> Callable:
+def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
     """Returns a target function for pytensor scan, this equates to a single step in the
     system dynamics model simulation. This probably shouldn't be used anywhere
     outside of the context of the pymc model creation function."""
@@ -78,10 +78,10 @@ def pt_sim_step(model: "reno.model.Model") -> Callable:
     #   ordering)
 
     def step(*args):
-        original_refs = resolve_pt_scan_args(model, args)
+        original_refs = resolve_pt_scan_args(model, args, steps)
         # keeping a non-modified version of refs to help with typechecking
         # at the end of this function
-        refs = resolve_pt_scan_args(model, args)
+        refs = resolve_pt_scan_args(model, args, steps)
 
         stock_nexts = []
         other_nexts = {}
@@ -404,15 +404,23 @@ def to_pymc_model(
                     refs[obj.qual_name()] = pt_eq
 
                 # handle initial historical arrays if necessary (but not ones with just -1)
-                if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+                if obj in historical_ref_taps and (
+                    len(historical_ref_taps[obj]) > 1
+                    or None in historical_ref_taps[obj]
+                ):
                     # TODO: doesn't handle static but still unclear if that
                     # makes sense anyway
                     inner_array_value = 0.0
                     if obj.shape > 1:
                         inner_array_value = [0.0] * obj.shape
-                    inner_array = [inner_array_value] * (
-                        min(historical_ref_taps[obj]) * -1
-                    ) + [inits_by_obj[obj]]
+                    history_size = 0
+                    if None in historical_ref_taps[obj]:
+                        history_size = steps
+                    else:
+                        history_size = min(historical_ref_taps[obj] * -1)
+                    inner_array = [inner_array_value] * history_size + [
+                        inits_by_obj[obj]
+                    ]
                     hist_var = pm.Deterministic(
                         f"{obj.qual_name()}_hist", pt.stack(inner_array)
                     )
@@ -441,9 +449,11 @@ def to_pymc_model(
         inits = []
         for obj in model.all_refs():
             if obj in hist_vars_by_obj:
-                inits.append(
-                    dict(initial=hist_vars_by_obj[obj], taps=historical_ref_taps[obj])
-                )
+                taps = historical_ref_taps[obj]
+                if None in taps:
+                    # handle passing the full timestep range
+                    taps = list(range(-steps, 0))
+                inits.append(dict(initial=hist_vars_by_obj[obj], taps=taps))
             elif obj in inits_by_obj:
                 inits.append(inits_by_obj[obj])
 
@@ -453,7 +463,7 @@ def to_pymc_model(
                 statics.append(statics_by_obj[obj])
 
         seqs, updates = pytensor.scan(
-            fn=pt_sim_step(model),
+            fn=pt_sim_step(model, steps),
             sequences=sequences,
             non_sequences=statics,
             outputs_info=inits,
@@ -765,17 +775,40 @@ def find_historical_tracked_refs(
 
     ref_taps = {}
     for val in historical_values:
-        # for now we only directly support a `t - some_static_amount`
-        # NOTE: expanding this would likely require always passing in the full
-        # time series, much more annoying boilerplate I suspect.
-        if not reno.utils.check_for_easy_static_time_eq(val.index_eq):
-            warnings.warn(
-                f"Historical value {val.qual_name()} has a non-basic time equation which isn't supported in pymc model conversion yet. Please index with a 't - [static_eq]' equation."
-            )
         if val.tracked_ref not in ref_taps:
             ref_taps[val.tracked_ref] = []
 
-        index_offset = val.index_eq.eval(t=0, force=True)
+        if reno.utils.check_for_easy_static_time_eq(val.index_eq):
+            # as long as output is singular value or all values are the same,
+            # insert the singular tap
+            index_offset = val.index_eq.eval(force=True)
+            # the np.equal(..., np.roll) is a way of determining if all values
+            # in array are the same
+            if (
+                isinstance(index_offset, np.ndarray)
+                and len(index_offset) > 1
+                and not np.equal(index_offset, np.roll(index_offset, 1))
+            ):
+                # otherwise also insert a None
+                ref_taps[val.tracked_ref].append(None)
+            else:
+                # was either a singular value or all values were same
+                if isinstance(index_offset, np.ndarray):
+                    index_offset = int(index_offset[0])
+                ref_taps[val.tracked_ref].append(index_offset)
+        else:
+            # need to insert a None
+            ref_taps[val.tracked_ref].append(None)
+
+        # # for now we only directly support a `t - some_static_amount`
+        # # NOTE: expanding this would likely require always passing in the full
+        # # time series, much more annoying boilerplate I suspect.
+        # if not reno.utils.check_for_easy_static_time_eq(val.index_eq):
+        #     warnings.warn(
+        #         f"Historical value {val.qual_name()} has a non-basic time equation which isn't supported in pymc model conversion yet. Please index with a 't - [static_eq]' equation."
+        #     )
+        #
+        # index_offset = val.index_eq.eval(t=0, force=True)
         # TODO: this doesn't work yet because of how tap names get resolved.
         # With multidim, multiple separate tap references need to be used inside
         # the step function as a single vector, meaning one will have to be
@@ -787,9 +820,9 @@ def find_historical_tracked_refs(
         #     # all indices that will be required
         #     ref_taps[val.tracked_ref].extend(list(set(list(index_offset))))  # note we only get unique
         # else:
-        if isinstance(index_offset, np.ndarray):
-            index_offset = int(index_offset[0])
-        ref_taps[val.tracked_ref].append(index_offset)
+        # if isinstance(index_offset, np.ndarray):
+        #     index_offset = int(index_offset[0])
+        # ref_taps[val.tracked_ref].append(index_offset)
 
     # remove duplicate taps, ensure -1 is in there (we always want last val
     # of every ref in case it's used in a stock eq)
@@ -798,13 +831,23 @@ def find_historical_tracked_refs(
     # sort each taps list (order of taps is order they're passed to scan target
     # function, so we should keep consistent sorted ordering for the sanity of everyone)
     for ref, taps in ref_taps.items():
-        taps.sort()
+        if None not in taps:
+            taps.sort()
+        else:
+            # you can't sort a list with None in it, so sort the non-None part
+            # and then add back in
+            ref_taps[ref] = [tap for tap in ref_taps[ref] if tap is not None]
+            ref_taps[ref].sort()
+            ref_taps[ref].append(None)
 
     return ref_taps
 
 
 def expected_pt_scan_arg_names(
-    model: "reno.model.Model", as_dict: bool = False, tap_1_only: bool = False
+    model: "reno.model.Model",
+    as_dict: bool = False,
+    tap_1_only: bool = False,
+    max_taps=None,
 ) -> list[str] | dict[str, str]:
     """Pytensor scan target functions are called with a very specific ordering of function
     arguments (see https://pytensor.readthedocs.io/en/latest/library/scan.html).
@@ -831,6 +874,9 @@ def expected_pt_scan_arg_names(
     # initially only filled with the mirrored -1 taps, if actually returning
     # as dict, extend with zipped names
 
+    names_to_args_indices = {}
+    index = 0
+
     historical_ref_taps = find_historical_tracked_refs(model)
 
     # -----------------------
@@ -840,10 +886,14 @@ def expected_pt_scan_arg_names(
     timeref_name = model.find_timeref_name()
     if timeref_name is not None:
         names.append(timeref_name)
+        names_to_args_indices[timeref_name] = index
+        index += 1
     # find any per-timestep distributions
     for var in model.all_vars():
         if isinstance(var.eq, reno.components.Distribution) and var.eq.per_timestep:
             names.append(var.qual_name())
+            names_to_args_indices[var.qual_name()] = index
+            index += 1
 
     # -----------------------
     # OUTPUT TAPS (non-static references)
@@ -852,28 +902,52 @@ def expected_pt_scan_arg_names(
     # get last of each stock
     for stock in model.all_stocks():
         if stock in historical_ref_taps:
-            for tap in historical_ref_taps[stock]:
-                str_tap = str(tap * -1)
-                name = f"{stock.qual_name()}_h{str_tap}"
-                if str_tap == "1":
-                    # special handling for -1 tap
-                    names_as_dict[name] = stock.qual_name()
-                else:
-                    names.append(name)
+            # handle setting up individual tap names
+            if None not in historical_ref_taps[stock]:
+                for tap in historical_ref_taps[stock]:
+                    str_tap = str(tap * -1)
+                    name = f"{stock.qual_name()}_h{str_tap}"
+                    if str_tap == "1":
+                        # special handling for -1 tap
+                        names_as_dict[name] = stock.qual_name()
+                    else:
+                        names.append(name)
+                        names_to_args_indices[name] = index
+                        index += 1
+            else:
+                # handle passing full sequence
+                names_to_args_indices[f"{stock.qual_name()}_h"] = slice(
+                    index, index + max_taps
+                )
+                index += max_taps
         names.append(stock.qual_name())
+        names_to_args_indices[stock.qual_name()] = index
+        index += 1
 
     for flow in model.all_flows():
         if not flow.is_static():
             if flow in historical_ref_taps:
-                for tap in historical_ref_taps[flow]:
-                    str_tap = str(tap * -1)
-                    name = f"{flow.qual_name()}_h{str_tap}"
-                    if str_tap == "1":
-                        # special handling for -1 tap
-                        names_as_dict[name] = flow.qual_name()
-                    else:
-                        names.append(name)
+                # handle setting up individual tap names
+                if None not in historical_ref_taps[flow]:
+                    for tap in historical_ref_taps[flow]:
+                        str_tap = str(tap * -1)
+                        name = f"{flow.qual_name()}_h{str_tap}"
+                        if str_tap == "1":
+                            # special handling for -1 tap
+                            names_as_dict[name] = flow.qual_name()
+                        else:
+                            names.append(name)
+                            names_to_args_indices[name] = index
+                            index += 1
+                else:
+                    # handle passing full sequence
+                    names_to_args_indices[f"{flow.qual_name()}_h"] = slice(
+                        index, index + max_taps
+                    )
+                    index += max_taps
             names.append(flow.qual_name())
+            names_to_args_indices[flow.qual_name()] = index
+            index += 1
 
     for var in model.all_vars():
         # skip vars that are just per-timestep distributions (already handled)
@@ -881,15 +955,27 @@ def expected_pt_scan_arg_names(
             continue
         if not var.is_static():
             if var in historical_ref_taps:
-                for tap in historical_ref_taps[var]:
-                    str_tap = str(tap * -1)
-                    name = f"{var.qual_name()}_h{str_tap}"
-                    if str_tap == "1":
-                        # special handling for -1 tap
-                        names_as_dict[name] = var.qual_name()
-                    else:
-                        names.append(name)
+                # handle setting up individual tap names
+                if None not in historical_ref_taps[var]:
+                    for tap in historical_ref_taps[var]:
+                        str_tap = str(tap * -1)
+                        name = f"{var.qual_name()}_h{str_tap}"
+                        if str_tap == "1":
+                            # special handling for -1 tap
+                            names_as_dict[name] = var.qual_name()
+                        else:
+                            names.append(name)
+                            names_to_args_indices[name] = index
+                            index += 1
+                else:
+                    # handle passing full sequence
+                    names_to_args_indices[f"{var.qual_name()}_h"] = slice(
+                        index, index + max_taps
+                    )
+                    index += max_taps
             names.append(var.qual_name())
+            names_to_args_indices[var.qual_name()] = index
+            index += 1
 
     # -----------------------
     # NON-SEQUENCE ARGS (static references)
@@ -898,10 +984,14 @@ def expected_pt_scan_arg_names(
     for flow in model.all_flows():
         if flow.is_static():
             names.append(flow.qual_name())
+            names_to_args_indices[flow.qual_name()] = index
+            index += 1
 
     for var in model.all_vars():
         if var.is_static():
             names.append(var.qual_name())
+            names_to_args_indices[var.qual_name()] = index
+            index += 1
 
     # NOTE: assumed order of variables whenever they're being passed or returned
     # is order found in model.stocks + model.flows + model.vars
@@ -911,11 +1001,12 @@ def expected_pt_scan_arg_names(
         return names_as_dict
     elif as_dict and tap_1_only:
         return names_as_dict
-    return names
+    # return names
+    return names_to_args_indices
 
 
 def resolve_pt_scan_args(
-    model: "reno.model.Model", args: list[pt.TensorVariable]
+    model: "reno.model.Model", args: list[pt.TensorVariable], max_taps: int = None
 ) -> dict[str, pt.TensorVariable]:
     """Take the set of arguments passed by pytensor to a target scan function,
     and turn it into a dictionary for passing into reno math components' `pt()`
@@ -927,12 +1018,14 @@ def resolve_pt_scan_args(
     # remember ordering is sequences/seq taps, output taps, non-sequence args
     refs = {}
 
-    arg_names = expected_pt_scan_arg_names(model)
-    for i, name in enumerate(arg_names):
-        refs[name] = args[i]
+    arg_names_to_indices = expected_pt_scan_arg_names(model, max_taps=max_taps)
+    for name, index in arg_names_to_indices.items():
+        refs[name] = args[index]
+    # for i, name in enumerate(arg_names):
+    #     refs[name] = args[i]
 
     # handle mirrored -1 taps (v1_h1 == v1)
-    tap1_mirrors = expected_pt_scan_arg_names(model, True, True)
+    tap1_mirrors = expected_pt_scan_arg_names(model, True, True, max_taps=max_taps)
     for hist1_name, target_name in tap1_mirrors.items():
         refs[hist1_name] = refs[target_name]
 
