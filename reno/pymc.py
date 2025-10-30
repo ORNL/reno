@@ -82,6 +82,7 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
         # keeping a non-modified version of refs to help with typechecking
         # at the end of this function
         refs = resolve_pt_scan_args(model, args, steps)
+        refs["__PT_SEQ_LEN__"] = steps
 
         stock_nexts = []
         other_nexts = {}
@@ -919,7 +920,7 @@ def expected_pt_scan_arg_names(
                 names_to_args_indices[f"{stock.qual_name()}_h"] = slice(
                     index, index + max_taps
                 )
-                index += max_taps
+                index += max_taps - 1  # -1 to handle v0 == v0[t-1]
         names.append(stock.qual_name())
         names_to_args_indices[stock.qual_name()] = index
         index += 1
@@ -944,7 +945,7 @@ def expected_pt_scan_arg_names(
                     names_to_args_indices[f"{flow.qual_name()}_h"] = slice(
                         index, index + max_taps
                     )
-                    index += max_taps
+                    index += max_taps - 1  # -1 to handle v0 == v0[t-1]
             names.append(flow.qual_name())
             names_to_args_indices[flow.qual_name()] = index
             index += 1
@@ -972,7 +973,7 @@ def expected_pt_scan_arg_names(
                     names_to_args_indices[f"{var.qual_name()}_h"] = slice(
                         index, index + max_taps
                     )
-                    index += max_taps
+                    index += max_taps - 1  # -1 to handle v0 == v0[t-1]
             names.append(var.qual_name())
             names_to_args_indices[var.qual_name()] = index
             index += 1
@@ -1019,8 +1020,13 @@ def resolve_pt_scan_args(
     refs = {}
 
     arg_names_to_indices = expected_pt_scan_arg_names(model, max_taps=max_taps)
+    print(args)
     for name, index in arg_names_to_indices.items():
-        refs[name] = args[index]
+        if isinstance(index, slice):
+            refs[name] = pt.stack(args[index], axis=0)
+        else:
+            refs[name] = args[index]
+        print(name, index, refs[name])
     # for i, name in enumerate(arg_names):
     #     refs[name] = args[i]
 

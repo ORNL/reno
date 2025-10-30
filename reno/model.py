@@ -849,6 +849,17 @@ class Model:
 
         return None
 
+    def get_timeref(self) -> reno.components.TimeRef:
+        all_refs = []
+        for flow in self.all_flows():
+            all_refs.extend(flow.eq.seek_refs())
+        for var in self.all_vars():
+            all_refs.extend(var.eq.seek_refs())
+
+        for ref in all_refs:
+            if isinstance(ref, reno.components.TimeRef):
+                return ref
+
     def dependency_compute_order(
         self, inits_order: bool = False, debug: bool = False
     ) -> list[reno.components.TrackedReference]:

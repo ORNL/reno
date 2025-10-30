@@ -1705,7 +1705,16 @@ class HistoricalValue(Reference):
             if is_simple and not force_array_index:
                 return refs[name]
             else:
-                return refs[name][self.index_eq.pt(**refs)]
+                print(refs)
+                # from_zero_index_eq = self.index_eq + refs["__PT_SEQ_LEN__"] - reno.TimeRef()
+                # from_zero_index_eq = self.index_eq + refs["__PT_SEQ_LEN__"] - refs["t"]
+                print(self.index_eq)
+                from_zero_index_eq = (
+                    self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
+                ) % refs["__PT_SEQ_LEN__"] - 1
+                print(from_zero_index_eq)
+                return refs[name][from_zero_index_eq.pt(**refs)]
+                # return refs[name][self.index_eq.pt(**refs)]
         if self.shape == 1:
             return pt.as_tensor(0.0)
         else:
