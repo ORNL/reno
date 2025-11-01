@@ -1711,7 +1711,9 @@ class HistoricalValue(Reference):
                 print(self.index_eq)
                 from_zero_index_eq = (
                     self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
-                ) % refs["__PT_SEQ_LEN__"] - 1
+                ) % (
+                    refs["__PT_SEQ_LEN__"] + 1
+                )  # + 1 to allow for the "current val, t-0" before wrap
                 print(from_zero_index_eq)
                 return refs[name][from_zero_index_eq.pt(**refs)]
                 # return refs[name][self.index_eq.pt(**refs)]

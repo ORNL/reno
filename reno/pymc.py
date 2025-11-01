@@ -54,7 +54,6 @@ to create strings of PyMC/PyTensor code (suffixed with _str). These exist for tw
     incorporated or modified to do more advanced things.
 """
 
-import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -84,6 +83,8 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
         refs = resolve_pt_scan_args(model, args, steps)
         refs["__PT_SEQ_LEN__"] = steps
 
+        historical_refs_from_tracked = find_tracked_ref_historical_ref(model)
+
         stock_nexts = []
         other_nexts = {}
         # other_nexts is dictionary because we need to reorder to default
@@ -99,6 +100,12 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
         # this timestep's stock computation result
         for index, stock in enumerate(model.all_stocks()):
             refs[stock.qual_name()] = stock_nexts[index]
+
+            # ensure a full history correctly has the new value at the end.
+            if stock in historical_refs_from_tracked:
+                refs[f"{stock.qual_name()}_h"] = pt.concatenate(
+                    [refs[f"{stock.qual_name()}_h"], pt.as_tensor([stock_nexts[index]])]
+                )
 
         # dependency ordering for non-static flow/var eqs
         ref_compute_order = model.dependency_compute_order(inits_order=False)
@@ -121,6 +128,12 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
                 pt_eq = obj._implied_eq().pt(**refs)
                 other_nexts[obj] = pt_eq
                 refs[obj.qual_name()] = pt_eq
+
+                # ensure a full history correctly has the new value at the end.
+                if obj in historical_refs_from_tracked:
+                    refs[f"{obj.qual_name()}_h"] = pt.concatenate(
+                        [refs[f"{obj.qual_name()}_h"], pt.as_tensor([pt_eq])]
+                    )
 
         # do any type checking to ensure consistency (if ints become floats without
         # an explicit conversion, PyTensor gets real unhappy)
@@ -758,6 +771,35 @@ def to_pymc_model_str(
             code += f"\t{observation.ref.qual_name()}_likelihood = {observation.pt_str(**initial_refs_dict)}\n"
 
     return code
+
+
+def find_tracked_ref_historical_ref(
+    model: "reno.model.Model",
+) -> dict[reno.components.TrackedReference, reno.components.HistoricalValue]:
+    """Get the set of tracked references that have historical values with
+    non-simple index equations and the corresponding historical value components"""
+
+    historical_values = []
+    for ref in model.all_refs():
+        historical_values.extend(ref.find_refs_of_type(reno.components.HistoricalValue))
+
+    tracked_to_historical = {}
+
+    for val in historical_values:
+        if reno.utils.check_for_easy_static_time_eq(val.index_eq):
+            index_offset = val.index_eq.eval(force=True)
+            # the np.equal(..., np.roll) is a way of determining if all values
+            # in array are the same
+            if (
+                isinstance(index_offset, np.ndarray)
+                and len(index_offset) > 1
+                and not np.equal(index_offset, np.roll(index_offset, 1))
+            ):
+                tracked_to_historical[val.tracked_ref] = val
+        else:
+            tracked_to_historical[val.tracked_ref] = val
+
+    return tracked_to_historical
 
 
 def find_historical_tracked_refs(
