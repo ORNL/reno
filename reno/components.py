@@ -191,6 +191,9 @@ class EquationPart:
     def clip(self, min, max):
         return reno.ops.clip(self, min, max)
 
+    def astype(self, dtype):
+        return reno.ops.astype(self, dtype)
+
     # ---- /CLEANER MATH API ----
 
     def eval(
@@ -1705,16 +1708,11 @@ class HistoricalValue(Reference):
             if is_simple and not force_array_index:
                 return refs[name]
             else:
-                print(refs)
-                # from_zero_index_eq = self.index_eq + refs["__PT_SEQ_LEN__"] - reno.TimeRef()
-                # from_zero_index_eq = self.index_eq + refs["__PT_SEQ_LEN__"] - refs["t"]
-                print(self.index_eq)
                 from_zero_index_eq = (
                     self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
                 ) % (
                     refs["__PT_SEQ_LEN__"] + 1
                 )  # + 1 to allow for the "current val, t-0" before wrap
-                print(from_zero_index_eq)
                 return refs[name][from_zero_index_eq.pt(**refs)]
                 # return refs[name][self.index_eq.pt(**refs)]
         if self.shape == 1:

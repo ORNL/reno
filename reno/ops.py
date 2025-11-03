@@ -40,6 +40,7 @@ __all__ = [
     "sin",
     "interpolate",
     "assign",
+    "astype",
     # -- "higher order" --
     "pulse",
     "repeated_pulse",
@@ -896,6 +897,34 @@ class assign(reno.components.Operation):
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return self.sub_equation_parts[0].pt_str(**refs)
+
+
+class astype(reno.components.Operation):
+    """Allow explicitly converting to float, int, etc."""
+
+    def __init__(self, a, dtype: type):
+        self.__dtype = dtype
+        super().__init__(a)
+
+    def get_type(self) -> type:
+        return self.__dtype
+
+    def latex(self, **kwargs):
+        return self.sub_equation_parts[0].latex(**kwargs)
+
+    def op_eval(self, **kwargs):
+        sub_val = self.sub_equation_parts[0].eval(**kwargs)
+        if isinstance(sub_val, np.ndarray):
+            sub_val = sub_val.astype(self.__dtype)
+        else:
+            sub_val = self.__dtype(sub_val)
+        return sub_val
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[0].pt(**refs).astype(self.__dtype)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"({self.sub_equation_parts[0].pt_str(**refs)}).astype({self.__dtype.__name__})"
 
 
 # ==================================================

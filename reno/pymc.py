@@ -1062,15 +1062,11 @@ def resolve_pt_scan_args(
     refs = {}
 
     arg_names_to_indices = expected_pt_scan_arg_names(model, max_taps=max_taps)
-    print(args)
     for name, index in arg_names_to_indices.items():
         if isinstance(index, slice):
             refs[name] = pt.stack(args[index], axis=0)
         else:
             refs[name] = args[index]
-        print(name, index, refs[name])
-    # for i, name in enumerate(arg_names):
-    #     refs[name] = args[i]
 
     # handle mirrored -1 taps (v1_h1 == v1)
     tap1_mirrors = expected_pt_scan_arg_names(model, True, True, max_taps=max_taps)
