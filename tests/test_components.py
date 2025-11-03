@@ -556,3 +556,31 @@ def test_non_basic_historical_index_pymc():
 
     ds = m.pymc(compute_prior_only=True)
     assert (ds.prior.f.values[0] == [[0, 0, 0, 5, 5, 5, 5, 5, 5, 5]]).all()
+
+
+def test_non_basic_dynamic_historical_index():
+    """A historical index equation with a changing (but non basic) historical index equation
+    should still work correctly."""
+    m = Model()
+    t = TimeRef()
+    m.v = Variable(t + 2)
+    m.f = Flow(m.v.history((t / 2).astype(int)))
+    m.s = Stock()
+    m.s += m.f
+
+    ds = m()
+    assert (ds.f.values == [[2, 2, 3, 3, 4, 4, 5, 5, 6, 6]]).all()
+
+
+def test_non_basic_dynamic_historical_index_pymc():
+    """A historical index equation with a changing (but non basic) historical index equation
+    should still work correctly in pymc."""
+    m = Model()
+    t = TimeRef()
+    m.v = Variable(t + 2)
+    m.f = Flow(m.v.history((t / 2).astype(int)))
+    m.s = Stock()
+    m.s += m.f
+
+    ds = m.pymc(n=1, compute_prior_only=True)
+    assert (ds.prior.f.values[0] == [[2, 2, 3, 3, 4, 4, 5, 5, 6, 6]]).all()

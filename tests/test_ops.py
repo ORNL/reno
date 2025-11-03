@@ -602,7 +602,6 @@ def test_distribution_with_time_in_eq():
 def test_static_astype():
     """astype on a static value should correctly convert the type"""
     m = model.Model()
-    t = TimeRef()
     m.v0 = reno.Variable(5.5)
     m.v1 = reno.Variable(m.v0.astype(int))
     ds = m()
@@ -612,7 +611,6 @@ def test_static_astype():
 def test_static_astype_pymc():
     """astype on a static value should correctly convert the type in pymc"""
     m = model.Model()
-    t = TimeRef()
     m.v0 = reno.Variable(5.5)
     m.v1 = reno.Variable(m.v0.astype(int))
     ds = m.pymc(n=1, compute_prior_only=True)
