@@ -451,7 +451,7 @@ def to_pymc_model(
                     if None in historical_ref_taps[obj]:
                         history_size = steps - 1
                     else:
-                        history_size = min(historical_ref_taps[obj] * -1)
+                        history_size = min(historical_ref_taps[obj]) * -1
                     inner_array = [inner_array_value] * history_size + [
                         inits_by_obj[obj]
                     ]
@@ -683,7 +683,9 @@ def to_pymc_model_str(
 
             # handle initial historical arrays if necessary (but not ones with just -1)
             # TODO: is the len > 1 still necessary?
-            if obj in historical_ref_taps and (len(historical_ref_taps[obj]) > 1):
+            if obj in historical_ref_taps and (
+                len(historical_ref_taps[obj]) > 1 or None in historical_ref_taps[obj]
+            ):
                 # TODO: doesn't handle static but still unclear if that makes sense anyway
                 inner_array_value = "0.0"
                 if obj.shape > 1:
@@ -695,7 +697,7 @@ def to_pymc_model_str(
                         f"{obj.qual_name()}_hist"
                     )
                 else:
-                    history_size = min(historical_ref_taps[obj] * -1)
+                    history_size = min(historical_ref_taps[obj]) * -1
                 inner_array = (
                     ", ".join([inner_array_value] * history_size)
                     + f", {obj.qual_name()}_init"
@@ -759,7 +761,9 @@ def to_pymc_model_str(
             # (which doesn't truely make sense but also shouldn't be
             # explicitly disallowed?)
             # if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
-            if obj in historical_ref_taps:
+            if obj in historical_ref_taps and (
+                len(historical_ref_taps[obj]) > 1 or None in historical_ref_taps[obj]
+            ):
                 taps = historical_ref_taps[obj]
                 if None in taps:
                     # handle passing the full timestep range
