@@ -329,7 +329,8 @@ def to_pymc_model(
         # treatment too - they're already fully computed after initialization
         # and just need to be passed in to the "sequences" portion of the scan
 
-        refs["__PT_SEQ_LEN__"] = pt.as_tensor(steps)
+        # refs["__PT_SEQ_LEN__"] = pt.as_tensor(steps)
+        refs["__PT_SEQ_LEN__"] = steps
         # there are a few operations that need to know the total length
         # of the simulation/sequence in order to create the correct
         # pytensor equivalent output, see ops.py
@@ -458,6 +459,8 @@ def to_pymc_model(
                         f"{obj.qual_name()}_hist", pt.stack(inner_array)
                     )
                     hist_vars_by_obj[obj] = hist_var
+                    if None in historical_ref_taps[obj]:
+                        refs[f"{obj.qual_name()}_h"] = hist_var
             except Exception as e:
                 e.add_note(
                     f"Was trying to set up initial PYMC equation for {obj.qual_name()}"
@@ -598,7 +601,7 @@ def to_pymc_model_str(
     if model.find_timeref_name() is not None:
         initial_refs_dict[model.find_timeref_name()] = "pt.as_tensor(0)"
 
-    initial_refs_dict["__PT_SEQ_LEN__"] = f"pt.as_tensor({steps})"
+    initial_refs_dict["__PT_SEQ_LEN__"] = steps
     # there are a few operations that need to know the total length
     # of the simulation/sequence in order to create the correct
     # pytensor equivalent output, see ops.py
@@ -679,6 +682,7 @@ def to_pymc_model_str(
                 initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
 
             # handle initial historical arrays if necessary (but not ones with just -1)
+            # TODO: is the len > 1 still necessary?
             if obj in historical_ref_taps and (len(historical_ref_taps[obj]) > 1):
                 # TODO: doesn't handle static but still unclear if that makes sense anyway
                 inner_array_value = "0.0"
@@ -687,6 +691,9 @@ def to_pymc_model_str(
                 history_size = 0
                 if None in historical_ref_taps[obj]:
                     history_size = steps - 1
+                    initial_refs_dict[f"{obj.qual_name()}_h"] = (
+                        f"{obj.qual_name()}_hist"
+                    )
                 else:
                     history_size = min(historical_ref_taps[obj] * -1)
                 inner_array = (
@@ -697,7 +704,7 @@ def to_pymc_model_str(
                 code += f'\t{obj.qual_name()}_hist = pm.Deterministic("{obj.qual_name()}_hist", {inner_eq})\n'
         except Exception as e:
             e.add_note(
-                f"Was trying to set up initial PYMC equation string for {obj.qual_name()}"
+                f"Was trying to set up initial PyMC equation string for {obj.qual_name()}"
             )
             e.add_note(f"\tEquation: {obj.eq}")
             e.add_note(f"\tType: {obj.dtype}")
