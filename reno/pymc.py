@@ -104,7 +104,10 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
             # ensure a full history correctly has the new value at the end.
             if stock in historical_refs_from_tracked:
                 refs[f"{stock.qual_name()}_h"] = pt.concatenate(
-                    [refs[f"{stock.qual_name()}_h"], pt.as_tensor([stock_nexts[index]])]
+                    [
+                        refs[f"{stock.qual_name()}_h"][1:],
+                        pt.as_tensor([stock_nexts[index]]),
+                    ]
                 )
 
         # dependency ordering for non-static flow/var eqs
@@ -132,7 +135,7 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
                 # ensure a full history correctly has the new value at the end.
                 if obj in historical_refs_from_tracked:
                     refs[f"{obj.qual_name()}_h"] = pt.concatenate(
-                        [refs[f"{obj.qual_name()}_h"], pt.as_tensor([pt_eq])]
+                        [refs[f"{obj.qual_name()}_h"][1:], pt.as_tensor([pt_eq])]
                     )
 
         # do any type checking to ensure consistency (if ints become floats without
@@ -220,7 +223,7 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
 
         # ensure a full history correctly has the new value at the end
         if stock in historical_refs_from_tracked:
-            code += f"\t{stock.qual_name()}_h = pt.concatenate([{stock.qual_name()}_h, pt.as_tensor([{stock.qual_name()}_next])])\n"
+            code += f"\t{stock.qual_name()}_h = pt.concatenate([{stock.qual_name()}_h[1:], pt.as_tensor([{stock.qual_name()}_next])])\n"
             # refs_dict[f"{stock.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{stock.qual_name()}_h']}, pt.as_tensor([{f'{stock.qual_name()}_next'}])"
 
     # dependency ordering for non-static flow/var eqs
@@ -247,7 +250,7 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
 
             # ensure a full history correctly has the new value at the end
             if obj in historical_refs_from_tracked:
-                code += f"\t{obj.qual_name()}_h = pt.concatenate([{obj.qual_name()}_h, pt.as_tensor([{obj.qual_name()}_next])])\n"
+                code += f"\t{obj.qual_name()}_h = pt.concatenate([{obj.qual_name()}_h[1:], pt.as_tensor([{obj.qual_name()}_next])])\n"
                 # refs_dict[f"{obj.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{obj.qual_name()}_h']}, pt.as_tensor([{pt_eq}])"
 
     # type checking
@@ -445,7 +448,7 @@ def to_pymc_model(
                         inner_array_value = [0.0] * obj.shape
                     history_size = 0
                     if None in historical_ref_taps[obj]:
-                        history_size = steps
+                        history_size = steps - 1
                     else:
                         history_size = min(historical_ref_taps[obj] * -1)
                     inner_array = [inner_array_value] * history_size + [
@@ -683,7 +686,7 @@ def to_pymc_model_str(
                     inner_array_value = f"[0.0]*{obj.shape}"
                 history_size = 0
                 if None in historical_ref_taps[obj]:
-                    history_size = steps
+                    history_size = steps - 1
                 else:
                     history_size = min(historical_ref_taps[obj] * -1)
                 inner_array = (

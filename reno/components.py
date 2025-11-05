@@ -1709,10 +1709,10 @@ class HistoricalValue(Reference):
                 return refs[name]
             else:
                 from_zero_index_eq = (
-                    self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
-                ) % (
-                    refs["__PT_SEQ_LEN__"] + 1
-                )  # + 1 to allow for the "current val, t-0" before wrap
+                    self.index_eq
+                    + (refs["__PT_SEQ_LEN__"] - 1)
+                    - self.model.get_timeref()
+                ) % refs["__PT_SEQ_LEN__"]
                 return refs[name][from_zero_index_eq.pt(**refs)]
                 # return refs[name][self.index_eq.pt(**refs)]
         if self.shape == 1:
@@ -1735,10 +1735,10 @@ class HistoricalValue(Reference):
                 return refs[name]
             else:
                 from_zero_index_eq = (
-                    self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
-                ) % (
-                    refs["__PT_SEQ_LEN__"] + 1
-                )  # + 1 to allow for the "current val, t-0" before wrap
+                    self.index_eq
+                    + (refs["__PT_SEQ_LEN__"] - 1)
+                    - self.model.get_timeref()
+                ) % refs["__PT_SEQ_LEN__"]
                 return f"{refs[name]}[{from_zero_index_eq.pt_str(**refs)}]"
         if self.shape == 1:
             return "pt.as_tensor(0.0)"
