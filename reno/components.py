@@ -1721,10 +1721,25 @@ class HistoricalValue(Reference):
             return pt.as_tensor(0.0).repeat(self.shape)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        simple_index = self.index_eq.eval(force=True) * -1
-        name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
+        force_array_index = (
+            "__FORCE_ARRAY_INDEX__" in refs and refs["__FORCE_ARRAY_INDEX__"]
+        )
+        is_simple = check_for_easy_static_time_eq(self.index_eq)
+        if is_simple and not force_array_index:
+            simple_index = self.index_eq.eval(force=True) * -1
+            name = f"{self.tracked_ref.qual_name()}_h{simple_index}"
+        else:
+            name = f"{self.tracked_ref.qual_name()}_h"
         if name in refs:
-            return refs[name]
+            if is_simple and not force_array_index:
+                return refs[name]
+            else:
+                from_zero_index_eq = (
+                    self.index_eq + refs["__PT_SEQ_LEN__"] - self.model.get_timeref()
+                ) % (
+                    refs["__PT_SEQ_LEN__"] + 1
+                )  # + 1 to allow for the "current val, t-0" before wrap
+                return f"{refs[name]}[{from_zero_index_eq.pt_str(**refs)}]"
         if self.shape == 1:
             return "pt.as_tensor(0.0)"
         else:

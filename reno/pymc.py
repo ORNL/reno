@@ -175,7 +175,7 @@ def pt_sim_step_imports() -> str:
     return "\n".join(import_strs)
 
 
-def pt_sim_step_str(model: "reno.model.Model") -> str:
+def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
     """Construct a string of python code for the step function for this model that could
     be used by a pytensor scan operation. Should be a functional (string) equivalent of
     the ``pt_sim_step()`` function.
@@ -191,11 +191,18 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
     """
     name = "step" if model.name is None else f"{model.name}_step"
     code = f"def {name}(*args):\n"
-    code += f"\t{', '.join(expected_pt_scan_arg_names(model))} = args\n"
+    # code += f"\t{', '.join(expected_pt_scan_arg_names(model))} = args\n"
+    for ref_name, arg_indices in expected_pt_scan_arg_names(
+        model, max_taps=steps
+    ).items():
+        code += f"\t{ref_name} = args[{arg_indices}]\n"
 
-    refs_dict = expected_pt_scan_arg_names(model, as_dict=True)
+    refs_dict = expected_pt_scan_arg_names(model, as_dict=True, max_taps=steps)
+    refs_dict["__PT_SEQ_LEN__"] = steps
     # (in pt_str calls, variables passed in from args should simply be substituted
     # with the variable name itself)
+
+    historical_refs_from_tracked = find_tracked_ref_historical_ref(model)
 
     code += "\n\t# Difference/recurrence equations\n"
 
@@ -210,6 +217,11 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
     # be based on old value at that point)
     for stock in model.all_stocks():
         refs_dict[stock.qual_name()] = f"{stock.qual_name()}_next"
+
+        # ensure a full history correctly has the new value at the end
+        if stock in historical_refs_from_tracked:
+            code += f"\t{stock.qual_name()}_h = pt.concatenate([{stock.qual_name()}_h, pt.as_tensor([{stock.qual_name()}_next])])\n"
+            # refs_dict[f"{stock.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{stock.qual_name()}_h']}, pt.as_tensor([{f'{stock.qual_name()}_next'}])"
 
     # dependency ordering for non-static flow/var eqs
     ref_compute_order = model.dependency_compute_order(inits_order=False)
@@ -229,10 +241,14 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
             continue
         # we also don't compute statics or per-timestep distributions
         if not obj.is_static() and obj not in per_timestep_dist_objs:
-            code += (
-                f"\t{obj.qual_name()}_next = {obj._implied_eq().pt_str(**refs_dict)}\n"
-            )
+            pt_eq = obj._implied_eq().pt_str(**refs_dict)
+            code += f"\t{obj.qual_name()}_next = {pt_eq}\n"
             refs_dict[obj.qual_name()] = f"{obj.qual_name()}_next"
+
+            # ensure a full history correctly has the new value at the end
+            if obj in historical_refs_from_tracked:
+                code += f"\t{obj.qual_name()}_h = pt.concatenate([{obj.qual_name()}_h, pt.as_tensor([{obj.qual_name()}_next])])\n"
+                # refs_dict[f"{obj.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{obj.qual_name()}_h']}, pt.as_tensor([{pt_eq}])"
 
     # type checking
     code += "\n\t# Type checks\n"
@@ -251,7 +267,7 @@ def pt_sim_step_str(model: "reno.model.Model") -> str:
 
     code += f"\n\treturn [{return_names}], pm.pytensorf.collect_default_updates(inputs=args, outputs=[{return_names}])\n"
 
-    return code
+    return code.replace("\t", "    ")
 
 
 def to_pymc_model(
@@ -565,7 +581,7 @@ def to_pymc_model_str(
 
     name = "pymc_m" if model.name is None else f"{model.name}_pymc_m"
     step_name = "step" if model.name is None else f"{model.name}_step"
-    code = pt_sim_step_str(model) + "\n"
+    code = pt_sim_step_str(model, steps) + "\n"
     code += f'coords = {{\n\t"t": range({steps}),\n'
     for obj in model.all_refs():
         if obj.shape > 1:
@@ -660,15 +676,18 @@ def to_pymc_model_str(
                 initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
 
             # handle initial historical arrays if necessary (but not ones with just -1)
-            if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+            if obj in historical_ref_taps and (len(historical_ref_taps[obj]) > 1):
                 # TODO: doesn't handle static but still unclear if that makes sense anyway
                 inner_array_value = "0.0"
                 if obj.shape > 1:
                     inner_array_value = f"[0.0]*{obj.shape}"
+                history_size = 0
+                if None in historical_ref_taps[obj]:
+                    history_size = steps
+                else:
+                    history_size = min(historical_ref_taps[obj] * -1)
                 inner_array = (
-                    ", ".join(
-                        [inner_array_value] * (min(historical_ref_taps[obj]) * -1)
-                    )
+                    ", ".join([inner_array_value] * history_size)
                     + f", {obj.qual_name()}_init"
                 )
                 inner_eq = f"pt.stack([{inner_array}])"
@@ -729,8 +748,12 @@ def to_pymc_model_str(
             # handling if we have a historical value on a static variable
             # (which doesn't truely make sense but also shouldn't be
             # explicitly disallowed?)
-            if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+            # if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
+            if obj in historical_ref_taps:
                 taps = historical_ref_taps[obj]
+                if None in taps:
+                    # handle passing the full timestep range
+                    taps = list(range(-steps, 0))
                 init_names.append(f"dict(initial={obj.qual_name()}_hist, taps={taps})")
             elif not obj.is_static() and obj.qual_name() not in per_step_dist_names:
                 init_names.append(f"{obj.qual_name()}_init")
@@ -770,7 +793,7 @@ def to_pymc_model_str(
         for observation in observations:
             code += f"\t{observation.ref.qual_name()}_likelihood = {observation.pt_str(**initial_refs_dict)}\n"
 
-    return code
+    return code.replace("\t", "    ")
 
 
 def find_tracked_ref_historical_ref(
@@ -959,6 +982,7 @@ def expected_pt_scan_arg_names(
                         index += 1
             else:
                 # handle passing full sequence
+                names.append(f"{stock.qual_name()}_h")
                 names_to_args_indices[f"{stock.qual_name()}_h"] = slice(
                     index, index + max_taps
                 )
@@ -984,6 +1008,7 @@ def expected_pt_scan_arg_names(
                             index += 1
                 else:
                     # handle passing full sequence
+                    names.append(f"{flow.qual_name()}_h")
                     names_to_args_indices[f"{flow.qual_name()}_h"] = slice(
                         index, index + max_taps
                     )
@@ -1012,6 +1037,7 @@ def expected_pt_scan_arg_names(
                             index += 1
                 else:
                     # handle passing full sequence
+                    names.append(f"{var.qual_name()}_h")
                     names_to_args_indices[f"{var.qual_name()}_h"] = slice(
                         index, index + max_taps
                     )
