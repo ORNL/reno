@@ -657,3 +657,17 @@ def test_multidim_dynamic_hist_pymc():
             ]
         ]
     ).all()
+
+
+def test_dist_based_basic_hist_pymc():
+    """A history indexed by a distribution, even in a basic time-based equation, should work in pymc."""
+    m = Model()
+    t = TimeRef()
+    m.v0 = Variable(t + 1)
+    m.v1 = Variable(ops.DiscreteUniform(2, 5))
+    m.v2 = Variable(m.v0.history(t - m.v1))
+    ds = m.pymc(100, compute_prior_only=True)
+    assert 8 in ds.prior.v2[0, :, -1]
+    assert 7 in ds.prior.v2[0, :, -1]
+    assert 6 in ds.prior.v2[0, :, -1]
+    assert 5 in ds.prior.v2[0, :, -1]

@@ -1668,7 +1668,6 @@ class HistoricalValue(Reference):
 
         if self.tracked_ref._static:
             return self.tracked_ref.value
-        print("Trying to resolve", index, "on", self.tracked_ref.value)
         # return self.tracked_ref.value[:, index]
         return self.tracked_ref.value[
             list(range(0, self.tracked_ref.value.shape[0])), index

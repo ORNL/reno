@@ -1361,8 +1361,6 @@ class Categorical(reno.components.Distribution):
     def populate(self, n: int, steps: int = 0, dim: int = 1):
         dims = dist_shape(self, n, steps, dim)
         # TODO: how would p_dist apply here? Should it?
-        print(n, steps, dim)
-        print(dims)
         self.value = np.argmax(
             np.random.multinomial(1, self.sub_equation_parts[0].eval(), dims), axis=-1
         )

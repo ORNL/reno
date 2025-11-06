@@ -140,7 +140,14 @@ def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
         return False
     if not isinstance(eq.sub_equation_parts[0], reno.components.TimeRef):
         return False
-    if not is_static(eq.sub_equation_parts[1]):
+    if (
+        not is_static(eq.sub_equation_parts[1])
+        or len(eq.sub_equation_parts[1].find_refs_of_type(reno.components.Distribution))
+        > 0
+    ):
+        # NOTE: currently not counting distributions as "easy" because of
+        # weirdness in computing the index multiple times resulting in multiple
+        # values (thus pymc taps are wrong)
         return False
     return True
 
