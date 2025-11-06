@@ -1157,6 +1157,32 @@ def dist_params(
     return name, dim, dim_name, seq
 
 
+def dist_dim_shape_args(dist: reno.components.Distribution, refs: dict) -> dict:
+    name, dim, dim_name, seq = dist_params(dist, refs)
+    if not dist.per_timestep and dim == 1:
+        return dict()
+    elif dist.per_timestep and dim == 1:
+        return dict(shape=(seq,), dims="t")
+    elif dist.per_timestep and dim > 1:
+        return dict(shape=(seq, dim), dims=("t", dim_name))
+    else:
+        return dict(shape=(dim,), dims=dim_name)
+
+
+def dist_dim_shape_args_str(
+    dist: reno.components.Distribution, refs: dict[str, str]
+) -> str:
+    name, dim, dim_name, seq = dist_params(dist, refs)
+    if not dist.per_timestep and dim == 1:
+        return ""
+    elif dist.per_timestep and dim == 1:
+        return f', shape=({seq},), dims="t"'
+    elif dist.per_timestep and dim > 1:
+        return f', shape=({seq},, {dim}), dims=("t", "{dim_name}")'
+    else:
+        return f', shape=({dim},), dims="{dim_name}"'
+
+
 class Normal(reno.components.Distribution):
     def __init__(self, mean, std=1.0, per_timestep: bool = False):
         # super().__init__()
@@ -1170,8 +1196,8 @@ class Normal(reno.components.Distribution):
     def populate(self, n: int, steps: int = 0, dim: int = 1):
         dims = dist_shape(self, n, steps, dim)
         self.value = np.random.normal(
-            self.sub_equation_parts[0].eval(0),
-            self.sub_equation_parts[1].eval(0),
+            self.sub_equation_parts[0].eval(),
+            self.sub_equation_parts[1].eval(),
             size=dims,
         )
 
@@ -1179,260 +1205,187 @@ class Normal(reno.components.Distribution):
         return float
 
     def __repr__(self):
-        return f"Normal({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]})"
+        return f"Normal({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)
-        if not self.per_timestep and dim == 1:
-            return pm.Normal(
-                name,
-                self.sub_equation_parts[0].pt(**refs),
-                self.sub_equation_parts[1].pt(**refs),
-            )
-        elif self.per_timestep and dim == 1:
-            return pm.Normal(
-                name,
-                self.sub_equation_parts[0].pt(**refs),
-                self.sub_equation_parts[1].pt(**refs),
-                shape=(seq,),
-                dims="t",
-            )
-        elif self.per_timestep and dim > 1:
-            return pm.Normal(
-                name,
-                self.sub_equation_parts[0].pt(**refs),
-                self.sub_equation_parts[1].pt(**refs),
-                shape=(seq, dim),
-                dims=("t", dim_name),
-            )
-        else:
-            return pm.Normal(
-                name,
-                self.sub_equation_parts[0].pt(**refs),
-                self.sub_equation_parts[1].pt(**refs),
-                shape=(dim,),
-                dims=dim_name,
-            )
+        return pm.Normal(
+            name,
+            self.sub_equation_parts[0].pt(**refs),
+            self.sub_equation_parts[1].pt(**refs),
+            **dist_dim_shape_args(self, refs),
+        )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name, dim, dim_name, seq = dist_params(self, refs)
-        if not self.per_timestep and dim == 1:
-            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)})'
-        elif self.per_timestep and dim == 1:
-            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({seq},), dims="t")'
-        elif self.per_timestep and dim > 1:
-            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({seq}, {dim}), dims=("t", "{dim_name}"))'
-        else:
-            return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, shape=({dim},), dims="{dim_name}")'
+        return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
 class Uniform(reno.components.Distribution):
-    def __init__(self, low=0.0, high=1.0):
-        super().__init__()
-        self.low = low
-        self.high = high
+    def __init__(self, low=0.0, high=1.0, per_timestep: bool = False):
+        super().__init__(low, high, per_timestep=per_timestep)
 
     def latex(self, **kwargs):
-        return f"\\mathcal{{U}}({self.low}, {self.high})"
+        return f"\\mathcal{{U}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def get_type(self) -> type:
         return float
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
-        dims = n if dim == 1 else (n, dim)
-        self.value = np.random.uniform(self.low, self.high, size=dims)
+        dims = dist_shape(self, n, steps, dim)
+        self.value = np.random.uniform(
+            self.sub_equation_parts[0].eval(),
+            self.sub_equation_parts[1].eval(),
+            size=dims,
+        )
 
     def __repr__(self):
-        return f"Uniform({self.low}, {self.high})"
+        return f"Uniform({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        if dim > 1:
-            return pm.Uniform(name, self.low, self.high, shape=(dim,), dims=dim_name)
-        return pm.Uniform(name, self.low, self.high)
+        name, dim, dim_name, seq = dist_params(self, refs)
+        return pm.Uniform(
+            name,
+            self.sub_equation_parts[0].pt(**refs),
+            self.sub_equation_parts[1].pt(**refs),
+            **dist_dim_shape_args(self, refs),
+        )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        if dim > 1:
-            return f'pm.Uniform("{name}", {self.low}, {self.high}, shape=({dim},), dims="{dim_name}")'
-        return f'pm.Uniform("{name}", {self.low}, {self.high})'
+        name, dim, dim_name, seq = dist_params(self, refs)
+        return f'pm.Uniform("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
 class DiscreteUniform(reno.components.Distribution):
     """Low is inclusive, high is exclusive."""
 
-    def __init__(self, low: int = 0, high: int = 2):
-        super().__init__()
-        self.low = low
-        self.high = high
+    def __init__(self, low: int = 0, high: int = 2, per_timestep: bool = False):
+        super().__init__(low, high, per_timestep=per_timestep)
 
     def latex(self, **kwargs):
-        return f"\\text{{DiscreteUniform}}({self.low}, {self.high})"
+        return f"\\text{{DiscreteUniform}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
+
+    def get_type(self) -> type:
+        return int
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
-        dims = n if dim == 1 else (n, dim)
-        self.value = np.random.randint(self.low, self.high, size=dims)
+        dims = dist_shape(self, n, steps, dim)
+        self.value = np.random.randint(
+            self.sub_equation_parts[0].eval(),
+            self.sub_equation_parts[1].eval(),
+            size=dims,
+        )
 
     def __repr__(self):
-        return f"DiscreteUniform({self.low}, {self.high})"
+        return f"DiscreteUniform({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        if dim > 1:
-            return pm.DiscreteUniform(
-                name, self.low, self.high, shape=(dim,), dims=dim_name
-            )
-        return pm.DiscreteUniform(name, self.low, self.high)
+        name, dim, dim_name, seq = dist_params(self, refs)
+        return pm.DiscreteUniform(
+            name,
+            self.sub_equation_parts[0].pt(**refs),
+            self.sub_equation_parts[1].pt(**refs),
+            **dist_dim_shape_args(self, refs),
+        )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        if dim > 1:
-            return f'pm.DiscreteUniform("{name}", {self.low}, {self.high}, shape=({dim},), dims="{dim_name}")'
-        return f'pm.DiscreteUniform("{name}", {self.low}, {self.high})'
+        name, dim, dim_name, seq = dist_params(self, refs)
+        return f'pm.DiscreteUniform("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
 class Bernoulli(reno.components.Distribution):
     """Discrete single event probability (p is probability of eval == 1)"""
 
-    def __init__(self, p: float, use_p_dist: bool = False):
-        super().__init__()
-        self.p = p
+    def __init__(self, p: float, use_p_dist: bool = False, per_timestep: bool = False):
+        super().__init__(p, per_timestep=per_timestep)
         self.use_p_dist = use_p_dist
 
     def latex(self, **kwargs):
-        return f"\\text{{Bernoulli}}({self.p})"
+        return f"\\text{{Bernoulli}}({self.sub_equation_parts[0]})"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
-        dims = n if dim == 1 else (n, dim)
-        self.value = np.random.binomial(1, self.p, dims)
+        dims = dist_shape(self, n, steps, dim)
+        self.value = np.random.binomial(1, self.sub_equation_parts[0].eval(), dims)
+
+    def get_type(self) -> type:
+        return int
 
     def __repr__(self):
-        return f"Bernoulli({self.p})"
+        return f"Bernoulli({self.sub_equation_parts[0]}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        inner_dist = self.p
+        name, dim, dim_name, seq = dist_params(self, refs)
+
+        inner_dist = self.sub_equation_parts[0].pt(**refs)
         if self.use_p_dist:
             inner_dist = pm.Interpolated(
                 f"{name}_p",
                 x_points=np.array([0.0, 1.0]),
-                pdf_points=np.array([1 - self.p, self.p]),
+                pdf_points=np.array(
+                    [
+                        1 - self.sub_equation_parts[0].pt(**refs),
+                        self.sub_equation_parts[0].pt(**refs),
+                    ]
+                ),
             )
-        if dim > 1:
-            return pm.Bernoulli(name, inner_dist, shape=(dim,), dims=dim_name)
-        return pm.Bernoulli(name, inner_dist)
+        return pm.Bernoulli(name, inner_dist, **dist_dim_shape_args(self, refs))
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        inner_dist = self.p
+        name, dim, dim_name, seq = dist_params(self, refs)
+
+        inner_dist = self.sub_equation_parts[0].pt_str(**refs)
         if self.use_p_dist:
-            inner_dist = f'pm.Interpolated("{name}_p", x_points=np.array([0.0, 1.0]), pdf_points=np.array([{1 - self.p}, {self.p}]))'
-        if dim > 1:
-            return f'pm.Bernoulli("{name}", {inner_dist}, shape=({dim},), dims="{dim_name}")'
-        return f'pm.Bernoulli("{name}", {inner_dist})'
+            inner_dist = f'pm.Interpolated("{name}_p", x_points=np.array([0.0, 1.0]), pdf_points=np.array([{1 - self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[0].pt_str(**refs)}]))'
+        return (
+            f'pm.Bernoulli("{name}", {inner_dist}{dist_dim_shape_args_str(self, refs)})'
+        )
 
 
 class Categorical(reno.components.Distribution):
     """Random categorical distribution - you specify the probability per category,
     and the output is a set of category indices."""
 
-    def __init__(self, p: list[float], use_p_dist: bool = False):
-        super().__init__()
-        self.p = p
+    def __init__(
+        self, p: list[float], use_p_dist: bool = False, per_timestep: bool = False
+    ):
+        super().__init__(p, per_timestep=per_timestep)
         self.use_p_dist = use_p_dist
+        self.expected_arg_num_dims[0] = 1
 
     def latex(self, **kwargs):
-        return f"\\text{{Categorical}}({self.p})"
+        return f"\\text{{Categorical}}({self.sub_equation_parts[0].latex(**kwargs)})"
+
+    def get_type(self) -> type:
+        return int
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
-        dims = n if dim == 1 else (n, dim)
+        dims = dist_shape(self, n, steps, dim)
         # TODO: how would p_dist apply here? Should it?
-        self.value = np.argmax(np.random.multinomial(1, self.p, dims), axis=-1)
+        print(n, steps, dim)
+        print(dims)
+        self.value = np.argmax(
+            np.random.multinomial(1, self.sub_equation_parts[0].eval(), dims), axis=-1
+        )
 
     def __repr__(self):
-        return f"Categorical({self.p})"
+        return f"Categorical({self.sub_equation_parts[0]}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        inner_dist = self.p
+        name, dim, dim_name, seq = dist_params(self, refs)
+
+        inner_dist = self.sub_equation_parts[0].pt(**refs)
         if self.use_p_dist:
-            inner_dist = pm.Dirichlet(f"{name}_p", self.p)
-        if dim > 1:
-            return pm.Categorical(name, inner_dist, shape=(dim,), dims=dim_name)
-        return pm.Categorical(name, inner_dist)
+            inner_dist = pm.Dirichlet(
+                f"{name}_p", self.sub_equation_parts[0].pt(**refs)
+            )
+        return pm.Categorical(name, inner_dist, **dist_dim_shape_args(self, refs))
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name = "dist" + str(id(self))
-        if "__PTNAME__" in refs:
-            name = refs["__PTNAME__"]
-        dim = 1
-        if "__DIM__" in refs:
-            dim = refs["__DIM__"]
-        dim_name = "vec"
-        if "__DIMNAME__" in refs:
-            dim_name = refs["__DIMNAME__"]
-        inner_dist = self.p
+        name, dim, dim_name, seq = dist_params(self, refs)
+        inner_dist = self.sub_equation_parts[0].pt_str(**refs)
         if self.use_p_dist:
-            inner_dist = f'pm.Dirichlet("{name}_p", {self.p})'
-        if dim > 1:
-            return f'pm.Categorical("{name}", {inner_dist}, shape=({dim},), dims="{dim_name}")'
-        return f'pm.Categorical("{name}", {inner_dist})'
+            inner_dist = f'pm.Dirichlet("{name}_p", {self.p.pt_str(**refs)})'
+        return f'pm.Categorical("{name}", {inner_dist}{dist_dim_shape_args_str(self, refs)})'
 
 
 class List(reno.components.Distribution):

@@ -425,6 +425,10 @@ class Distribution(EquationPart):
     def __init__(self, *operands, per_timestep: bool = False):
         super().__init__(list(operands))
         self.per_timestep = per_timestep
+        self.expected_arg_num_dims = {}
+        # if a parameter is supposed to be an array, set expected dims for that
+        # parameter int index to 1, that way can be checked for in get_shape
+        # NOTE: this same strategy may need to apply to operation as well
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
         """Generate n x dim samples based on this probability distribution, assigns
@@ -443,11 +447,19 @@ class Distribution(EquationPart):
     def get_shape(self) -> int:
         # by _default_, use a simple broadcast if all parts but one are just one
         # TODO: prob need to do similar to op_repr and have an op_get_shape
+
         try:
             # print(f"Getting shape for {self}")
             non_one_shapes = []
-            for sub_equation_part in self.sub_equation_parts:
+            for index, sub_equation_part in enumerate(self.sub_equation_parts):
                 shape = sub_equation_part.shape
+                if (
+                    index in self.expected_arg_num_dims
+                    and self.expected_arg_num_dims[index] == 1
+                ):
+                    # TODO: will eventually need something more robust
+                    shape = 1
+
                 # print(f"Looking at {sub_equation_part}, shape {shape}")
                 if shape > 1:
                     non_one_shapes.append(shape)
