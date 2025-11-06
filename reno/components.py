@@ -1648,19 +1648,37 @@ class HistoricalValue(Reference):
         # TODO: TODO: eventually need to actually handle vector indexing
         # print(self.qual_name(), index)
         if isinstance(index, np.ndarray):
-            index = int(index[0])
-        if index < 0:
+            # index = int(index[0])
+            index = index.astype(int)
+        if isinstance(index, int) and index < 0:
             return 0  # TODO: TODO: TODO: or initial condition?
+        # TODO: also conditional for < 0 for array case?
 
         if self.tracked_ref._static:
             return self.tracked_ref.value
-        return self.tracked_ref.value[:, index]
+        print("Trying to resolve", index, "on", self.tracked_ref.value)
+        # return self.tracked_ref.value[:, index]
+        return self.tracked_ref.value[
+            list(range(0, self.tracked_ref.value.shape[0])), index
+        ]
 
     def qual_name(self):
         # TODO: 2025.09.09, is this reasonable?
         return self.tracked_ref.qual_name()
 
     def get_shape(self) -> int:
+        if (
+            self.tracked_ref.shape != 1
+            and self.index_eq.shape != 1
+            and self.tracked_ref.shape != self.index_eq.shape
+        ):
+            raise Exception(
+                "Index and tracked ref are both non-one and different, can't broadcast"
+            )
+        elif self.tracked_ref.shape != 1:
+            return self.tracked_ref.shape
+        elif self.index_eq.shape != 1:
+            return self.index_eq.shape
         return self.tracked_ref.shape
 
     @property
@@ -1820,6 +1838,8 @@ class Flow(TrackedReference):
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section
                     assignment_dims.append(slice(None, None))
+                print(init_eq)
+                print(resolved_init_value)
                 self.value[*assignment_dims] = resolved_init_value
                 self.computed_mask[:, 0] = True
         except Exception as e:

@@ -584,3 +584,76 @@ def test_non_basic_dynamic_historical_index_pymc():
 
     ds = m.pymc(n=1, compute_prior_only=True)
     assert (ds.prior.f.values[0] == [[2, 2, 3, 3, 4, 4, 5, 5, 6, 6]]).all()
+
+
+def test_diff_hist_index_across_list_dist():
+    """A reno.List distribution used to index different historical values
+    should correctly provide different results for each of n"""
+    m = Model()
+    t = TimeRef()
+    m.v1 = Variable(t + 2)
+    m.v2 = Variable(ops.List([1, 2]))
+    m.f = Flow(m.v1.history(3 + m.v2))
+
+    ds = m(n=2)
+    assert (
+        ds.f.values == [[0, 0, 0, 0, 6, 6, 6, 6, 6, 6], [0, 0, 0, 0, 0, 7, 7, 7, 7, 7]]
+    ).all()
+
+
+# TODO: test for basic too
+def test_multidim_dynamic_hist():
+    """A multidim index equation (non-basic) for a variable should work in
+    normal reno math."""
+    m = Model()
+    t = TimeRef()
+    m.v1 = Variable(t + 2)
+    m.v2 = Variable([1, 2])
+    m.f = Flow(m.v1.history(3 + m.v2))
+
+    ds = m()
+    assert (
+        ds.f.values
+        == [
+            [
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [6, 0],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+            ]
+        ]
+    ).all()
+
+
+def test_multidim_dynamic_hist_pymc():
+    """A multidim index equation (non-basic) for a variable should work in pymc."""
+    m = Model()
+    t = TimeRef()
+    m.v1 = Variable(t + 2)
+    m.v2 = Variable([1, 2])
+    m.f = Flow(m.v1.history(3 + m.v2))
+
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (
+        ds.prior.f.values[0]
+        == [
+            [
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [6, 0],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+                [6, 7],
+            ]
+        ]
+    ).all()

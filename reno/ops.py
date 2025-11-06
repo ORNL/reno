@@ -926,6 +926,26 @@ class astype(reno.components.Operation):
     def pt_str(self, **refs: dict[str, str]) -> str:
         return f"({self.sub_equation_parts[0].pt_str(**refs)}).astype({self.__dtype.__name__})"
 
+    @staticmethod
+    def parse(arg_strs: list[str], refs: dict[str, reno.components.Reference]):
+        if len(arg_strs) != 2:
+            raise SyntaxError(
+                "astype op expects two arguments, the reference to convert, and the string type to convert to"
+            )
+        ref = reno.parser.parse(arg_strs[0], refs)
+        if arg_strs[1] == "int":
+            dtype = int
+        elif arg_strs[1] == "float":
+            dtype = float
+        elif arg_strs[1] == "bool":
+            dtype = bool
+        return astype(ref, dtype)
+
+    def __repr__(self):
+        return (
+            f"(astype {self.sub_equation_parts[0].__repr__()} {self.__dtype.__name__})"
+        )
+
 
 # ==================================================
 # "HIGHER ORDER"
