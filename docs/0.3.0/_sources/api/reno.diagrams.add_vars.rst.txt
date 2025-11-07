@@ -1,0 +1,6 @@
+reno.diagrams.add\_vars
+=======================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_vars

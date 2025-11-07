@@ -1,0 +1,48 @@
+reno.ops.Uniform
+================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: Uniform
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Uniform.__init__
+      ~Uniform.astype
+      ~Uniform.clip
+      ~Uniform.equal
+      ~Uniform.eval
+      ~Uniform.find_refs_of_type
+      ~Uniform.get_shape
+      ~Uniform.get_type
+      ~Uniform.is_static
+      ~Uniform.latex
+      ~Uniform.not_equal
+      ~Uniform.populate
+      ~Uniform.pt
+      ~Uniform.pt_str
+      ~Uniform.seek_refs
+      ~Uniform.series_max
+      ~Uniform.series_min
+      ~Uniform.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Uniform.dtype
+      ~Uniform.shape
+      ~Uniform.timeseries

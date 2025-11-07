@@ -1,0 +1,6 @@
+reno.diagrams.add\_flows
+========================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_flows

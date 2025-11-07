@@ -1,0 +1,51 @@
+reno.ops.smooth
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: smooth
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~smooth.__init__
+      ~smooth.astype
+      ~smooth.clip
+      ~smooth.equal
+      ~smooth.eval
+      ~smooth.find_refs_of_type
+      ~smooth.get_shape
+      ~smooth.get_type
+      ~smooth.is_static
+      ~smooth.latex
+      ~smooth.not_equal
+      ~smooth.op_eval
+      ~smooth.op_repr
+      ~smooth.op_types
+      ~smooth.pt
+      ~smooth.pt_str
+      ~smooth.seek_refs
+      ~smooth.series_max
+      ~smooth.series_min
+      ~smooth.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~smooth.OP_REPR
+      ~smooth.dtype
+      ~smooth.shape
+      ~smooth.timeseries
