@@ -1,0 +1,51 @@
+reno.ops.ne
+===========
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: ne
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ne.__init__
+      ~ne.astype
+      ~ne.clip
+      ~ne.equal
+      ~ne.eval
+      ~ne.find_refs_of_type
+      ~ne.get_shape
+      ~ne.get_type
+      ~ne.is_static
+      ~ne.latex
+      ~ne.not_equal
+      ~ne.op_eval
+      ~ne.op_repr
+      ~ne.op_types
+      ~ne.pt
+      ~ne.pt_str
+      ~ne.seek_refs
+      ~ne.series_max
+      ~ne.series_min
+      ~ne.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ne.OP_REPR
+      ~ne.dtype
+      ~ne.shape
+      ~ne.timeseries

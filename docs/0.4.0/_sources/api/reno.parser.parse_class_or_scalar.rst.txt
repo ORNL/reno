@@ -1,0 +1,6 @@
+reno.parser.parse\_class\_or\_scalar
+====================================
+
+.. currentmodule:: reno.parser
+
+.. autofunction:: parse_class_or_scalar
