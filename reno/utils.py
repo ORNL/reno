@@ -1,6 +1,7 @@
 """Utility functions that are potentially needed in multiple modules."""
 
 import importlib.resources
+import inspect
 from typing import Any
 
 import numpy as np
@@ -11,6 +12,28 @@ import reno
 # references in latex. Might want to change in disgusting lightmode contexts
 DOC_HIGHLIGHT_COLOR = "teal"
 EQ_HIGHLIGHT_COLOR = "cyan"
+
+
+def _get_assigned_var_name(var: Any) -> str:
+    """In a model context manager we don't have the direct ability to get the name of the variable
+    we're assigning to the model (to avoid the PyMC requirement of specifying the name separately
+    as a string.)
+
+    To address that, this function pulls from the local frame to find the variable matching the
+    one passed.
+
+    https://stackoverflow.com/questions/18425225/getting-the-name-of-a-variable-as-a-string
+    """
+    # NOTE: this can't be used within the __init__ of a reference because the
+    # variable on the left hand side of the assignment isn't technically in the
+    # frame yet/hasn't been created.
+    frame_items = inspect.currentframe().f_back.f_back.f_locals.items()
+    for var_name, var_val in frame_items:
+        if var_val is var:
+            return var_name
+
+    # TODO: should this throw an error instead?
+    return None
 
 
 def find_ref_root_model(ref):

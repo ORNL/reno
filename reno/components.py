@@ -1286,6 +1286,12 @@ class TrackedReference(Reference):
         self._computing_type: bool = False
         """Use to avoid infinite recursion on get_type in a stock etc."""
 
+        # handle if within a context_manager, tell the manager to eventually
+        # appropriately find the name for this reference and add it to the
+        # model.
+        if reno.Model.get_context() is not None:
+            reno.Model.get_context()._unnamed_references.append(self)
+
     def min_refs(self) -> list:
         """Get any references found in the min constraint equation. Currently mostly
         only used to aid in diagrams."""

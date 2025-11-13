@@ -213,3 +213,46 @@ def test_multidim_model_w_vectors_runs(multidim_model_determ):
     assert ds.v2.shape == (1,)
     assert ds.v3.shape == (1, 10, 4)
     assert ds.s.shape == (1, 10, 4)
+
+
+def test_model_context_manager_finds_name():
+    """Creating references within a model's context manager should appropriately find the variable names and add them
+    to the model"""
+
+    m = Model()
+    with m:
+        var1 = Variable(2)
+        var2 = Variable(5)
+        combination = Variable(var1 + var2)
+
+    assert var1.name == "var1"
+    assert var2.name == "var2"
+    assert combination.name == "combination"
+    assert var1.model == m
+    assert var2.model == m
+    assert combination.model == m
+
+    assert m.var1 == var1
+    assert m.var2 == var2
+    assert m.combination == combination
+
+
+def test_model_context_manager_ignores_preexisting():
+    """Creating references within a model's context manager should appropriately find the variable names and add them
+    to the model unless it's explicitly added to the model already"""
+
+    m = Model()
+    with m:
+        var1 = Variable(2)
+        m.var2 = Variable(5)
+        combination = Variable(var1 + m.var2)
+
+    assert var1.name == "var1"
+    assert m.var2.name == "var2"
+    assert combination.name == "combination"
+    assert var1.model == m
+    assert m.var2.model == m
+    assert combination.model == m
+
+    assert m.var1 == var1
+    assert m.combination == combination

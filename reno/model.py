@@ -3,6 +3,7 @@ stock and flow equations to run simulation(s)."""
 
 import json
 import math
+import threading
 import warnings
 from copy import deepcopy
 from typing import Any
@@ -16,6 +17,29 @@ from pytensor import compile
 from tqdm.auto import tqdm
 
 import reno
+
+
+class _ModelContexts(threading.local):
+    """Similar to how PyMC manages this, we keep a model manager to allow models
+    to be used as context managers, so a model name of ``my_really_long_model``
+    doesn't have to be repeated over and over and over when defining all of the
+    stocks and flows on it."""
+
+    def __init__(self):
+        self.current_models: list[Model] = []
+
+    @property
+    def current_model(self):
+        if len(self.current_models) > 0:
+            return self.current_models[-1]
+        return None
+
+    # TODO: is a parent_model property necessary?
+
+
+# similar to PyMC, single global (thread-safe) list of current model contexts
+# (e.g. within a with block)
+MODEL_CONTEXTS = _ModelContexts()
 
 
 class Model:
@@ -111,6 +135,27 @@ class Model:
         defaults on functions that aren't explicitly passed traces."""
         self.trace_RVs: list[str] = []
         """The set of string names of any random variables from the last pymc run."""
+
+        self._unnamed_references: list = []
+        """TrackedReferences added within a context manager go here so names can be
+        assigned based on local frame variable names when it exits."""
+
+    @classmethod
+    def get_context(cls):
+        return MODEL_CONTEXTS.current_model
+
+    def __enter__(self):
+        MODEL_CONTEXTS.current_models.append(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        MODEL_CONTEXTS.current_models.pop()
+        for index, ref in enumerate(self._unnamed_references):
+            # make sure adding this ref wasn't already handled
+            if ref.name is not None or ref.model is not None:
+                continue
+            name = reno.utils._get_assigned_var_name(ref)
+            setattr(self, name, self._unnamed_references[index])
+        self._unnamed_references = []
 
     def _is_init_ref(self, name: str) -> bool:
         """Is the name of the stock/flow/variable reference an initial value reference?
@@ -1040,7 +1085,16 @@ class Model:
                         f"{n} is too few samples, run with a higher n parameter, e.g. ``.pymc(n=1000)``"
                     )
 
-                trace = sample_func(**sampling_kwargs, compile_kwargs=compile_kwargs)
+                # leaving explicit compile_kwargs out for now because in an
+                # older pymc version it wasn't implemented for smc (specifically
+                # 5.12.0?) An older version of pymc is sometimes necessary if
+                # there's weird stalling issues:
+                # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
+                if len(compile_kwargs) > 0:
+                    sampling_kwargs["compile_kwargs"] = compile_kwargs
+                trace = sample_func(
+                    **sampling_kwargs
+                )  # , compile_kwargs=compile_kwargs)
                 if observations is None:
                     trace.add_groups(posterior=trace.prior)
 
