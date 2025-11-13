@@ -236,6 +236,9 @@ def test_model_context_manager_finds_name():
     assert m.var2 == var2
     assert m.combination == combination
 
+    ds = m(1, 1)
+    assert ds.combination.values[0] == 7
+
 
 def test_model_context_manager_ignores_preexisting():
     """Creating references within a model's context manager should appropriately find the variable names and add them
@@ -256,3 +259,28 @@ def test_model_context_manager_ignores_preexisting():
 
     assert m.var1 == var1
     assert m.combination == combination
+
+    ds = m(1, 1)
+    assert ds.combination.values[0] == 7
+
+
+def test_model_context_manager_handles_submodels():
+    """Creating models within a model's context manager should appropriately find the model name and add to parent
+    model."""
+
+    m1 = Model()
+    with m1:
+        var1 = Variable(2)
+        m2 = Model()
+        with m2:
+            var2 = Variable(5)
+        m1.combination = Variable(var1 + m2.var2)
+
+    assert m2.parent == m1
+    assert m1.m2 == m2
+    assert m1.m2.var2 == var2
+    assert m2 in m1.models
+    assert m2.name == "m2"
+
+    ds = m1(1, 1)
+    assert ds.combination.values[0] == 7

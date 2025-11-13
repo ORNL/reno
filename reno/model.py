@@ -140,6 +140,9 @@ class Model:
         """TrackedReferences added within a context manager go here so names can be
         assigned based on local frame variable names when it exits."""
 
+        if Model.get_context() is not None:
+            Model.get_context()._unnamed_references.append(self)
+
     @classmethod
     def get_context(cls):
         return MODEL_CONTEXTS.current_model
@@ -151,8 +154,12 @@ class Model:
         MODEL_CONTEXTS.current_models.pop()
         for index, ref in enumerate(self._unnamed_references):
             # make sure adding this ref wasn't already handled
-            if ref.name is not None or ref.model is not None:
-                continue
+            if isinstance(ref, reno.components.TrackedReference):
+                if ref.name is not None and ref.model is not None:
+                    continue
+            elif isinstance(ref, reno.components.TrackedReference):
+                if ref.name is not None and ref.parent is not None:
+                    continue
             name = reno.utils._get_assigned_var_name(ref)
             setattr(self, name, self._unnamed_references[index])
         self._unnamed_references = []
