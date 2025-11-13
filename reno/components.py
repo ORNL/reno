@@ -1855,8 +1855,6 @@ class Flow(TrackedReference):
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section
                     assignment_dims.append(slice(None, None))
-                print(init_eq)
-                print(resolved_init_value)
                 self.value[*assignment_dims] = resolved_init_value
                 self.computed_mask[:, 0] = True
         except Exception as e:
