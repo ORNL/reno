@@ -154,7 +154,9 @@ class Model:
         MODEL_CONTEXTS.current_models.pop()
         for index, ref in enumerate(self._unnamed_references):
             # make sure adding this ref wasn't already handled
-            if isinstance(ref, reno.components.TrackedReference):
+            if isinstance(
+                ref, (reno.components.TrackedReference, reno.components.Metric)
+            ):
                 if ref.name is not None and ref.model is not None:
                     continue
             elif isinstance(ref, reno.components.TrackedReference):

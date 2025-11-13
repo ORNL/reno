@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from reno.components import Flow, Piecewise, Scalar, Stock, TimeRef, Variable
+from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
 from reno.model import Model
 from reno.pymc import find_historical_tracked_refs
 
@@ -224,17 +224,21 @@ def test_model_context_manager_finds_name():
         var1 = Variable(2)
         var2 = Variable(5)
         combination = Variable(var1 + var2)
+        some_metric = Metric(var1.timeseries[-1])
 
     assert var1.name == "var1"
     assert var2.name == "var2"
     assert combination.name == "combination"
+    assert some_metric.name == "some_metric"
     assert var1.model == m
     assert var2.model == m
     assert combination.model == m
+    assert some_metric.model == m
 
     assert m.var1 == var1
     assert m.var2 == var2
     assert m.combination == combination
+    assert m.some_metric == some_metric
 
     ds = m(1, 1)
     assert ds.combination.values[0] == 7

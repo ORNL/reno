@@ -2246,6 +2246,12 @@ class Metric(Reference):
         """Keep a reference to container model, makes it easier to compare refs across
         multiple models."""
 
+        # handle if within a context_manager, tell the manager to eventually
+        # appropriately find the name for this reference and add it to the
+        # model.
+        if reno.Model.get_context() is not None:
+            reno.Model.get_context()._unnamed_references.append(self)
+
     def equation(self, **kwargs) -> str:
         """Get the representation of the full equation for the metric as a latex
         string."""
