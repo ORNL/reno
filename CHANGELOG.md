@@ -5,7 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [unreleased]
+## [0.4.0] - 2025-11-13
+
+### Added
+
+* Models can be used as context managers similar to PyMC, any variables/submodels
+  defined within the `with` block will automatically be added to the model:
+
+  ```python
+  my_model = reno.Model()
+  with my_model:
+    my_variable = reno.Variable(5)
+  assert my_variable.name == "my_variable"
+  assert my_variable.model == my_model
+  assert my_variable == my_model.my_variable
+  ```
 
 ### Changed
 
