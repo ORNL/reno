@@ -48,6 +48,8 @@ __all__ = [
     "delay1",
     "delay3",
     "smooth",
+    # -- meta --
+    "outflows",
     # -- distributions --
     "Normal",
     "Uniform",
@@ -290,10 +292,10 @@ class orient_timeseries(reno.components.Operation):
     TODO: we can _eventually_ make this work within pytensor by the approach to solving general
     history time equations - if a timeseries op detected within non-metric context, include the full
     stops of the relevant variables
-
-    TODO: it probably doesn't make sense to call this on anything except a trackedreference,
-    may want to add checks for this.
     """
+
+    # TODO: it probably doesn't make sense to call this on anything except a trackedreference,
+    # may want to add checks for this.
 
     def __init__(self, a):
         super().__init__(a)
@@ -1115,6 +1117,42 @@ class smooth(reno.components.ExtendedOperation):
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return self.output.pt_str(**refs)
+
+
+# ==================================================
+# META
+# ==================================================
+
+
+class outflows(reno.components.Operation):
+    # TODO: may be dependency issues, account for outflows operations in
+    # seek_refs?
+    def __init__(self, stock):
+        # WAIT: optionally include a list of flows to exclude??
+        super().__init__(stock)
+        # TODO: throw error if not a stock
+
+    def latex(self, **kwargs) -> str:
+        return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{outflows}}"
+
+    def op_eval(self, **kwargs):
+        self.sub_equation_parts[0].combine_eqs(
+            self.sub_equation_parts[0].out_flows
+        ).eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return (
+            self.sub_equation_parts[0]
+            .combine_eqs(self.sub_equation_parts[0].out_flows)
+            .pt(**refs)
+        )
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return (
+            self.sub_equation_parts[0]
+            .combine_eqs(self.sub_equation_parts[0].out_flows)
+            .pt_str(**refs)
+        )
 
 
 # ==================================================
