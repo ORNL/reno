@@ -1,0 +1,2555 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; Reno 0.5.0 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ornl.github.io/reno/stable/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.5.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <dialog id="pst-search-dialog">
+
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="index.html">
+
+
+
+
+
+
+    <p class="title logo__title">Reno 0.5.0 documentation</p>
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+
+
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+
+
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+
+
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none"></div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__add__">__add__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__and__">__and__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution.__annotations__">__annotations__ (reno.components.Distribution attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__annotations__">(reno.components.EquationPart attribute)</a>
+</li>
+        <li><a href="api/reno.components.ExtendedOperation.html#reno.components.ExtendedOperation.__annotations__">(reno.components.ExtendedOperation attribute)</a>
+</li>
+        <li><a href="api/reno.components.Flag.html#reno.components.Flag.__annotations__">(reno.components.Flag attribute)</a>
+</li>
+        <li><a href="api/reno.components.Flow.html#reno.components.Flow.__annotations__">(reno.components.Flow attribute)</a>
+</li>
+        <li><a href="api/reno.components.Function.html#reno.components.Function.__annotations__">(reno.components.Function attribute)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.__annotations__">(reno.components.HistoricalValue attribute)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.__annotations__">(reno.components.Metric attribute)</a>
+</li>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.__annotations__">(reno.components.Operation attribute)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.__annotations__">(reno.components.Piecewise attribute)</a>
+</li>
+        <li><a href="api/reno.components.Reference.html#reno.components.Reference.__annotations__">(reno.components.Reference attribute)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.__annotations__">(reno.components.Scalar attribute)</a>
+</li>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.__annotations__">(reno.components.Stock attribute)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.__annotations__">(reno.components.TimeRef attribute)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.__annotations__">(reno.components.TrackedReference attribute)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.__annotations__">(reno.components.Variable attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.__annotations__">(reno.explorer.DiagramPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.__annotations__">(reno.explorer.EditableTextPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.__annotations__">(reno.explorer.Explorer attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.__annotations__">(reno.explorer.FreeVarsEditor attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.__annotations__">(reno.explorer.MainView attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Observable.html#reno.explorer.Observable.__annotations__">(reno.explorer.Observable attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.__annotations__">(reno.explorer.ObservablesList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.__annotations__">(reno.explorer.PanesSet attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.__annotations__">(reno.explorer.PlotsPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.__annotations__">(reno.explorer.RunRow attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.__annotations__">(reno.explorer.RunsList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ViewControls.html#reno.explorer.ViewControls.__annotations__">(reno.explorer.ViewControls attribute)</a>
+</li>
+        <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.__annotations__">(reno.interactive_latex.InteractiveLatex attribute)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.__annotations__">(reno.model.Model attribute)</a>
+</li>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.__annotations__">(reno.ops.abs attribute)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.__annotations__">(reno.ops.add attribute)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.__annotations__">(reno.ops.assign attribute)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.__annotations__">(reno.ops.astype attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.__annotations__">(reno.ops.Bernoulli attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.__annotations__">(reno.ops.bool_and attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.__annotations__">(reno.ops.bool_or attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.__annotations__">(reno.ops.Categorical attribute)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.__annotations__">(reno.ops.clip attribute)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.__annotations__">(reno.ops.delay1 attribute)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.__annotations__">(reno.ops.delay3 attribute)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.__annotations__">(reno.ops.DiscreteUniform attribute)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.__annotations__">(reno.ops.div attribute)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.__annotations__">(reno.ops.eq attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.__annotations__">(reno.ops.gt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.__annotations__">(reno.ops.gte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.__annotations__">(reno.ops.index attribute)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.__annotations__">(reno.ops.interpolate attribute)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.__annotations__">(reno.ops.List attribute)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.__annotations__">(reno.ops.log attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.__annotations__">(reno.ops.lt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.__annotations__">(reno.ops.lte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.__annotations__">(reno.ops.maximum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.__annotations__">(reno.ops.minimum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.__annotations__">(reno.ops.mod attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.__annotations__">(reno.ops.mul attribute)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.__annotations__">(reno.ops.ne attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.__annotations__">(reno.ops.Normal attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Observation.html#reno.ops.Observation.__annotations__">(reno.ops.Observation attribute)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.__annotations__">(reno.ops.orient_timeseries attribute)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.__annotations__">(reno.ops.outflows attribute)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.__annotations__">(reno.ops.pulse attribute)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.__annotations__">(reno.ops.repeated_pulse attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.__annotations__">(reno.ops.series_max attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.__annotations__">(reno.ops.series_min attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.__annotations__">(reno.ops.sin attribute)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.__annotations__">(reno.ops.slice attribute)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.__annotations__">(reno.ops.smooth attribute)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.__annotations__">(reno.ops.step attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.__annotations__">(reno.ops.sub attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.__annotations__">(reno.ops.sum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.__annotations__">(reno.ops.Uniform attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.__annotations__">(reno.viz.ModelLatex attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.__annotations__">(reno.viz.ModelViewer attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__annotations__">(reno.viz.ReferenceEditor attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.__call__">__call__() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__dataclass_fields__">__dataclass_fields__ (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__dataclass_params__">__dataclass_params__ (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__dict__">__dict__ (reno.components.EquationPart attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.__dict__">(reno.model.Model attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.__dict__">(reno.viz.ModelLatex attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.__dict__">(reno.viz.ModelViewer attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__dict__">(reno.viz.ReferenceEditor attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.__enter__">__enter__() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__eq__">__eq__() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.__exit__">__exit__() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__ge__">__ge__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.__getattr__">__getattr__() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__getitem__">__getitem__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__gt__">__gt__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__hash__">__hash__ (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.__iadd__">__iadd__() (reno.components.Stock method)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.__isub__">__isub__() (reno.components.Stock method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__le__">__le__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.__lshift__">__lshift__() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.__lshift__">(reno.components.Stock method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__lt__">__lt__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__match_args__">__match_args__ (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__mod__">__mod__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution.__module__">__module__ (reno.components.Distribution attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__module__">(reno.components.EquationPart attribute)</a>
+</li>
+        <li><a href="api/reno.components.ExtendedOperation.html#reno.components.ExtendedOperation.__module__">(reno.components.ExtendedOperation attribute)</a>
+</li>
+        <li><a href="api/reno.components.Flag.html#reno.components.Flag.__module__">(reno.components.Flag attribute)</a>
+</li>
+        <li><a href="api/reno.components.Flow.html#reno.components.Flow.__module__">(reno.components.Flow attribute)</a>
+</li>
+        <li><a href="api/reno.components.Function.html#reno.components.Function.__module__">(reno.components.Function attribute)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.__module__">(reno.components.HistoricalValue attribute)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.__module__">(reno.components.Metric attribute)</a>
+</li>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.__module__">(reno.components.Operation attribute)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.__module__">(reno.components.Piecewise attribute)</a>
+</li>
+        <li><a href="api/reno.components.Reference.html#reno.components.Reference.__module__">(reno.components.Reference attribute)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.__module__">(reno.components.Scalar attribute)</a>
+</li>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.__module__">(reno.components.Stock attribute)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.__module__">(reno.components.TimeRef attribute)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.__module__">(reno.components.TrackedReference attribute)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.__module__">(reno.components.Variable attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion.__module__">(reno.explorer.BetterAccordion attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.__module__">(reno.explorer.ClickablePane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.__module__">(reno.explorer.DiagramPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.__module__">(reno.explorer.EditableTextPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.__module__">(reno.explorer.Explorer attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.__module__">(reno.explorer.FreeVarsEditor attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.__module__">(reno.explorer.MainView attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Observable.html#reno.explorer.Observable.__module__">(reno.explorer.Observable attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.__module__">(reno.explorer.ObservablesList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.__module__">(reno.explorer.PanesSet attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.__module__">(reno.explorer.PlotsPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.__module__">(reno.explorer.RunRow attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.__module__">(reno.explorer.RunsList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ViewControls.html#reno.explorer.ViewControls.__module__">(reno.explorer.ViewControls attribute)</a>
+</li>
+        <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.__module__">(reno.interactive_latex.InteractiveLatex attribute)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.__module__">(reno.model.Model attribute)</a>
+</li>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.__module__">(reno.ops.abs attribute)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.__module__">(reno.ops.add attribute)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.__module__">(reno.ops.assign attribute)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.__module__">(reno.ops.astype attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.__module__">(reno.ops.Bernoulli attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.__module__">(reno.ops.bool_and attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.__module__">(reno.ops.bool_or attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.__module__">(reno.ops.Categorical attribute)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.__module__">(reno.ops.clip attribute)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.__module__">(reno.ops.delay1 attribute)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.__module__">(reno.ops.delay3 attribute)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.__module__">(reno.ops.DiscreteUniform attribute)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.__module__">(reno.ops.div attribute)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.__module__">(reno.ops.eq attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.__module__">(reno.ops.gt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.__module__">(reno.ops.gte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.__module__">(reno.ops.index attribute)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.__module__">(reno.ops.interpolate attribute)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.__module__">(reno.ops.List attribute)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.__module__">(reno.ops.log attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.__module__">(reno.ops.lt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.__module__">(reno.ops.lte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.__module__">(reno.ops.maximum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.__module__">(reno.ops.minimum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.__module__">(reno.ops.mod attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.__module__">(reno.ops.mul attribute)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.__module__">(reno.ops.ne attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.__module__">(reno.ops.Normal attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Observation.html#reno.ops.Observation.__module__">(reno.ops.Observation attribute)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.__module__">(reno.ops.orient_timeseries attribute)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.__module__">(reno.ops.outflows attribute)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.__module__">(reno.ops.pulse attribute)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.__module__">(reno.ops.repeated_pulse attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.__module__">(reno.ops.series_max attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.__module__">(reno.ops.series_min attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.__module__">(reno.ops.sin attribute)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.__module__">(reno.ops.slice attribute)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.__module__">(reno.ops.smooth attribute)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.__module__">(reno.ops.step attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.__module__">(reno.ops.sub attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.__module__">(reno.ops.sum attribute)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.__module__">(reno.ops.Uniform attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.__module__">(reno.viz.ModelLatex attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.__module__">(reno.viz.ModelViewer attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__module__">(reno.viz.ReferenceEditor attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__mul__">__mul__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__neg__">__neg__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__or__">__or__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion.__original_doc__">__original_doc__ (reno.explorer.BetterAccordion attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.__original_doc__">(reno.explorer.ClickablePane attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.__panel__">__panel__() (reno.explorer.DiagramPane method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.__panel__">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.__panel__">(reno.explorer.Explorer method)</a>
+</li>
+        <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.__panel__">(reno.explorer.FreeVarsEditor method)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.__panel__">(reno.explorer.MainView method)</a>
+</li>
+        <li><a href="api/reno.explorer.Observable.html#reno.explorer.Observable.__panel__">(reno.explorer.Observable method)</a>
+</li>
+        <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.__panel__">(reno.explorer.ObservablesList method)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.__panel__">(reno.explorer.PanesSet method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.__panel__">(reno.explorer.PlotsPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.__panel__">(reno.explorer.RunRow method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.__panel__">(reno.explorer.RunsList method)</a>
+</li>
+        <li><a href="api/reno.explorer.ViewControls.html#reno.explorer.ViewControls.__panel__">(reno.explorer.ViewControls method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__radd__">__radd__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__rand__">__rand__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Function.html#reno.components.Function.__repr__">__repr__() (reno.components.Function method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.__repr__">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.__repr__">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.__repr__">(reno.components.Operation method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.__repr__">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Reference.html#reno.components.Reference.__repr__">(reno.components.Reference method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.__repr__">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.__repr__">(reno.components.TimeRef method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.__repr__">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.__repr__">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.__repr__">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.__repr__">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.__repr__">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.__repr__">(reno.ops.List method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.__repr__">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.__repr__">(reno.ops.Uniform method)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__repr__">(reno.viz.ReferenceEditor method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__rmod__">__rmod__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__rmul__">__rmul__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__ror__">__ror__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.__rshift__">__rshift__() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.__rshift__">(reno.components.Stock method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__rsub__">__rsub__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__rtruediv__">__rtruediv__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.__setattr__">__setattr__() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.__setattr__">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.__setattr__">(reno.components.Stock method)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.__setattr__">(reno.components.Variable method)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.__setattr__">(reno.model.Model method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__sub__">__sub__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__truediv__">__truediv__() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.__weakref__">__weakref__ (reno.components.EquationPart attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.__weakref__">(reno.model.Model attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.__weakref__">(reno.viz.ModelLatex attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.__weakref__">(reno.viz.ModelViewer attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.__weakref__">(reno.viz.ReferenceEditor attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.abs.html#reno.ops.abs">abs (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.add.html#reno.ops.add">add (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.add">add() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.add_diagram_pane">add_diagram_pane() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_flows.html#reno.diagrams.add_flows">add_flows() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.add_observation">add_observation() (reno.explorer.ObservablesList method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.add_pane">add_pane() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.add_plots_pane">add_plots_pane() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.add_run">add_run() (reno.explorer.RunsList method)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_stock_io_edge.html#reno.diagrams.add_stock_io_edge">add_stock_io_edge() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_stock_limit_edge.html#reno.diagrams.add_stock_limit_edge">add_stock_limit_edge() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_stocks.html#reno.diagrams.add_stocks">add_stocks() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.ops.Observation.html#reno.ops.Observation.add_tensors">add_tensors() (reno.ops.Observation method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.add_text_pane">add_text_pane() (reno.explorer.PanesSet method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.diagrams.add_to_flow_edge.html#reno.diagrams.add_to_flow_edge">add_to_flow_edge() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_to_var_edge.html#reno.diagrams.add_to_var_edge">add_to_var_edge() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.diagrams.add_vars.html#reno.diagrams.add_vars">add_vars() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.all_flows">all_flows() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.all_metrics">all_metrics() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.all_refs">all_refs() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.all_stocks">all_stocks() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.all_vars">all_vars() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.ops.assign.html#reno.ops.assign">assign (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.assign_controls">assign_controls() (reno.viz.ModelViewer method)</a>
+</li>
+      <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.assign_from_controls">assign_from_controls() (reno.explorer.FreeVarsEditor method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.assign_value_from_control">assign_value_from_control() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.ops.astype.html#reno.ops.astype">astype (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.astype">astype() (reno.components.EquationPart method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.base64repr">base64repr (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli">Bernoulli (class in reno.ops)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion">BetterAccordion (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and">bool_and (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or">bool_or (class in reno.ops)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical">Categorical (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.utils.check_for_easy_static_time_eq.html#reno.utils.check_for_easy_static_time_eq">check_for_easy_static_time_eq() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion.child">child (reno.explorer.BetterAccordion attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.child">(reno.explorer.ClickablePane attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.click_enabled">click_enabled (reno.explorer.ClickablePane attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane">ClickablePane (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.ops.clip.html#reno.ops.clip">clip (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.clip">clip() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.columns">columns (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.combine_eqs">combine_eqs() (reno.components.Stock method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.viz.compare_posterior.html#reno.viz.compare_posterior">compare_posterior() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.viz.compare_seq.html#reno.viz.compare_seq">compare_seq() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.compute_diff_eq">compute_diff_eq() (reno.components.Stock method)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.computed_mask">computed_mask (reno.components.TrackedReference attribute)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.config">config() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.control">control (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.copy">copy() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.explorer.create_explorer.html#reno.explorer.create_explorer">create_explorer() (in module reno.explorer)</a>
+</li>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.create_tab">create_tab() (reno.explorer.MainView method)</a>
+</li>
+      <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.create_variable_controls">create_variable_controls() (reno.explorer.FreeVarsEditor method)</a>
+
+      <ul>
+        <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.create_variable_controls">(reno.viz.ModelViewer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.diagrams.DARK_MODE.html#reno.diagrams.DARK_MODE">DARK_MODE (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.dataset">dataset() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.debug_equation">debug_equation() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.debug_equation">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.debug_equation">(reno.components.Stock method)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.debug_equation">(reno.components.Variable method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.delay1.html#reno.ops.delay1">delay1 (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.delay3.html#reno.ops.delay3">delay3 (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.viz.density.html#reno.viz.density">density() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.utils.dependency_compute_order.html#reno.utils.dependency_compute_order">dependency_compute_order() (in module reno.utils)</a>
+
+      <ul>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.dependency_compute_order">(reno.model.Model method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane">DiagramPane (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.dim">dim (reno.components.TrackedReference attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform">DiscreteUniform (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.display">display() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.display">(reno.components.Stock method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.dist_dim_shape_args.html#reno.ops.dist_dim_shape_args">dist_dim_shape_args() (in module reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.dist_dim_shape_args_str.html#reno.ops.dist_dim_shape_args_str">dist_dim_shape_args_str() (in module reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.dist_params.html#reno.ops.dist_params">dist_params() (in module reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.dist_shape.html#reno.ops.dist_shape">dist_shape() (in module reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution">Distribution (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.ops.div.html#reno.ops.div">div (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Reference.html#reno.components.Reference.doc">doc (reno.components.Reference attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.doc">(reno.model.Model attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.drag_scroll_enabled">drag_scroll_enabled (reno.explorer.ClickablePane attribute)</a>
+</li>
+      <li><a href="api/reno.diagrams.draw_appropriate_edge.html#reno.diagrams.draw_appropriate_edge">draw_appropriate_edge() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.dtype">dtype (reno.components.EquationPart property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane">EditableTextPane (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.utils.ensure_scalar.html#reno.utils.ensure_scalar">ensure_scalar() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.ops.eq.html#reno.ops.eq">eq (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.equal">equal() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.equation">equation() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.equation">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.equation">(reno.components.Variable method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart">EquationPart (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.equations">equations() (reno.components.Stock method)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution.eval">eval() (reno.components.Distribution method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.eval">(reno.components.EquationPart method)</a>
+</li>
+        <li><a href="api/reno.components.Flag.html#reno.components.Flag.eval">(reno.components.Flag method)</a>
+</li>
+        <li><a href="api/reno.components.Function.html#reno.components.Function.eval">(reno.components.Function method)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.eval">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.eval">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.eval">(reno.components.Operation method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.eval">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.eval">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.eval">(reno.components.TimeRef method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.eval">(reno.components.TrackedReference method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.eval_condition">eval_condition() (reno.components.Piecewise method)</a>
+</li>
+      <li><a href="api/reno.pymc.expected_pt_scan_arg_names.html#reno.pymc.expected_pt_scan_arg_names">expected_pt_scan_arg_names() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer">Explorer (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.export">export() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.tab_exporter.export_bokeh_html.html#reno.tab_exporter.export_bokeh_html">export_bokeh_html() (in module reno.tab_exporter)</a>
+</li>
+      <li><a href="api/reno.tab_exporter.export_clean_html.html#reno.tab_exporter.export_clean_html">export_clean_html() (in module reno.tab_exporter)</a>
+</li>
+      <li><a href="api/reno.tab_exporter.export_selenium_pdf.html#reno.tab_exporter.export_selenium_pdf">export_selenium_pdf() (in module reno.tab_exporter)</a>
+</li>
+      <li><a href="api/reno.components.ExtendedOperation.html#reno.components.ExtendedOperation">ExtendedOperation (class in reno.components)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.fig_height">fig_height (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.fig_width">fig_width (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.diagrams.filter_variables.html#reno.diagrams.filter_variables">filter_variables() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.find_equation_name_from_index">find_equation_name_from_index() (reno.viz.ModelLatex method)</a>
+</li>
+      <li><a href="api/reno.pymc.find_historical_tracked_refs.html#reno.pymc.find_historical_tracked_refs">find_historical_tracked_refs() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.utils.find_ref_root_model.html#reno.utils.find_ref_root_model">find_ref_root_model() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.find_refs_of_type">find_refs_of_type() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.find_timeref_name">find_timeref_name() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.pymc.find_tracked_ref_historical_ref.html#reno.pymc.find_tracked_ref_historical_ref">find_tracked_ref_historical_ref() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.fire_on_cache_invalidated">fire_on_cache_invalidated() (reno.explorer.DiagramPane method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.fire_on_cache_invalidated">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.fire_on_cache_invalidated">(reno.explorer.PlotsPane method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.fire_on_click">fire_on_click() (reno.explorer.ClickablePane method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.fire_on_name_changed">fire_on_name_changed() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.fire_on_name_clicked">fire_on_name_clicked() (reno.viz.ModelLatex method)</a>
+</li>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.fire_on_new_controls_needed">fire_on_new_controls_needed() (reno.explorer.MainView method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.fire_on_new_controls_needed">(reno.explorer.PanesSet method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.fire_on_removed">fire_on_removed() (reno.explorer.RunRow method)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.fire_on_row_clicked">fire_on_row_clicked() (reno.interactive_latex.InteractiveLatex method)</a>
+</li>
+      <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.fire_on_run_posterior_clicked">fire_on_run_posterior_clicked() (reno.explorer.ObservablesList method)</a>
+</li>
+      <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.fire_on_run_prior_clicked">fire_on_run_prior_clicked() (reno.explorer.FreeVarsEditor method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.fire_on_selected">fire_on_selected() (reno.explorer.RunRow method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.fire_on_selected_runs_changed">fire_on_selected_runs_changed() (reno.explorer.RunsList method)</a>
+</li>
+      <li><a href="api/reno.components.Flag.html#reno.components.Flag.first_event">first_event() (reno.components.Flag method)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.fit">fit (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.components.Flag.html#reno.components.Flag">Flag (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow">Flow (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.flows">flows (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.free_refs">free_refs() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor">FreeVarsEditor (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.components.Metric.html#reno.components.Metric.from_dict">from_dict() (reno.components.Metric method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.from_dict">(reno.components.Stock method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.from_dict">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.from_dict">(reno.explorer.DiagramPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.from_dict">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.from_dict">(reno.explorer.Explorer static method)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.from_dict">(reno.explorer.MainView method)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.from_dict">(reno.explorer.PanesSet method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.from_dict">(reno.explorer.PlotsPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.from_dict">(reno.explorer.RunRow method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.from_dict">(reno.explorer.RunsList method)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.from_dict">(reno.model.Model static method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.Function.html#reno.components.Function">Function (class in reno.components)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.get_context">get_context() (reno.model.Model class method)</a>
+</li>
+      <li><a href="api/reno.utils.get_dependency_relevant_equation_part.html#reno.utils.get_dependency_relevant_equation_part">get_dependency_relevant_equation_part() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.get_docs">get_docs() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.get_eq">get_eq() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.get_eq_str">get_eq_str() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.get_nonrecursive_config">get_nonrecursive_config() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.get_observations">get_observations() (reno.explorer.ObservablesList method)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.get_ref">get_ref() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.get_selected_runs">get_selected_runs() (reno.explorer.RunsList method)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution.get_shape">get_shape() (reno.components.Distribution method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.get_shape">(reno.components.EquationPart method)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.get_shape">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.get_shape">(reno.components.Operation method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.get_shape">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.get_shape">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.get_shape">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.get_shape">(reno.ops.index method)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.get_shape">(reno.ops.interpolate method)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.get_shape">(reno.ops.List method)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.get_shape">(reno.ops.series_max method)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.get_shape">(reno.ops.series_min method)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.get_shape">(reno.ops.sum method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.get_timeref">get_timeref() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.get_type">get_type() (reno.components.EquationPart method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Operation.html#reno.components.Operation.get_type">(reno.components.Operation method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.get_type">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.get_type">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.get_type">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.get_type">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.get_type">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.get_type">(reno.ops.bool_and method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.get_type">(reno.ops.bool_or method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.get_type">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.get_type">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.get_type">(reno.ops.eq method)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.get_type">(reno.ops.gt method)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.get_type">(reno.ops.gte method)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.get_type">(reno.ops.List method)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.get_type">(reno.ops.log method)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.get_type">(reno.ops.lt method)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.get_type">(reno.ops.lte method)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.get_type">(reno.ops.ne method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.get_type">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.get_type">(reno.ops.sin method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.get_type">(reno.ops.Uniform method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.graph">graph() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.ops.gt.html#reno.ops.gt">gt (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.gte.html#reno.ops.gte">gte (class in reno.ops)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue">HistoricalValue (class in reno.components)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.history">history() (reno.components.TrackedReference method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.implicit">implicit (reno.components.TrackedReference attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.include_dependencies">include_dependencies (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.ops.index.html#reno.ops.index">index (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Flag.html#reno.components.Flag.indices">indices() (reno.components.Flag method)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.init">init (reno.components.TrackedReference attribute)</a>
+</li>
+      <li><a href="api/reno.components.Flow.html#reno.components.Flow.initial_vals">initial_vals() (reno.components.Flow method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.initial_vals">(reno.components.Stock method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.initial_vals">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.components.Variable.html#reno.components.Variable.initial_vals">(reno.components.Variable method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex">InteractiveLatex (class in reno.interactive_latex)</a>
+</li>
+      <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate">interpolate (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.invalidate_downloads">invalidate_downloads() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.utils.is_free_var.html#reno.utils.is_free_var">is_free_var() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.is_init">is_init (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.utils.is_ref_in_parent_scope.html#reno.utils.is_ref_in_parent_scope">is_ref_in_parent_scope() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.utils.is_static.html#reno.utils.is_static">is_static() (in module reno.utils)</a>
+
+      <ul>
+        <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.is_static">(reno.components.EquationPart method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.Reference.html#reno.components.Reference.label">label (reno.components.Reference attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion.label">(reno.explorer.BetterAccordion attribute)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.label">(reno.model.Model attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.latex">latex() (reno.components.EquationPart method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Flow.html#reno.components.Flow.latex">(reno.components.Flow method)</a>
+</li>
+        <li><a href="api/reno.components.Function.html#reno.components.Function.latex">(reno.components.Function method)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.latex">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.latex">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Reference.html#reno.components.Reference.latex">(reno.components.Reference method)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.latex">(reno.components.TimeRef method)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.latex">(reno.model.Model method)</a>
+</li>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.latex">(reno.ops.abs method)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.latex">(reno.ops.add method)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.latex">(reno.ops.assign method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.latex">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.latex">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.latex">(reno.ops.bool_and method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.latex">(reno.ops.bool_or method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.latex">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.latex">(reno.ops.clip method)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.latex">(reno.ops.delay1 method)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.latex">(reno.ops.delay3 method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.latex">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.latex">(reno.ops.div method)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.latex">(reno.ops.eq method)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.latex">(reno.ops.gt method)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.latex">(reno.ops.gte method)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.latex">(reno.ops.index method)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.latex">(reno.ops.interpolate method)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.latex">(reno.ops.List method)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.latex">(reno.ops.log method)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.latex">(reno.ops.lt method)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.latex">(reno.ops.lte method)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.latex">(reno.ops.maximum method)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.latex">(reno.ops.minimum method)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.latex">(reno.ops.mod method)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.latex">(reno.ops.mul method)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.latex">(reno.ops.ne method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.latex">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.latex">(reno.ops.orient_timeseries method)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.latex">(reno.ops.outflows method)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.latex">(reno.ops.pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.latex">(reno.ops.repeated_pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.latex">(reno.ops.series_max method)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.latex">(reno.ops.series_min method)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.latex">(reno.ops.sin method)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.latex">(reno.ops.slice method)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.latex">(reno.ops.smooth method)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.latex">(reno.ops.step method)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.latex">(reno.ops.sub method)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.latex">(reno.ops.sum method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.latex">(reno.ops.Uniform method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.latex_data_with_highlight">latex_data_with_highlight() (reno.viz.ModelLatex method)</a>
+</li>
+      <li><a href="api/reno.utils.latex_eqline_wrap.html#reno.utils.latex_eqline_wrap">latex_eqline_wrap() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.utils.latex_eqline_wrap_doc.html#reno.utils.latex_eqline_wrap_doc">latex_eqline_wrap_doc() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.utils.latex_name.html#reno.utils.latex_name">latex_name() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.latex_output">latex_output (reno.interactive_latex.InteractiveLatex attribute)</a>
+</li>
+      <li><a href="api/reno.ops.List.html#reno.ops.List">List (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.load">load() (reno.model.Model static method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.load_dataset">load_dataset() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.tab_exporter.load_pn_panes.html#reno.tab_exporter.load_pn_panes">load_pn_panes() (in module reno.tab_exporter)</a>
+</li>
+      <li><a href="api/reno.ops.log.html#reno.ops.log">log (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.lt.html#reno.ops.lt">lt (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.lte.html#reno.ops.lte">lte (class in reno.ops)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView">MainView (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.max_refs">max_refs() (reno.components.TrackedReference method)</a>
+</li>
+      <li><a href="api/reno.ops.maximum.html#reno.ops.maximum">maximum (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Metric.html#reno.components.Metric">Metric (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.metrics">metrics (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.min_refs">min_refs() (reno.components.TrackedReference method)</a>
+</li>
+      <li><a href="api/reno.ops.minimum.html#reno.ops.minimum">minimum (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.mod.html#reno.ops.mod">mod (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model">Model (class in reno.model)</a>
+</li>
+      <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.model">model (reno.components.HistoricalValue property)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.model">(reno.components.Metric attribute)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.model">(reno.components.TrackedReference attribute)</a>
+</li>
+        <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.model">(reno.viz.ReferenceEditor attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex">ModelLatex (class in reno.viz)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.models">models (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer">ModelViewer (class in reno.viz)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="api/reno.components.html#module-reno.components">reno.components</a>
+</li>
+        <li><a href="api/reno.diagrams.html#module-reno.diagrams">reno.diagrams</a>
+</li>
+        <li><a href="api/reno.explorer.html#module-reno.explorer">reno.explorer</a>
+</li>
+        <li><a href="api/reno.interactive_latex.html#module-reno.interactive_latex">reno.interactive_latex</a>
+</li>
+        <li><a href="api/reno.model.html#module-reno.model">reno.model</a>
+</li>
+        <li><a href="api/reno.ops.html#module-reno.ops">reno.ops</a>
+</li>
+        <li><a href="api/reno.parser.html#module-reno.parser">reno.parser</a>
+</li>
+        <li><a href="api/reno.pymc.html#module-reno.pymc">reno.pymc</a>
+</li>
+        <li><a href="api/reno.tab_exporter.html#module-reno.tab_exporter">reno.tab_exporter</a>
+</li>
+        <li><a href="api/reno.utils.html#module-reno.utils">reno.utils</a>
+</li>
+        <li><a href="api/reno.viz.html#module-reno.viz">reno.viz</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.mul.html#reno.ops.mul">mul (class in reno.ops)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.n">n (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.BetterAccordion.html#reno.explorer.BetterAccordion.name">name (reno.explorer.BetterAccordion attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.name">(reno.explorer.ClickablePane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.name">(reno.explorer.DiagramPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.name">(reno.explorer.EditableTextPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.name">(reno.explorer.Explorer attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.name">(reno.explorer.FreeVarsEditor attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.name">(reno.explorer.MainView attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.Observable.html#reno.explorer.Observable.name">(reno.explorer.Observable attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.name">(reno.explorer.ObservablesList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.name">(reno.explorer.PanesSet attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.name">(reno.explorer.PlotsPane attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.name">(reno.explorer.RunRow attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.name">(reno.explorer.RunsList attribute)</a>
+</li>
+        <li><a href="api/reno.explorer.ViewControls.html#reno.explorer.ViewControls.name">(reno.explorer.ViewControls attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.ne.html#reno.ops.ne">ne (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.diagrams.NODE_COLOR.html#reno.diagrams.NODE_COLOR">NODE_COLOR (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.ops.Normal.html#reno.ops.Normal">Normal (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.not_equal">not_equal() (reno.components.EquationPart method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.Observable.html#reno.explorer.Observable">Observable (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList">ObservablesList (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.ops.Observation.html#reno.ops.Observation">Observation (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.on_cache_invalidated">on_cache_invalidated() (reno.explorer.DiagramPane method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.on_cache_invalidated">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.on_cache_invalidated">(reno.explorer.PlotsPane method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.on_click">on_click() (reno.explorer.ClickablePane method)</a>
+</li>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.on_name_changed">on_name_changed() (reno.explorer.PanesSet method)</a>
+</li>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.on_name_clicked">on_name_clicked() (reno.viz.ModelLatex method)</a>
+</li>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.on_new_controls_needed">on_new_controls_needed() (reno.explorer.MainView method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.on_new_controls_needed">(reno.explorer.PanesSet method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.on_removed">on_removed() (reno.explorer.RunRow method)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.on_row_clicked">on_row_clicked() (reno.interactive_latex.InteractiveLatex method)</a>
+</li>
+      <li><a href="api/reno.explorer.ObservablesList.html#reno.explorer.ObservablesList.on_run_posterior_clicked">on_run_posterior_clicked() (reno.explorer.ObservablesList method)</a>
+</li>
+      <li><a href="api/reno.explorer.FreeVarsEditor.html#reno.explorer.FreeVarsEditor.on_run_prior_clicked">on_run_prior_clicked() (reno.explorer.FreeVarsEditor method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.on_selected">on_selected() (reno.explorer.RunRow method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.on_selected_runs_changed">on_selected_runs_changed() (reno.explorer.RunsList method)</a>
+</li>
+      <li><a href="api/reno.components.Operation.html#reno.components.Operation.op_eval">op_eval() (reno.components.Operation method)</a>
+
+      <ul>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.op_eval">(reno.ops.abs method)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.op_eval">(reno.ops.add method)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.op_eval">(reno.ops.assign method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.op_eval">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.op_eval">(reno.ops.bool_and method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.op_eval">(reno.ops.bool_or method)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.op_eval">(reno.ops.clip method)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.op_eval">(reno.ops.delay1 method)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.op_eval">(reno.ops.delay3 method)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.op_eval">(reno.ops.div method)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.op_eval">(reno.ops.eq method)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.op_eval">(reno.ops.gt method)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.op_eval">(reno.ops.gte method)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.op_eval">(reno.ops.index method)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.op_eval">(reno.ops.interpolate method)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.op_eval">(reno.ops.log method)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.op_eval">(reno.ops.lt method)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.op_eval">(reno.ops.lte method)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.op_eval">(reno.ops.maximum method)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.op_eval">(reno.ops.minimum method)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.op_eval">(reno.ops.mod method)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.op_eval">(reno.ops.mul method)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.op_eval">(reno.ops.ne method)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.op_eval">(reno.ops.orient_timeseries method)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.op_eval">(reno.ops.outflows method)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.op_eval">(reno.ops.pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.op_eval">(reno.ops.repeated_pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.op_eval">(reno.ops.series_max method)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.op_eval">(reno.ops.series_min method)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.op_eval">(reno.ops.sin method)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.op_eval">(reno.ops.slice method)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.op_eval">(reno.ops.smooth method)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.op_eval">(reno.ops.step method)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.op_eval">(reno.ops.sub method)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.op_eval">(reno.ops.sum method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.Operation.html#reno.components.Operation.OP_REPR">OP_REPR (reno.components.Operation attribute)</a>
+
+      <ul>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.OP_REPR">(reno.ops.add attribute)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.OP_REPR">(reno.ops.assign attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.OP_REPR">(reno.ops.bool_and attribute)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.OP_REPR">(reno.ops.bool_or attribute)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.OP_REPR">(reno.ops.div attribute)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.OP_REPR">(reno.ops.eq attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.OP_REPR">(reno.ops.gt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.OP_REPR">(reno.ops.gte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.OP_REPR">(reno.ops.lt attribute)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.OP_REPR">(reno.ops.lte attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.OP_REPR">(reno.ops.mod attribute)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.OP_REPR">(reno.ops.mul attribute)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.OP_REPR">(reno.ops.ne attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.OP_REPR">(reno.ops.series_max attribute)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.OP_REPR">(reno.ops.series_min attribute)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.OP_REPR">(reno.ops.sub attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.Operation.html#reno.components.Operation.op_repr">op_repr() (reno.components.Operation class method)</a>
+</li>
+      <li><a href="api/reno.components.Operation.html#reno.components.Operation.op_types">op_types() (reno.components.Operation static method)</a>
+</li>
+      <li><a href="api/reno.components.Operation.html#reno.components.Operation">Operation (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries">orient_timeseries (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.outflows.html#reno.ops.outflows">outflows (class in reno.ops)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.outflows">(reno.components.Stock property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet">PanesSet (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.parent">parent (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.parser.parse.html#reno.parser.parse">parse() (in module reno.parser)</a>
+
+      <ul>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.parse">(reno.components.HistoricalValue static method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.parse">(reno.components.Piecewise static method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.parse">(reno.ops.astype static method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.parser.parse_class_or_scalar.html#reno.parser.parse_class_or_scalar">parse_class_or_scalar() (in module reno.parser)</a>
+</li>
+      <li><a href="api/reno.parser.parse_function_args.html#reno.parser.parse_function_args">parse_function_args() (in module reno.parser)</a>
+</li>
+      <li><a href="api/reno.parser.parse_op_str.html#reno.parser.parse_op_str">parse_op_str() (in module reno.parser)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.parse_str_to_eq">parse_str_to_eq() (reno.viz.ReferenceEditor method)</a>
+</li>
+      <li><a href="api/reno.parser.parse_value.html#reno.parser.parse_value">parse_value() (in module reno.parser)</a>
+</li>
+      <li><a href="api/reno.parser.parser_table.html#reno.parser.parser_table">parser_table() (in module reno.parser)</a>
+</li>
+      <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise">Piecewise (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.plot">plot() (reno.components.Stock method)</a>
+</li>
+      <li><a href="api/reno.viz.plot_refs.html#reno.viz.plot_refs">plot_refs() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.viz.plot_refs_single_axis.html#reno.viz.plot_refs_single_axis">plot_refs_single_axis() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.plot_stocks">plot_stocks() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.plot_trace_refs.html#reno.viz.plot_trace_refs">plot_trace_refs() (in module reno.viz)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.plot_type">plot_type (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane">PlotsPane (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.components.Distribution.html#reno.components.Distribution.populate">populate() (reno.components.Distribution method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Flag.html#reno.components.Flag.populate">(reno.components.Flag method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.populate">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.populate">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.populate">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.populate">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.List.html#reno.ops.List.populate">(reno.ops.List method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.populate">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.populate">(reno.ops.Uniform method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.pt">pt() (reno.components.EquationPart method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Function.html#reno.components.Function.pt">(reno.components.Function method)</a>
+</li>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.pt">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.pt">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.pt">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.pt">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.pt">(reno.components.TimeRef method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.pt">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.pt">(reno.ops.abs method)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.pt">(reno.ops.add method)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.pt">(reno.ops.assign method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.pt">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.pt">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.pt">(reno.ops.bool_and method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.pt">(reno.ops.bool_or method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.pt">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.pt">(reno.ops.clip method)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.pt">(reno.ops.delay1 method)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.pt">(reno.ops.delay3 method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.pt">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.pt">(reno.ops.div method)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.pt">(reno.ops.eq method)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.pt">(reno.ops.gt method)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.pt">(reno.ops.gte method)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.pt">(reno.ops.index method)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.pt">(reno.ops.interpolate method)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.pt">(reno.ops.log method)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.pt">(reno.ops.lt method)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.pt">(reno.ops.lte method)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.pt">(reno.ops.maximum method)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.pt">(reno.ops.minimum method)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.pt">(reno.ops.mod method)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.pt">(reno.ops.mul method)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.pt">(reno.ops.ne method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.pt">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.Observation.html#reno.ops.Observation.pt">(reno.ops.Observation method)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.pt">(reno.ops.orient_timeseries method)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.pt">(reno.ops.outflows method)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.pt">(reno.ops.pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.pt">(reno.ops.repeated_pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.pt">(reno.ops.series_max method)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.pt">(reno.ops.series_min method)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.pt">(reno.ops.sin method)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.pt">(reno.ops.slice method)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.pt">(reno.ops.smooth method)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.pt">(reno.ops.step method)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.pt">(reno.ops.sub method)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.pt">(reno.ops.sum method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.pt">(reno.ops.Uniform method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.pt_condition">pt_condition() (reno.components.Piecewise method)</a>
+</li>
+      <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.pt_condition_str">pt_condition_str() (reno.components.Piecewise method)</a>
+</li>
+      <li><a href="api/reno.pymc.pt_sim_step.html#reno.pymc.pt_sim_step">pt_sim_step() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.pymc.pt_sim_step_imports.html#reno.pymc.pt_sim_step_imports">pt_sim_step_imports() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.pymc.pt_sim_step_str.html#reno.pymc.pt_sim_step_str">pt_sim_step_str() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.pt_str">pt_str() (reno.components.EquationPart method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.pt_str">(reno.components.HistoricalValue method)</a>
+</li>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.pt_str">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.Piecewise.html#reno.components.Piecewise.pt_str">(reno.components.Piecewise method)</a>
+</li>
+        <li><a href="api/reno.components.Scalar.html#reno.components.Scalar.pt_str">(reno.components.Scalar method)</a>
+</li>
+        <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef.pt_str">(reno.components.TimeRef method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.pt_str">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.ops.abs.html#reno.ops.abs.pt_str">(reno.ops.abs method)</a>
+</li>
+        <li><a href="api/reno.ops.add.html#reno.ops.add.pt_str">(reno.ops.add method)</a>
+</li>
+        <li><a href="api/reno.ops.assign.html#reno.ops.assign.pt_str">(reno.ops.assign method)</a>
+</li>
+        <li><a href="api/reno.ops.astype.html#reno.ops.astype.pt_str">(reno.ops.astype method)</a>
+</li>
+        <li><a href="api/reno.ops.Bernoulli.html#reno.ops.Bernoulli.pt_str">(reno.ops.Bernoulli method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_and.html#reno.ops.bool_and.pt_str">(reno.ops.bool_and method)</a>
+</li>
+        <li><a href="api/reno.ops.bool_or.html#reno.ops.bool_or.pt_str">(reno.ops.bool_or method)</a>
+</li>
+        <li><a href="api/reno.ops.Categorical.html#reno.ops.Categorical.pt_str">(reno.ops.Categorical method)</a>
+</li>
+        <li><a href="api/reno.ops.clip.html#reno.ops.clip.pt_str">(reno.ops.clip method)</a>
+</li>
+        <li><a href="api/reno.ops.delay1.html#reno.ops.delay1.pt_str">(reno.ops.delay1 method)</a>
+</li>
+        <li><a href="api/reno.ops.delay3.html#reno.ops.delay3.pt_str">(reno.ops.delay3 method)</a>
+</li>
+        <li><a href="api/reno.ops.DiscreteUniform.html#reno.ops.DiscreteUniform.pt_str">(reno.ops.DiscreteUniform method)</a>
+</li>
+        <li><a href="api/reno.ops.div.html#reno.ops.div.pt_str">(reno.ops.div method)</a>
+</li>
+        <li><a href="api/reno.ops.eq.html#reno.ops.eq.pt_str">(reno.ops.eq method)</a>
+</li>
+        <li><a href="api/reno.ops.gt.html#reno.ops.gt.pt_str">(reno.ops.gt method)</a>
+</li>
+        <li><a href="api/reno.ops.gte.html#reno.ops.gte.pt_str">(reno.ops.gte method)</a>
+</li>
+        <li><a href="api/reno.ops.index.html#reno.ops.index.pt_str">(reno.ops.index method)</a>
+</li>
+        <li><a href="api/reno.ops.interpolate.html#reno.ops.interpolate.pt_str">(reno.ops.interpolate method)</a>
+</li>
+        <li><a href="api/reno.ops.log.html#reno.ops.log.pt_str">(reno.ops.log method)</a>
+</li>
+        <li><a href="api/reno.ops.lt.html#reno.ops.lt.pt_str">(reno.ops.lt method)</a>
+</li>
+        <li><a href="api/reno.ops.lte.html#reno.ops.lte.pt_str">(reno.ops.lte method)</a>
+</li>
+        <li><a href="api/reno.ops.maximum.html#reno.ops.maximum.pt_str">(reno.ops.maximum method)</a>
+</li>
+        <li><a href="api/reno.ops.minimum.html#reno.ops.minimum.pt_str">(reno.ops.minimum method)</a>
+</li>
+        <li><a href="api/reno.ops.mod.html#reno.ops.mod.pt_str">(reno.ops.mod method)</a>
+</li>
+        <li><a href="api/reno.ops.mul.html#reno.ops.mul.pt_str">(reno.ops.mul method)</a>
+</li>
+        <li><a href="api/reno.ops.ne.html#reno.ops.ne.pt_str">(reno.ops.ne method)</a>
+</li>
+        <li><a href="api/reno.ops.Normal.html#reno.ops.Normal.pt_str">(reno.ops.Normal method)</a>
+</li>
+        <li><a href="api/reno.ops.Observation.html#reno.ops.Observation.pt_str">(reno.ops.Observation method)</a>
+</li>
+        <li><a href="api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries.pt_str">(reno.ops.orient_timeseries method)</a>
+</li>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.pt_str">(reno.ops.outflows method)</a>
+</li>
+        <li><a href="api/reno.ops.pulse.html#reno.ops.pulse.pt_str">(reno.ops.pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse.pt_str">(reno.ops.repeated_pulse method)</a>
+</li>
+        <li><a href="api/reno.ops.series_max.html#reno.ops.series_max.pt_str">(reno.ops.series_max method)</a>
+</li>
+        <li><a href="api/reno.ops.series_min.html#reno.ops.series_min.pt_str">(reno.ops.series_min method)</a>
+</li>
+        <li><a href="api/reno.ops.sin.html#reno.ops.sin.pt_str">(reno.ops.sin method)</a>
+</li>
+        <li><a href="api/reno.ops.slice.html#reno.ops.slice.pt_str">(reno.ops.slice method)</a>
+</li>
+        <li><a href="api/reno.ops.smooth.html#reno.ops.smooth.pt_str">(reno.ops.smooth method)</a>
+</li>
+        <li><a href="api/reno.ops.step.html#reno.ops.step.pt_str">(reno.ops.step method)</a>
+</li>
+        <li><a href="api/reno.ops.sub.html#reno.ops.sub.pt_str">(reno.ops.sub method)</a>
+</li>
+        <li><a href="api/reno.ops.sum.html#reno.ops.sum.pt_str">(reno.ops.sum method)</a>
+</li>
+        <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform.pt_str">(reno.ops.Uniform method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.pulse.html#reno.ops.pulse">pulse (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.pymc">pymc() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.pymc_model">pymc_model() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.pymc.pymc_model_imports.html#reno.pymc.pymc_model_imports">pymc_model_imports() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.pymc_str">pymc_str() (reno.model.Model method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.HistoricalValue.html#reno.components.HistoricalValue.qual_name">qual_name() (reno.components.HistoricalValue method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Metric.html#reno.components.Metric.qual_name">(reno.components.Metric method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.qual_name">(reno.components.TrackedReference method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.utils.range_eq_latex.html#reno.utils.range_eq_latex">range_eq_latex() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor.ref_name">ref_name (reno.viz.ReferenceEditor attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.ref_subset">ref_subset (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.utils.ref_universe.html#reno.utils.ref_universe">ref_universe() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.components.Reference.html#reno.components.Reference">Reference (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.viz.ReferenceEditor.html#reno.viz.ReferenceEditor">ReferenceEditor (class in reno.viz)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.refresh_display">refresh_display() (reno.interactive_latex.InteractiveLatex method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.refresh_rows">refresh_rows() (reno.explorer.RunsList method)</a>
+</li>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.refresh_tab_contents">refresh_tab_contents() (reno.explorer.MainView method)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.render">render() (reno.explorer.DiagramPane method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.render">(reno.explorer.PlotsPane method)</a>
+</li>
+      </ul></li>
+      <li>
+    reno.components
+
+      <ul>
+        <li><a href="api/reno.components.html#module-reno.components">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.diagrams
+
+      <ul>
+        <li><a href="api/reno.diagrams.html#module-reno.diagrams">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.explorer
+
+      <ul>
+        <li><a href="api/reno.explorer.html#module-reno.explorer">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.interactive_latex
+
+      <ul>
+        <li><a href="api/reno.interactive_latex.html#module-reno.interactive_latex">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.model
+
+      <ul>
+        <li><a href="api/reno.model.html#module-reno.model">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.ops
+
+      <ul>
+        <li><a href="api/reno.ops.html#module-reno.ops">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    reno.parser
+
+      <ul>
+        <li><a href="api/reno.parser.html#module-reno.parser">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.pymc
+
+      <ul>
+        <li><a href="api/reno.pymc.html#module-reno.pymc">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.tab_exporter
+
+      <ul>
+        <li><a href="api/reno.tab_exporter.html#module-reno.tab_exporter">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.utils
+
+      <ul>
+        <li><a href="api/reno.utils.html#module-reno.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    reno.viz
+
+      <ul>
+        <li><a href="api/reno.viz.html#module-reno.viz">module</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.repeated_pulse.html#reno.ops.repeated_pulse">repeated_pulse (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.rerender_equations">rerender_equations() (reno.viz.ModelViewer method)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.rerender_graph">rerender_graph() (reno.viz.ModelViewer method)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.rerun">rerun() (reno.viz.ModelViewer method)</a>
+</li>
+      <li><a href="api/reno.explorer.ClickablePane.html#reno.explorer.ClickablePane.reset_pan">reset_pan() (reno.explorer.ClickablePane method)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.resolve_init_array">resolve_init_array() (reno.components.TrackedReference method)</a>
+</li>
+      <li><a href="api/reno.pymc.resolve_pt_scan_args.html#reno.pymc.resolve_pt_scan_args">resolve_pt_scan_args() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.utils.resource_path.html#reno.utils.resource_path">resource_path() (in module reno.utils)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.run_metrics">run_metrics() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.run_name">run_name (reno.explorer.RunRow attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.run_posterior">run_posterior() (reno.explorer.Explorer method)</a>
+</li>
+      <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.run_prior">run_prior() (reno.explorer.Explorer method)</a>
+</li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow">RunRow (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList">RunsList (class in reno.explorer)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.save">save() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.components.Scalar.html#reno.components.Scalar">Scalar (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.seek_refs">seek_refs() (reno.components.EquationPart method)</a>
+
+      <ul>
+        <li><a href="api/reno.ops.outflows.html#reno.ops.outflows.seek_refs">(reno.ops.outflows method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.ops.series_max.html#reno.ops.series_max">series_max (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.series_max">series_max() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.ops.series_min.html#reno.ops.series_min">series_min (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.series_min">series_min() (reno.components.EquationPart method)</a>
+</li>
+      <li><a href="api/reno.diagrams.set_dark_mode.html#reno.diagrams.set_dark_mode">set_dark_mode() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.set_running">set_running() (reno.explorer.Explorer method)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.shape">shape (reno.components.EquationPart property)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.show_vars">show_vars (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.simulate">simulate() (reno.model.Model method)</a>
+</li>
+      <li><a href="api/reno.viz.ModelViewer.html#reno.viz.ModelViewer.simulate_button_press">simulate_button_press() (reno.viz.ModelViewer method)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.simulator">simulator() (reno.model.Model method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.sin.html#reno.ops.sin">sin (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.slice.html#reno.ops.slice">slice (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.ops.smooth.html#reno.ops.smooth">smooth (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock.space">space (reno.components.Stock property)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.sparkdensities">sparkdensities (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.sparklines">sparklines (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.ops.step.html#reno.ops.step">step (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.steps">steps (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.components.Stock.html#reno.components.Stock">Stock (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.diagrams.stock_flow_diagram.html#reno.diagrams.stock_flow_diagram">stock_flow_diagram() (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.stocks">stocks (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.ops.sub.html#reno.ops.sub">sub (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.diagrams.SUBGRAPH_COLORS.html#reno.diagrams.SUBGRAPH_COLORS">SUBGRAPH_COLORS (in module reno.diagrams)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.subset">subset (reno.explorer.PlotsPane attribute)</a>
+</li>
+      <li><a href="api/reno.ops.sum.html#reno.ops.sum">sum (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.sum">sum() (reno.components.EquationPart method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.tab_name">tab_name (reno.explorer.PanesSet attribute)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.template_file">template_file (reno.interactive_latex.InteractiveLatex attribute)</a>
+</li>
+      <li><a href="api/reno.components.TimeRef.html#reno.components.TimeRef">TimeRef (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.components.EquationPart.html#reno.components.EquationPart.timeseries">timeseries (reno.components.EquationPart property)</a>
+</li>
+      <li><a href="api/reno.components.Metric.html#reno.components.Metric.to_dict">to_dict() (reno.components.Metric method)</a>
+
+      <ul>
+        <li><a href="api/reno.components.Stock.html#reno.components.Stock.to_dict">(reno.components.Stock method)</a>
+</li>
+        <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference.to_dict">(reno.components.TrackedReference method)</a>
+</li>
+        <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.to_dict">(reno.explorer.DiagramPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.to_dict">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.Explorer.html#reno.explorer.Explorer.to_dict">(reno.explorer.Explorer method)</a>
+</li>
+        <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.to_dict">(reno.explorer.MainView method)</a>
+</li>
+        <li><a href="api/reno.explorer.PanesSet.html#reno.explorer.PanesSet.to_dict">(reno.explorer.PanesSet method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.to_dict">(reno.explorer.PlotsPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.to_dict">(reno.explorer.RunRow method)</a>
+</li>
+        <li><a href="api/reno.explorer.RunsList.html#reno.explorer.RunsList.to_dict">(reno.explorer.RunsList method)</a>
+</li>
+        <li><a href="api/reno.model.Model.html#reno.model.Model.to_dict">(reno.model.Model method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.to_html">to_html() (reno.explorer.DiagramPane method)</a>
+
+      <ul>
+        <li><a href="api/reno.explorer.EditableTextPane.html#reno.explorer.EditableTextPane.to_html">(reno.explorer.EditableTextPane method)</a>
+</li>
+        <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.to_html">(reno.explorer.PlotsPane method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/reno.pymc.to_pymc_model.html#reno.pymc.to_pymc_model">to_pymc_model() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.pymc.to_pymc_model_str.html#reno.pymc.to_pymc_model_str">to_pymc_model_str() (in module reno.pymc)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.trace">trace (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.trace_RVs">trace_RVs (reno.model.Model attribute)</a>
+</li>
+      <li><a href="api/reno.components.TrackedReference.html#reno.components.TrackedReference">TrackedReference (class in reno.components)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.ops.Uniform.html#reno.ops.Uniform">Uniform (class in reno.ops)</a>
+</li>
+      <li><a href="api/reno.explorer.DiagramPane.html#reno.explorer.DiagramPane.universe">universe (reno.explorer.DiagramPane attribute)</a>
+</li>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.update_plot_type">update_plot_type() (reno.explorer.PlotsPane method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.PlotsPane.html#reno.explorer.PlotsPane.update_subset">update_subset() (reno.explorer.PlotsPane method)</a>
+</li>
+      <li><a href="api/reno.explorer.MainView.html#reno.explorer.MainView.update_traces">update_traces() (reno.explorer.MainView method)</a>
+</li>
+      <li><a href="api/reno.components.Variable.html#reno.components.Variable.user">user (reno.components.Variable attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.components.Variable.html#reno.components.Variable">Variable (class in reno.components)</a>
+</li>
+      <li><a href="api/reno.model.Model.html#reno.model.Model.vars">vars (reno.model.Model attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.explorer.ViewControls.html#reno.explorer.ViewControls">ViewControls (class in reno.explorer)</a>
+</li>
+      <li><a href="api/reno.explorer.RunRow.html#reno.explorer.RunRow.visible">visible (reno.explorer.RunRow attribute)</a>
+</li>
+      <li><a href="api/reno.interactive_latex.InteractiveLatex.html#reno.interactive_latex.InteractiveLatex.vue_fire_on_row_clicked">vue_fire_on_row_clicked() (reno.interactive_latex.InteractiveLatex method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/reno.viz.ModelLatex.html#reno.viz.ModelLatex.widget">widget (reno.viz.ModelLatex attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2025, UT Battelle, LLC.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

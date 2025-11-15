@@ -1,0 +1,51 @@
+reno.ops.repeated\_pulse
+========================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: repeated_pulse
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~repeated_pulse.__init__
+      ~repeated_pulse.astype
+      ~repeated_pulse.clip
+      ~repeated_pulse.equal
+      ~repeated_pulse.eval
+      ~repeated_pulse.find_refs_of_type
+      ~repeated_pulse.get_shape
+      ~repeated_pulse.get_type
+      ~repeated_pulse.is_static
+      ~repeated_pulse.latex
+      ~repeated_pulse.not_equal
+      ~repeated_pulse.op_eval
+      ~repeated_pulse.op_repr
+      ~repeated_pulse.op_types
+      ~repeated_pulse.pt
+      ~repeated_pulse.pt_str
+      ~repeated_pulse.seek_refs
+      ~repeated_pulse.series_max
+      ~repeated_pulse.series_min
+      ~repeated_pulse.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~repeated_pulse.OP_REPR
+      ~repeated_pulse.dtype
+      ~repeated_pulse.shape
+      ~repeated_pulse.timeseries

@@ -5,6 +5,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.5.0] - 2025-11-15
+
+### Added
+
+* A `stock.outflows` op which evaluates to the sum of the flows leaving a stock.
+* A `stock.space` op which, when a stock has a `max` specified, returns the
+  remaining quantity between the max and the actual value, after accounting for
+  any outflows leaving the stock in that timestep. (This allows for bottlenecking
+  a flow to not "overfill" a stock without simplying throwing excess values away.)
+* `>>` and `<<` handling to stocks and flows as syntax sugar for quickly
+  speciying a pipeline of in and outflows, e.g.:
+
+  ```python
+  m = Model()
+  with m:
+    s0, s1, s2 = Stock(), Stock(), Stock()
+    f0, f1 = Flow(), Flow()
+
+    # stuff in s1 is moved to s0 and s2 through f0 and f1
+    s0 << f0 << s1 >> f1 >> s2
+  ```
+
+
+
+
 ## [0.4.0] - 2025-11-13
 
 ### Added

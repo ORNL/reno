@@ -1,0 +1,62 @@
+reno.explorer.Explorer
+======================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: Explorer
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Explorer.__init__
+      ~Explorer.clone
+      ~Explorer.embed
+      ~Explorer.from_dict
+      ~Explorer.get_root
+      ~Explorer.run_posterior
+      ~Explorer.run_prior
+      ~Explorer.save
+      ~Explorer.select
+      ~Explorer.servable
+      ~Explorer.server_doc
+      ~Explorer.set_running
+      ~Explorer.show
+      ~Explorer.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Explorer.align
+      ~Explorer.aspect_ratio
+      ~Explorer.css_classes
+      ~Explorer.design
+      ~Explorer.height
+      ~Explorer.height_policy
+      ~Explorer.loading
+      ~Explorer.margin
+      ~Explorer.max_height
+      ~Explorer.max_width
+      ~Explorer.min_height
+      ~Explorer.min_width
+      ~Explorer.name
+      ~Explorer.param
+      ~Explorer.sizing_mode
+      ~Explorer.styles
+      ~Explorer.stylesheets
+      ~Explorer.tags
+      ~Explorer.visible
+      ~Explorer.width
+      ~Explorer.width_policy

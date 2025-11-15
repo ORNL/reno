@@ -1,0 +1,71 @@
+reno.components.Stock
+=====================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Stock
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Stock.__init__
+      ~Stock.astype
+      ~Stock.clip
+      ~Stock.combine_eqs
+      ~Stock.compute_diff_eq
+      ~Stock.debug_equation
+      ~Stock.display
+      ~Stock.equal
+      ~Stock.equations
+      ~Stock.eval
+      ~Stock.find_refs_of_type
+      ~Stock.from_dict
+      ~Stock.get_shape
+      ~Stock.get_type
+      ~Stock.history
+      ~Stock.initial_vals
+      ~Stock.is_static
+      ~Stock.latex
+      ~Stock.max_refs
+      ~Stock.min_refs
+      ~Stock.not_equal
+      ~Stock.plot
+      ~Stock.populate
+      ~Stock.pt
+      ~Stock.pt_str
+      ~Stock.qual_name
+      ~Stock.resolve_init_array
+      ~Stock.seek_refs
+      ~Stock.series_max
+      ~Stock.series_min
+      ~Stock.sum
+      ~Stock.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Stock.dtype
+      ~Stock.outflows
+      ~Stock.shape
+      ~Stock.space
+      ~Stock.timeseries
+      ~Stock.model
+      ~Stock.init
+      ~Stock.dim
+      ~Stock.implicit
+      ~Stock.computed_mask
+      ~Stock.label
+      ~Stock.doc
