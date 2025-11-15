@@ -671,3 +671,18 @@ def test_dist_based_basic_hist_pymc():
     assert 7 in ds.prior.v2[0, :, -1]
     assert 6 in ds.prior.v2[0, :, -1]
     assert 5 in ds.prior.v2[0, :, -1]
+
+
+def test_rshift_lshift_op_overloading_for_stocks():
+    """With the magic of operator overloading, stock >> flow >> stock should correctly
+    add a flow as inflows and outflows appropriately"""
+    m = Model()
+    with m:
+        s0, s1, s2 = Stock(), Stock(), Stock()
+        f0, f1 = Flow(), Flow()
+        s0 << f0 << s1 >> f1 >> s2
+
+    assert f0 in s0.in_flows
+    assert f0 in s1.out_flows
+    assert f1 in s1.out_flows
+    assert f1 in s2.in_flows

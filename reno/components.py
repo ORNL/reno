@@ -1822,6 +1822,24 @@ class Flow(TrackedReference):
             eq, label, doc, min=min, max=max, dim=dim, group=group, dtype=dtype
         )
 
+    # ---- MATH OVERLOADING ----
+    # for convenience, allows defining a chain of stocks/flows
+    # e.g. f0 << s0 >> f1 >> s1
+    # for simplistic chains this helps make sure you don't forget
+    # to add a flow as both an inflow/outflow where necessary etc.
+
+    def __rshift__(self, stock):
+        """inflow >> stock"""
+        stock += self
+        return stock
+
+    def __lshift__(self, stock):
+        """outflow << stock"""
+        stock -= self
+        return stock
+
+    # ---- /MATH OVERLOADING ----
+
     def initial_vals(self):
         """Variables can be set to distributions, so the inital vals
         in that case will be a population sampled from the eq distribution."""
@@ -2096,6 +2114,21 @@ class Stock(TrackedReference):
     def __isub__(self, obj):
         self.out_flows.append(obj)
         return self
+
+    # for convenience, allows defining a chain of stocks/flows
+    # e.g. f0 << s0 >> f1 >> s1
+    # for simplistic chains this helps make sure you don't forget
+    # to add a flow as both an inflow/outflow where necessary etc.
+
+    def __rshift__(self, flow):
+        """stock >> outflow"""
+        self -= flow
+        return flow
+
+    def __lshift__(self, flow):
+        """stock << inflow"""
+        self += flow
+        return flow
 
     # ---- /MATH OVERLOADING ----
 
