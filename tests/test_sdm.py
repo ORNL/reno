@@ -4,6 +4,7 @@ import os
 
 import pytest
 
+import reno
 from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
 from reno.model import Model
 from reno.pymc import find_historical_tracked_refs
@@ -288,3 +289,48 @@ def test_model_context_manager_handles_submodels():
 
     ds = m1(1, 1)
     assert ds.combination.values[0] == 7
+
+
+def test_bottleneck_example():
+    """A model using the .outflows or .space of a stock to help limit should correctly bottleneck upstream."""
+    m = Model()
+    with m:
+        f_in, f_between, f_out = Flow(), Flow(), Flow(1)
+        s0, s1, sfinal = Stock(max=2), Stock(max=3), Stock()
+
+        f_in.eq = reno.minimum(4, s0.space)
+        f_between.eq = reno.minimum(2, s1.space)
+
+        s0 += f_in
+        s0 -= f_between
+        s1 += f_between
+        s1 -= f_out
+        sfinal += f_out
+
+    ds = m()
+    assert (ds.f_in[0][0:4] == [4.0, 2.0, 2.0, 1.0]).all()
+    assert (ds.f_between[0][0:4] == [2.0, 2.0, 2.0, 1.0]).all()
+
+
+def test_bottleneck_example_pymc():
+    """A pymc model using the .outflows or .space of a stock to help limit should correctly bottleneck upstream."""
+    m = Model()
+    with m:
+        f_in, f_between, f_out = Flow(), Flow(), Flow(1)
+        s0, s1, sfinal = Stock(max=2), Stock(max=3), Stock()
+
+        f_in.eq = reno.minimum(4, s0.space)
+        f_between.eq = reno.minimum(2, s1.space)
+
+        s0 += f_in
+        s0 -= f_between
+        s1 += f_between
+        s1 -= f_out
+        sfinal += f_out
+
+    ds1 = m()
+    ds2 = m.pymc(n=1, compute_prior_only=True)
+    assert (ds1.f_in.values == ds2.prior.f_in.sel(chain=0).values).all()
+    assert (ds1.f_between.values == ds2.prior.f_between.sel(chain=0).values).all()
+    assert (ds1.s0.values == ds2.prior.s0.sel(chain=0).values).all()
+    assert (ds1.s1.values == ds2.prior.s1.sel(chain=0).values).all()
