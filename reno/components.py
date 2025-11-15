@@ -2,6 +2,7 @@
 components necessary to make up a model and construct its equations.
 """
 
+import warnings
 from collections.abc import Callable
 
 import matplotlib.pyplot as plt
@@ -2098,11 +2099,27 @@ class Stock(TrackedReference):
 
     # ---- /MATH OVERLOADING ----
 
+    @property
+    def outflows(self) -> "Operation":
+        """An operation representing the sum of the flows leaving this stock."""
+        return reno.ops.outflows(self)
+
+    @property
+    def space(self) -> "Operation":
+        """An operation that computes how much space is remaining in this stock
+        after taking into account any outflows for this timestep.
+
+        Note that this requires a ``max`` value to be set on this stock."""
+        if self.max is None:
+            warnings.warn(
+                f"The ``space`` operation requires a maximum to be set on the stock, specify ``{self.qual_name()}.max``"
+            )
+        return self.max - self + self.outflows
+
+    # TODO: "operation" for "immediate space", just max - self?
+
     def initial_vals(self):
         try:
-            # dims = (slice(None, None), 0)
-            # if self.dim > 1:
-            #     dims = (slice(None, None), slice(None, None), 0)
             if self.init is not None:
                 self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
             else:
