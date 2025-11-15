@@ -1125,20 +1125,26 @@ class smooth(reno.components.ExtendedOperation):
 
 
 class outflows(reno.components.Operation):
-    # TODO: may be dependency issues, account for outflows operations in
-    # seek_refs?
     def __init__(self, stock):
         # WAIT: optionally include a list of flows to exclude??
         super().__init__(stock)
-        # TODO: throw error if not a stock
+        if not isinstance(stock, reno.components.Stock):
+            raise TypeError(f"The outflows op must be a Stock, not a {type(stock)}")
+
+    def seek_refs(self):
+        # have to override because outflows is "substituting in" the sum of flows.
+        # print("In outflows seek refs!")
+        return self.sub_equation_parts[0].out_flows
 
     def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{outflows}}"
 
     def op_eval(self, **kwargs):
-        self.sub_equation_parts[0].combine_eqs(
-            self.sub_equation_parts[0].out_flows
-        ).eval(**kwargs)
+        return (
+            self.sub_equation_parts[0]
+            .combine_eqs(self.sub_equation_parts[0].out_flows)
+            .eval(**kwargs)
+        )
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return (
