@@ -41,6 +41,7 @@ __all__ = [
     "interpolate",
     "assign",
     "astype",
+    "stack",
     # -- "higher order" --
     "pulse",
     "repeated_pulse",
@@ -953,6 +954,41 @@ class astype(reno.components.Operation):
         return (
             f"(astype {self.sub_equation_parts[0].__repr__()} {self.__dtype.__name__})"
         )
+
+
+class stack(reno.components.Operation):
+    """Stack a set of 1 dimensional values into a multidim value.
+
+    This does not yet implement stacking multiple multidim values.
+    (may need to be a separate concat operator for that)
+    """
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def get_shape(self) -> int:
+        return len(self.sub_equation_parts)
+
+    def get_type(self) -> type:
+        types = [part.dtype for part in self.sub_equation_parts]
+        if float in types:
+            return float
+        return types[0]
+
+    def latex(self, **kwargs) -> str:
+        building_str = (
+            f"[{','.join(part.latex(**kwargs) for part in self.sub_equation_parts)}]"
+        )
+        return building_str
+
+    def op_eval(self, **kwargs):
+        return np.stack([part.eval(**kwargs) for part in self.sub_equation_parts])
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return pt.stack([part.pt(**refs) for part in self.sub_equation_parts])
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"pt.stack([{','.join(part.pt_str(**refs) for part in self.sub_equation_parts)}])"
 
 
 # ==================================================

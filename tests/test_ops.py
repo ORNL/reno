@@ -635,3 +635,35 @@ def test_astype_pymc():
     m.v1 = reno.Variable(m.v0.astype(int))
     ds = m.pymc(n=1, steps=3, compute_prior_only=True)
     assert (ds.prior.v1.values[0] == [5, 6, 7]).all()
+
+
+def test_stack():
+    """Stacking multiple 1dim variables should correctly turn into a multidim value"""
+    m = model.Model()
+    with m:
+        v0, v1, v2 = Variable(1), Variable(2), Variable(3)
+        f3 = Flow(ops.stack(v0, v1, v2))
+
+        s0 = Stock()
+        f3 >> s0
+
+    assert f3.shape == 3
+    ds = m()
+    assert (ds.f3.values[0] == [1, 2, 3]).all()
+    assert (ds.s0.values[0][2] == [2, 4, 6]).all()
+
+
+def test_stack_pymc():
+    """Stacking multiple 1dim variables should correctly turn into a multidim value in pymc"""
+    m = model.Model()
+    with m:
+        v0, v1, v2 = Variable(1), Variable(2), Variable(3)
+        f3 = Flow(ops.stack(v0, v1, v2))
+
+        s0 = Stock()
+        f3 >> s0
+
+    assert f3.shape == 3
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (ds.prior.f3.values[0][0] == [1, 2, 3]).all()
+    assert (ds.prior.s0.values[0][0][2] == [2, 4, 6]).all()
