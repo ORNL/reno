@@ -13,9 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * A `stock.space` op which, when a stock has a `max` specified, returns the
   remaining quantity between the max and the actual value, after accounting for
   any outflows leaving the stock in that timestep. (This allows for bottlenecking
-  a flow to not "overfill" a stock without simplying throwing excess values away.)
+  a flow to not "overfill" a stock without simply throwing excess values away.)
 * `>>` and `<<` handling to stocks and flows as syntax sugar for quickly
-  speciying a pipeline of in and outflows, e.g.:
+  specifying a pipeline of in and outflows, e.g.:
 
   ```python
   m = Model()
