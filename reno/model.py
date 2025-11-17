@@ -528,12 +528,19 @@ class Model:
             # otherwise find and list each of the free variables within each submodel
             for model in self.models:
                 free.extend(
-                    [f"{model.name}.{ref}" for ref in model.free_refs(recursive)]
+                    [
+                        f"{model.name}.{ref}"
+                        for ref in model.free_refs(recursive)
+                        if not ref.implicit
+                    ]
                 )
 
         # a variable is free if its equation is directly a scalar or distribution, or hasn't
         # been assigned an equation. Flows use same logic as variables here.
         for ref in self.vars + self.flows:
+            if ref.implicit:
+                continue
+
             if reno.utils.is_free_var(ref.eq):
                 free.append(ref)
 

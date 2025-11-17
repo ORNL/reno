@@ -687,3 +687,35 @@ def test_rshift_lshift_op_overloading_for_stocks():
     assert f0 in s1.out_flows
     assert f1 in s1.out_flows
     assert f1 in s2.in_flows
+
+
+def test_implicit_inflow_eq():
+    """An equation with a flow given to a stock should correctly create an implicit
+    flow."""
+    m = Model()
+    with m:
+        s0, s1 = Stock(), Stock()
+        f0 = Flow(3)
+
+        s0 >> f0
+        (f0 - 1) >> s1
+
+    assert s1.in_flows[0].implicit
+
+    ds = m()
+    assert ds.s1.values[0][1] == 2
+    assert ds.s0.values[0][1] == -3
+
+
+def test_inflow_list():
+    """A stock given a list of flows to add should correctly add all of them."""
+    m = Model()
+    with m:
+        s0 = Stock()
+        f0, f1 = Flow(1), Flow(2)
+
+        [f0, f1] >> s0
+
+    assert s0.in_flows == [f0, f1]
+    ds = m()
+    assert ds.s0.values[0][1] == 3
