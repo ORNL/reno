@@ -350,6 +350,8 @@ class EquationPart:
 # what someone using this API should be using.
 
 
+# TODO: technically this should probably be called "Value" instead of Scalar
+# since it can take multidim data.
 class Scalar(EquationPart):
     """A static, single value equation part, representing some simple value that
     doesn't need to be computed.
@@ -407,7 +409,11 @@ class Scalar(EquationPart):
         return f"pt.as_tensor({self.value})"
 
     def __repr__(self):
-        return f"Scalar({self.value})"
+        # print("Type", type(self.value))
+        value = self.value
+        if isinstance(self.value, np.ndarray):
+            value = value.tolist()
+        return f"Scalar({value})"
 
 
 class Distribution(EquationPart):
@@ -1615,6 +1621,7 @@ class TrackedReference(Reference):
             "max": str(self.max),
             "group": self.group,
             "eq": str(self.eq),
+            "implicit": self.implicit,
         }
 
     def from_dict(self, data: dict, refs: dict[str, "TrackedReference"]):
@@ -1626,6 +1633,7 @@ class TrackedReference(Reference):
         self.min = reno.parser.parse(data["min"], refs)
         self.max = reno.parser.parse(data["max"], refs)
         self.group = data["group"]
+        self.implicit = data["implicit"]
         if "eq" in data:
             self.eq = reno.parser.parse(data["eq"], refs)
 
@@ -1899,6 +1907,8 @@ class Flow(TrackedReference):
         """Get the string representation for referring to this flow, italized
         and as a function of ``t`` to better represent that this should be a
         rate?"""
+        if self.implicit:
+            return f"({self.eq.latex(**kwargs)})"
         latex_str = f"{latex_name(self.label, 'textit')}"
         if self.model.parent is not None:
             latex_str += f"_{{{latex_name(self.model.label)}}}"
@@ -1945,6 +1955,9 @@ class Flow(TrackedReference):
                 value = reno.ops.assign(value)
             # Make sure sub_equation_parts is kept up to date with the equation.
             self.sub_equation_parts = [value]
+            # force recomputing type/shape now
+            self._dtype = None
+            self._shape = None
         elif name in ("min", "max", "init"):
             value = ensure_scalar(value)
         object.__setattr__(self, name, value)
@@ -2055,6 +2068,9 @@ class Variable(TrackedReference):
                 value = reno.ops.assign(value)
             # Make sure sub_equation_parts is kept up to date with the equation.
             self.sub_equation_parts = [value]
+            # force recomputing type/shape now
+            self._dtype = None
+            self._shape = None
         elif name in ("min", "max", "init"):
             value = ensure_scalar(value)
         object.__setattr__(self, name, value)
@@ -2108,11 +2124,11 @@ class Stock(TrackedReference):
     # bath_water -= Flow("drain")
 
     def __iadd__(self, obj):
-        self.in_flows.append(obj)
+        self.add_inflow(obj)
         return self
 
     def __isub__(self, obj):
-        self.out_flows.append(obj)
+        self.add_outflow(obj)
         return self
 
     # for convenience, allows defining a chain of stocks/flows
@@ -2124,6 +2140,11 @@ class Stock(TrackedReference):
         """stock >> outflow"""
         self -= flow
         return flow
+
+    def __rrshift__(self, flow):
+        """inflow >> stock"""
+        self += flow
+        return self
 
     def __lshift__(self, flow):
         """stock << inflow"""
@@ -2150,6 +2171,31 @@ class Stock(TrackedReference):
         return self.max - self + self.outflows
 
     # TODO: "operation" for "immediate space", just max - self?
+
+    def add_inflow(self, obj):
+        print("INFLOW", obj)
+        if isinstance(obj, Flow):
+            self.in_flows.append(obj)
+        elif isinstance(obj, list):
+            for item in obj:
+                self.add_inflow(item)
+        else:
+            # create implicit inflow
+            implicit_inflow = Flow(obj)
+            implicit_inflow.implicit = True
+            self.add_inflow(implicit_inflow)
+
+    def add_outflow(self, obj):
+        print("OUTFLOW", obj)
+        if isinstance(obj, Flow):
+            self.out_flows.append(obj)
+        elif isinstance(obj, list):
+            for item in obj:
+                self.add_outflow(item)
+        else:
+            raise TypeError(
+                "Only flows and lists of flows can currently be specified as a stock outflow."
+            )
 
     def initial_vals(self):
         try:
@@ -2260,9 +2306,11 @@ class Stock(TrackedReference):
         ``to_dict()``."""
         super().from_dict(data, refs)
         for in_flow in data["in_flows"]:
-            self.in_flows.append(reno.parser.parse(in_flow, refs))
+            # self.in_flows.append(reno.parser.parse(in_flow, refs))
+            self.add_inflow(reno.parser.parse(in_flow, refs))
         for out_flow in data["out_flows"]:
-            self.out_flows.append(reno.parser.parse(out_flow, refs))
+            # self.out_flows.append(reno.parser.parse(out_flow, refs))
+            self.add_outflow(reno.parser.parse(out_flow, refs))
 
     def __setattr__(self, name, value):
         # TODO: this is mostly the same across all tracked refs, can prob move

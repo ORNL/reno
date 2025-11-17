@@ -34,6 +34,7 @@ def test_int_float_parsing(string, expected, expected_type):
         ("Normal(5.0, std=10)", [5.0], {"std": 10}),
         ("Normal(5.0, std =13.2)", [5.0], {"std": 13.2}),
         ("Scalar(1.0)", [1.0], {}),
+        ("Scalar([1.0, 6.0, 2.0])", [[1.0, 6.0, 2.0]], {}),
     ],
 )
 def test_param_parsing(string, expected_args, expected_kwargs):

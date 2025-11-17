@@ -888,6 +888,12 @@ class assign(reno.components.Operation):
     def __init__(self, a):
         super().__init__(a)
 
+    def get_shape(self) -> int:
+        return self.sub_equation_parts[0].shape
+
+    def get_type(self) -> type:
+        return self.sub_equation_parts[0].dtype
+
     def latex(self, **kwargs):
         return self.sub_equation_parts[0].latex(**kwargs)
 

@@ -2,6 +2,8 @@
 reno op objects themselves. This is primarily needed for the interative viz
 portions and the ability to serialize models for saving/loading to file."""
 
+import json
+
 import reno
 
 
@@ -110,6 +112,11 @@ def parse_value(string: str) -> float | int | str:
     #     except ValueError:
     #         val = None
 
+    if val is None:
+        if str(string).startswith("[") and str(string).endswith("]"):
+            # safer parse of a list than a eval() would be
+            val = json.loads(string)
+
     # leave as string if it's none of the above types
     if val is None:
         val = string
@@ -161,7 +168,7 @@ def parse_op_str(string: str, no_op: bool = False) -> tuple[str, list[str]]:
 
         if i == len(string) - 1:
             if parens_stack != 0:
-                raise SyntaxError(f"Unmatched '(' in '{string}")
+                raise SyntaxError(f"Unmatched '(' in '{string}'")
             arg_strs.append(string[arg_start_i:])
 
     if no_op:
@@ -199,9 +206,26 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
     start = string.index("(") + 1
     end = string.index(")")
 
+    pieces = []
+    braces_stack = 0
+    last_start = start
+    for i in range(start, end):
+        if string[i] == "[":
+            braces_stack += 1
+        elif string[i] == "]":
+            braces_stack -= 1
+        elif string[i] == "," and braces_stack == 0:
+            pieces.append(string[last_start:i])
+            last_start = i + 1
+
+        if i == end - 1:
+            if braces_stack != 0:
+                raise SyntaxError(f"Unmatched '['] in '{string}'")
+            pieces.append(string[last_start:end])
+
     args = []
     kwargs = {}
-    pieces = string[start:end].split(",")
+    # pieces = string[start:end].split(",")  # doesn't account for array args
     for piece in pieces:
         # check if arg or kwarg
         if "=" in piece:
