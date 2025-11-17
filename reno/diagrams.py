@@ -189,13 +189,25 @@ def stock_flow_diagram(
     return g, missing_connections
 
 
-def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow):
+def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow, dir: str = None):
     """Edge with attributes for heavily highlighting in flows and
     outflows from stocks."""
-    if flow in stock.in_flows:
+
+    if flow.implicit and flow in stock.in_flows:
+        for ref in flow.seek_refs():
+            if isinstance(ref, Flow):
+                add_stock_io_edge(g, stock, ref, "in")
+        return
+    elif flow.implicit and flow in stock.out_flows:
+        for ref in flow.seek_refs():
+            if isinstance(ref, Flow):
+                add_stock_io_edge(g, stock, ref, "out")
+        return
+
+    if flow in stock.in_flows or dir == "in":
         name1 = flow.qual_name()
         name2 = stock.qual_name()
-    elif flow in stock.out_flows:
+    elif flow in stock.out_flows or dir == "out":
         name1 = stock.qual_name()
         name2 = flow.qual_name()
     else:

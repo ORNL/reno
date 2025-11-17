@@ -2173,7 +2173,6 @@ class Stock(TrackedReference):
     # TODO: "operation" for "immediate space", just max - self?
 
     def add_inflow(self, obj):
-        print("INFLOW", obj)
         if isinstance(obj, Flow):
             self.in_flows.append(obj)
         elif isinstance(obj, list):
@@ -2190,7 +2189,6 @@ class Stock(TrackedReference):
                 self.model.add(name, implicit_inflow)
 
     def add_outflow(self, obj):
-        print("OUTFLOW", obj)
         if isinstance(obj, Flow):
             self.out_flows.append(obj)
         elif isinstance(obj, list):
