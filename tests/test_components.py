@@ -222,11 +222,12 @@ def test_dependency_ordering_w_inits():
     """An init equation that is just another reference should correctly gather it as a seek_refs and compute order"""
     m = Model()
     m.v0 = Variable(1)
+    m.f0 = Flow(m.v0)
     m.s = Stock(init=m.v0)
-    m.s += m.v0
+    m.s += m.f0
 
     assert m.s.init.seek_refs() == [m.v0]
-    assert m.dependency_compute_order(inits_order=True) == [m.v0, m.s]
+    assert m.dependency_compute_order(inits_order=True) == [m.v0, m.s, m.f0]
 
 
 def test_submodel_getattrs():

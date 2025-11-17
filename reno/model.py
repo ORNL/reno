@@ -163,8 +163,8 @@ class Model:
                 if ref.name is not None and ref.parent is not None:
                     continue
             name = reno.utils._get_assigned_var_name(ref)
-            if name is None and ref.implicit:
-                name = "_implicit_ref_" + str(id(ref))
+            # if name is None and ref.implicit:
+            #     name = "_implicit_ref_" + str(id(ref))
             setattr(self, name, self._unnamed_references[index])
         self._unnamed_references = []
 
@@ -229,6 +229,9 @@ class Model:
                 Model,
             ),
         ) and not (isinstance(value, Model) and (name == "parent" or name == "model")):
+            # if isinstance(value, reno.components.Flow):
+            #     if value.name is None and value.implicit:
+            #         name = "_implicit_ref_" + str(id(value))
             if value.label is None or value.label == value.name:
                 value.label = name
             value.name = name

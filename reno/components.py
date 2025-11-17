@@ -2183,7 +2183,11 @@ class Stock(TrackedReference):
             # create implicit inflow
             implicit_inflow = Flow(obj)
             implicit_inflow.implicit = True
+            name = "_implicit_inflow_" + str(id(implicit_inflow))
+            implicit_inflow.name = name
             self.add_inflow(implicit_inflow)
+            if self.model is not None:
+                self.model.add(name, implicit_inflow)
 
     def add_outflow(self, obj):
         print("OUTFLOW", obj)
