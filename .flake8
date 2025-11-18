@@ -18,3 +18,4 @@ per-file-ignores =
     reno/pymc.py:C901
     # E221/E222: Think this might actually be a bug, no operators on complaint lines
     reno/explorer.py:E221,E222
+    tests/test*:F841

@@ -82,6 +82,7 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
         # at the end of this function
         refs = resolve_pt_scan_args(model, args, steps)
         refs["__PT_SEQ_LEN__"] = steps
+        refs["__TIMESERIES__"] = "scan"
 
         historical_refs_from_tracked = find_tracked_ref_historical_ref(model)
 
@@ -198,12 +199,17 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
     for ref_name, arg_indices in expected_pt_scan_arg_names(
         model, max_taps=steps
     ).items():
-        code += f"\t{ref_name} = args[{arg_indices}]\n"
+        if isinstance(arg_indices, slice):
+            code += f"\t{ref_name} = pt.stack(args[{arg_indices}], axis=0)\n"
+        else:
+            code += f"\t{ref_name} = args[{arg_indices}]\n"
 
     refs_dict = expected_pt_scan_arg_names(model, as_dict=True, max_taps=steps)
     refs_dict["__PT_SEQ_LEN__"] = steps
     # (in pt_str calls, variables passed in from args should simply be substituted
     # with the variable name itself)
+
+    refs_dict["__TIMESERIES__"] = "scan"
 
     historical_refs_from_tracked = find_tracked_ref_historical_ref(model)
 
@@ -334,6 +340,9 @@ def to_pymc_model(
         # there are a few operations that need to know the total length
         # of the simulation/sequence in order to create the correct
         # pytensor equivalent output, see ops.py
+
+        refs["__TIMESERIES__"] = "init"
+        # tell any timeseries operations to refer to the variable "_h" name.
 
         historical_ref_taps = find_historical_tracked_refs(model)
 
@@ -507,6 +516,10 @@ def to_pymc_model(
             n_steps=steps - 1,
         )
 
+        refs["__TIMESERIES__"] = "metric"
+        # at this point, any timeseries refs will be in metric equations which
+        # should _not_ go based on the historical variable
+
         # handle weird error when only a single stock returned (not wrapping
         # in a list correctly for some reason)
         if len(inits) == 1:
@@ -605,6 +618,9 @@ def to_pymc_model_str(
     # there are a few operations that need to know the total length
     # of the simulation/sequence in order to create the correct
     # pytensor equivalent output, see ops.py
+
+    initial_refs_dict["__TIMESERIES__"] = "init"
+    # tell any timeseries operations to refer to the variable "_hist" name.
 
     per_step_dist_names = []
     # use these in passing seqeunces to scan and ignore them in the others
@@ -782,6 +798,10 @@ def to_pymc_model_str(
     code += f"\t\tn_steps={steps - 1}\n"
     code += "\t)\n"
 
+    initial_refs_dict["__TIMESERIES__"] = "metric"
+    # at this point, any timeseries refs will be in metric equations which
+    # should _not_ go based on the historical variable
+
     code += "\n\t# Collect full sequence data for all stocks/flows/vars into pymc variables\n"
     for obj in model.all_stocks() + [
         obj
@@ -850,8 +870,15 @@ def find_historical_tracked_refs(
     This is primarily used for population of pymc scan step and scan arguments."""
 
     historical_values = []
+    timeseries_values = []
     for ref in model.all_refs():
         historical_values.extend(ref.find_refs_of_type(reno.components.HistoricalValue))
+        timeseries_values.extend(
+            [
+                ts.sub_equation_parts[0]
+                for ts in ref.find_refs_of_type(reno.ops.orient_timeseries)
+            ]
+        )
 
     ref_taps = {}
     for val in historical_values:
@@ -903,6 +930,11 @@ def find_historical_tracked_refs(
         # if isinstance(index_offset, np.ndarray):
         #     index_offset = int(index_offset[0])
         # ref_taps[val.tracked_ref].append(index_offset)
+
+    for val in timeseries_values:
+        if val not in ref_taps:
+            ref_taps[val] = []
+        ref_taps[val].append(None)
 
     # remove duplicate taps, ensure -1 is in there (we always want last val
     # of every ref in case it's used in a stock eq)

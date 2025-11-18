@@ -667,3 +667,43 @@ def test_stack_pymc():
     ds = m.pymc(1, compute_prior_only=True)
     assert (ds.prior.f3.values[0][0] == [1, 2, 3]).all()
     assert (ds.prior.s0.values[0][0][2] == [2, 4, 6]).all()
+
+
+def test_timeseries_slice_nonmetric():
+    """Using timeseries in a regular component (rather than a metric computed after simulation)
+    should still work."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(t + 2)
+        v1 = Variable(v0.timeseries[t - 3 : t - 1].sum())
+    ds = m()
+    assert (
+        ds.v1.values[0][0:4]
+        == [
+            0,
+            0,
+            2,
+            5,
+        ]
+    ).all()
+
+
+def test_timeseries_slice_nonmetric_pymc():
+    """Using timeseries in a regular component (rather than a metric computed after simulation)
+    should still work in pymc."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(t + 2)
+        v1 = Variable(v0.timeseries[t - 3 : t - 1].sum())
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (
+        ds.prior.v1.values[0][0][0:4]
+        == [
+            0,
+            0,
+            2,
+            5,
+        ]
+    ).all()

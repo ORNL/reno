@@ -210,7 +210,10 @@ class index(reno.components.Operation):
 
 class slice(reno.components.Operation):
     """Can be applied along with timeseries op in metrics for getting specific time segments, or
-    can be applied generally in equations when dealing with vector data."""
+    can be applied generally in equations when dealing with vector data.
+
+    Similar to normal python slices, top is exclusive
+    """
 
     def __init__(self, a, start=None, stop=None):
         self.start = start
@@ -249,6 +252,11 @@ class slice(reno.components.Operation):
         if isinstance(stop, np.ndarray):
             stop = stop[0]
 
+        if start is None or start < 0:
+            start = 0
+        if stop is not None and stop < start:
+            stop = start
+
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(t, **kwargs)
@@ -268,18 +276,28 @@ class slice(reno.components.Operation):
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         if self.start is None and self.stop is None:
             return self.sub_equation_parts[0].pt(**refs)
-        t_0 = pt.as_tensor(0) if self.start is None else self.start.pt(**refs)
+        t_0 = (
+            pt.as_tensor(0)
+            if self.start is None
+            else pt.maximum(pt.as_tensor(0), self.start.pt(**refs))
+        )
         if self.stop is None:
             return self.sub_equation_parts[0].pt(**refs)[..., t_0:]
-        return self.sub_equation_parts[0].pt(**refs)[..., t_0 : self.stop.pt(**refs)]
+        return self.sub_equation_parts[0].pt(**refs)[
+            ..., t_0 : pt.maximum(self.stop.pt(**refs), t_0)
+        ]
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         if self.start is None and self.stop is None:
             return f"{self.sub_equation_parts[0].pt_str(**refs)}"
-        t0 = "pt.as_tensor(0)" if self.start is None else self.start.pt_str(**refs)
+        t0 = (
+            "pt.as_tensor(0)"
+            if self.start is None
+            else f"pt.maximum(pt.as_tensor(0), {self.start.pt_str(**refs)})"
+        )
         if self.stop is None:
             return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0}:]"
-        return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0}:{self.stop.pt_str(**refs)}]"
+        return f"{self.sub_equation_parts[0].pt_str(**refs)}[..., {t0} : pt.maximum({self.stop.pt_str(**refs)}, {t0})]"
 
 
 class orient_timeseries(reno.components.Operation):
@@ -293,6 +311,8 @@ class orient_timeseries(reno.components.Operation):
     TODO: we can _eventually_ make this work within pytensor by the approach to solving general
     history time equations - if a timeseries op detected within non-metric context, include the full
     stops of the relevant variables
+
+    NOTE: only use this in a non-metric equation if a _range_ of timeseries values are needed. Otherwise use `.history()` for single values
     """
 
     # TODO: it probably doesn't make sense to call this on anything except a trackedreference,
@@ -328,6 +348,23 @@ class orient_timeseries(reno.components.Operation):
         if self.sub_equation_parts[0].is_static():
             seq_length = refs["__PT_SEQ_LEN__"]
             return pt.repeat(self.sub_equation_parts[0].pt(**refs), seq_length)
+        if "__TIMESERIES__" in refs:
+            name = self.sub_equation_parts[0].qual_name()
+            # NOTE: _h is what's stored in refs during init and scan,
+            # assuming I still need this to ensure the post calculation
+            # is done correctly with the full sequence instead of the historical
+            # ones.
+            if refs["__TIMESERIES__"] == "init":
+                name += "_h"
+                return refs[name]
+            elif refs["__TIMESERIES__"] == "scan":
+                name += "_h"
+                # TODO: this doesn't work if no timeref included.
+                t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                # have to concatenate to reorder, since pymc is passing in
+                # history (taps) according to the current timestep.
+                return pt.concatenate([refs[name][-t:], refs[name][:-t]])
+            return refs[name]
         return self.sub_equation_parts[0].pt(**refs)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
@@ -336,6 +373,15 @@ class orient_timeseries(reno.components.Operation):
             return (
                 f"pt.repeat({self.sub_equation_parts[0].pt_str(**refs)}, {seq_length})"
             )
+        if "__TIMESERIES__" in refs:
+            name = self.sub_equation_parts[0].qual_name()
+            if refs["__TIMESERIES__"] == "init":
+                name += "_h"
+                return refs[name]
+            elif refs["__TIMESERIES__"] == "scan":
+                name += "_h"
+                t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                return f"pt.concatenate([{refs[name]}[-{refs[t]}:], {refs[name]}[:-{refs[t]}]])"
         else:
             return self.sub_equation_parts[0].pt_str(**refs)
 
