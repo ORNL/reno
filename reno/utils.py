@@ -265,6 +265,8 @@ def is_static(
     if isinstance(eq, reno.ops.slice):
         # slices can potentially index time-based things (if stop is None or explicitly a
         # non-static variable) which would make this non-static
+        if not eq.sub_equation_parts[0].is_static():
+            return False
         if (
             eq.stop is None
             or (eq.stop is not None and not eq.stop.is_static())
@@ -272,6 +274,14 @@ def is_static(
         ):
             # print("Slice with non-static start/stop, not static")
             return False
+
+    if isinstance(eq, reno.ops.orient_timeseries):
+        return False
+    if len(eq.find_refs_of_type(reno.ops.orient_timeseries)) > 0:
+        return False
+    # if hasattr(eq, "eq" and isinstance(eq, reno.ops.orient_timeseries):
+    #     return False
+
     # UGH. I'm just playing whackamole (wow that word looks like guacamole) with
     # weird edgecases I keep accidentally adding.
     if (

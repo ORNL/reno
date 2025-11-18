@@ -61,6 +61,19 @@ def test_static_value_sum():
     assert v.timeseries[:].sum().eval(4) == np.array([25])
 
 
+def test_sum_of_series_inside_model():
+    """The sum of a timeseries inside a model should still work the same as
+    outside a model."""
+    m = model.Model()
+    with m:
+        v0 = Variable(2)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+    ds = m()
+    assert (ds.v1.values[0][4] == [2, 2, 2, 2]).all()
+    assert ds.v2.values[0][4] == 8
+
+
 def test_series_max():
     """Both API forms should return the correct series max."""
     v = Variable()
@@ -104,21 +117,39 @@ def test_slice_on_scalar():
 
 
 def test_slice_staticness_static_slice():
-    """A slice with defined bounds (or static bounds) should be considered static."""
-    v = Variable(None)
-    v.value = np.array([[0, 1, 2, 3, 4], [1, 2, 3, 4, 5]])
+    """A slice with defined bounds (or static bounds) of a non-timeseries multidim should be considered
+    static."""
+    v = Variable([0, 1, 2, 3, 4])
 
-    assert v.timeseries[1:3].is_static()
+    assert v[1:3].is_static()
 
     a = Scalar(1)
     b = Scalar(3)
 
-    assert v.timeseries[a:b].is_static()
+    assert v[a:b].is_static()
 
     av = Variable(a)
     bv = Variable(b)
 
-    assert v.timeseries[av:bv].is_static()
+    assert v[av:bv].is_static()
+
+
+def test_slice_staticness_static_slice_timeseries():
+    """A slice with defined bounds (or static bounds) of a timeseries should NOT be considered static."""
+    v = Variable(None)
+    v.value = np.array([[0, 1, 2, 3, 4], [1, 2, 3, 4, 5]])
+
+    assert not v.timeseries[1:3].is_static()
+
+    a = Scalar(1)
+    b = Scalar(3)
+
+    assert not v.timeseries[a:b].is_static()
+
+    av = Variable(a)
+    bv = Variable(b)
+
+    assert not v.timeseries[av:bv].is_static()
 
 
 def test_slice_staticness_none_endpoint():
@@ -130,6 +161,19 @@ def test_slice_staticness_none_endpoint():
     assert not v.timeseries[1:].is_static()
     t = TimeRef()
     assert not v.timeseries[:t].is_static()
+
+
+def test_slice_staticness_of_timeseries_in_model():
+    """A timeseries slice within a model should _not_ be considered static."""
+    m = model.Model()
+    with m:
+        v0 = Variable(2)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+
+    assert m.v0.is_static()
+    assert not m.v1.is_static()
+    assert not m.v2.is_static()
 
 
 def test_sum_of_dist():

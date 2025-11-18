@@ -125,6 +125,8 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
                 per_timestep_dist_objs.append(obj)
 
         for obj in ref_compute_order:
+            print(obj, obj.is_static())
+            print(historical_refs_from_tracked)
             if isinstance(obj, reno.components.Stock):
                 # no need to do stocks, already handled above
                 continue
@@ -135,6 +137,7 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
 
                 # ensure a full history correctly has the new value at the end.
                 if obj in historical_refs_from_tracked:
+                    print("UPDATING NON-STOCK HISTORICAL IN SCAN", obj.qual_name())
                     refs[f"{obj.qual_name()}_h"] = pt.concatenate(
                         [refs[f"{obj.qual_name()}_h"][1:], pt.as_tensor([pt_eq])]
                     )
@@ -377,7 +380,11 @@ def to_pymc_model(
                             __DIMNAME__=obj.qual_name() + "_vec",
                             **refs,
                         )
-                    elif obj.shape > obj.eq.shape:
+                    # NOTE: slice has no shape and has to assume dim is specified
+                    # correctly
+                    elif obj.shape > obj.eq.shape and not isinstance(
+                        obj.eq, reno.ops.slice
+                    ):
                         pt_eq = pm.Deterministic(
                             obj.qual_name(),
                             obj._implied_eq(obj.eq).pt(**refs).repeat(obj.shape),
@@ -414,7 +421,11 @@ def to_pymc_model(
                             **refs,
                         )
                     else:
-                        if obj.shape > obj.init.shape:
+                        # NOTE: slice has no shape and has to assume dim is specified
+                        # correctly
+                        if obj.shape > obj.init.shape and not isinstance(
+                            obj.init, reno.ops.slice
+                        ):
                             pt_eq = pm.Deterministic(
                                 f"{obj.qual_name()}_init",
                                 obj._implied_eq(obj.init).pt(**refs).repeat(obj.shape),
@@ -431,7 +442,11 @@ def to_pymc_model(
                 else:
                     # flows and vars without a separate init definition
                     # (just run a single normal calculation of their equation)
-                    if obj.shape > obj.eq.shape:
+                    # NOTE: slice has no shape and has to assume dim is specified
+                    # correctly
+                    if obj.shape > obj.eq.shape and not isinstance(
+                        obj.eq, reno.ops.slice
+                    ):
                         pt_eq = pm.Deterministic(
                             f"{obj.qual_name()}_init",
                             obj._implied_eq(obj.eq).pt(**refs).repeat(obj.shape),
@@ -451,8 +466,11 @@ def to_pymc_model(
                     len(historical_ref_taps[obj]) > 1
                     or None in historical_ref_taps[obj]
                 ):
-                    # TODO: doesn't handle static but still unclear if that
-                    # makes sense anyway
+                    # static "historical references" get constructed on the fly
+                    # because it wouldn't make sense to have a separate
+                    # outputs_info and handling for a thing that doesn't change
+                    if obj.is_static():
+                        continue
                     inner_array_value = 0.0
                     if obj.shape > 1:
                         inner_array_value = [0.0] * obj.shape
@@ -461,8 +479,20 @@ def to_pymc_model(
                         history_size = steps - 1
                     else:
                         history_size = min(historical_ref_taps[obj]) * -1
+
+                    # need to separately check for an inited dynamic variable vs
+                    # static because a timeseries of a static won't show up in
+                    # inits_by_obj
+                    inner_array_final_value = None
+                    print(inits_by_obj)
+                    print(statics_by_obj)
+                    if obj in inits_by_obj:
+                        inner_array_final_value = inits_by_obj[obj]
+                    elif obj in statics_by_obj:
+                        inner_array_final_value = statics_by_obj[obj]
+
                     inner_array = [inner_array_value] * history_size + [
-                        inits_by_obj[obj]
+                        inner_array_final_value
                     ]
                     hist_var = pm.Deterministic(
                         f"{obj.qual_name()}_hist", pt.stack(inner_array)
@@ -506,6 +536,9 @@ def to_pymc_model(
         for obj in model.all_flows() + model.all_vars():
             if obj in statics_by_obj:
                 statics.append(statics_by_obj[obj])
+
+        print("static", statics)
+        print("outputs", inits)
 
         seqs, updates = pytensor.scan(
             fn=pt_sim_step(model, steps),
@@ -649,6 +682,13 @@ def to_pymc_model_str(
                         **initial_refs_dict,
                     )
                     code += f"\t{obj.qual_name()} = {inner_eq}\n"
+                # NOTE: slice has no shape and has to assume dim is specified
+                # correctly
+                elif obj.shape > obj.eq.shape and not isinstance(
+                    obj.eq, reno.ops.slice
+                ):
+                    inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
+                    code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", {inner_eq}{dims_text}).repeat({obj.shape})\n'
                 else:
                     inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
                     code += f'\t{obj.qual_name()} = pm.Deterministic("{obj.qual_name()}", {inner_eq}{dims_text})\n'
@@ -682,7 +722,11 @@ def to_pymc_model_str(
                     )
                     code += f"\t{obj.qual_name()}_init = {inner_eq}\n"
                 else:
-                    if obj.shape > obj.init.shape:
+                    # NOTE: slice has no shape and has to assume dim is specified
+                    # correctly
+                    if obj.shape > obj.init.shape and not isinstance(
+                        obj.init, reno.ops.slice
+                    ):
                         inner_eq = f"{obj._implied_eq(obj.init).pt_str(**initial_refs_dict)}.repeat({obj.shape})"
                     else:
                         inner_eq = obj._implied_eq(obj.init).pt_str(**initial_refs_dict)
@@ -690,7 +734,9 @@ def to_pymc_model_str(
                 initial_refs_dict[obj.qual_name()] = f"{obj.qual_name()}_init"
             else:
                 # flows and vars without a separate init definition
-                if obj.shape > obj.eq.shape:
+                # NOTE: slice has no shape and has to assume dim is specified
+                # correctly
+                if obj.shape > obj.eq.shape and not isinstance(obj.eq, reno.ops.slice):
                     inner_eq = f"{obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)}.repeat({obj.shape})"
                 else:
                     inner_eq = obj._implied_eq(obj.eq).pt_str(**initial_refs_dict)
@@ -702,7 +748,11 @@ def to_pymc_model_str(
             if obj in historical_ref_taps and (
                 len(historical_ref_taps[obj]) > 1 or None in historical_ref_taps[obj]
             ):
-                # TODO: doesn't handle static but still unclear if that makes sense anyway
+                # static "historical references" get constructed on the fly
+                # because it wouldn't make sense to have a separate
+                # outputs_info and handling for a thing that doesn't change
+                if obj.is_static():
+                    continue
                 inner_array_value = "0.0"
                 if obj.shape > 1:
                     inner_array_value = f"[0.0]*{obj.shape}"
@@ -714,9 +764,13 @@ def to_pymc_model_str(
                     )
                 else:
                     history_size = min(historical_ref_taps[obj]) * -1
+
+                inner_name = f"{obj.qual_name()}_init"
+                if obj.is_static():
+                    inner_name = obj.qual_name()
+
                 inner_array = (
-                    ", ".join([inner_array_value] * history_size)
-                    + f", {obj.qual_name()}_init"
+                    ", ".join([inner_array_value] * history_size) + f", {inner_name}"
                 )
                 inner_eq = f"pt.stack([{inner_array}])"
                 code += f'\t{obj.qual_name()}_hist = pm.Deterministic("{obj.qual_name()}_hist", {inner_eq})\n'
@@ -777,8 +831,13 @@ def to_pymc_model_str(
             # (which doesn't truely make sense but also shouldn't be
             # explicitly disallowed?)
             # if obj in historical_ref_taps and len(historical_ref_taps[obj]) > 1:
-            if obj in historical_ref_taps and (
-                len(historical_ref_taps[obj]) > 1 or None in historical_ref_taps[obj]
+            if (
+                obj in historical_ref_taps
+                and (
+                    len(historical_ref_taps[obj]) > 1
+                    or None in historical_ref_taps[obj]
+                )
+                and not obj.is_static()
             ):
                 taps = historical_ref_taps[obj]
                 if None in taps:
@@ -837,8 +896,15 @@ def find_tracked_ref_historical_ref(
     non-simple index equations and the corresponding historical value components"""
 
     historical_values = []
+    timeseries_values = []
     for ref in model.all_refs():
         historical_values.extend(ref.find_refs_of_type(reno.components.HistoricalValue))
+        timeseries_values.extend(
+            [
+                (ref, ts.sub_equation_parts[0])
+                for ts in ref.find_refs_of_type(reno.ops.orient_timeseries)
+            ]
+        )
 
     tracked_to_historical = {}
 
@@ -855,6 +921,9 @@ def find_tracked_ref_historical_ref(
                 tracked_to_historical[val.tracked_ref] = val
         else:
             tracked_to_historical[val.tracked_ref] = val
+
+    for ref, val in timeseries_values:
+        tracked_to_historical[val] = ref
 
     return tracked_to_historical
 

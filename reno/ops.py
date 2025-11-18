@@ -338,15 +338,49 @@ class orient_timeseries(reno.components.Operation):
 
         count = t + 1
         if self.sub_equation_parts[0].is_static():
+            remaining = 0
+            if hasattr(self.sub_equation_parts[0], "model"):
+                if self.sub_equation_parts[0].model is not None:
+                    remaining = self.sub_equation_parts[0].model.steps - count
             if isinstance(value, (float, int)):
-                return np.array([np.array([value]).repeat(count)])
+                return np.concatenate(
+                    [
+                        np.array([np.array([value]).repeat(count)]),
+                        np.array([np.array([0]).repeat(remaining)]),
+                    ],
+                    axis=1,
+                )
             if len(value.shape) == 1:
                 return value[:, None].repeat(count, axis=1)
         return value
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        # have to have a time ref for this to work
+        if self.sub_equation_parts[0].model.find_timeref_name() is None:
+            self.sub_equation_parts.append(reno.components.TimeRef())
+
+        # for static underlying values, we reconstruct an array as if that
+        # underlying value were building up through an array of all zeros,
+        # so ""fill"" accordingly based on timestep
         if self.sub_equation_parts[0].is_static():
             seq_length = refs["__PT_SEQ_LEN__"]
+            if "__TIMESERIES__" in refs:
+                if refs["__TIMESERIES__"] == "init":
+                    return pt.concatenate(
+                        [
+                            [self.sub_equation_parts[0].pt(**refs)],
+                            pt.as_tensor(0).repeat(seq_length - 1),
+                        ]
+                    )
+                elif refs["__TIMESERIES__"] == "scan":
+                    t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                    return pt.concatenate(
+                        [
+                            self.sub_equation_parts[0].pt(**refs).repeat(t + 1),
+                            pt.as_tensor(0).repeat(seq_length - (t + 1)),
+                        ]
+                    )
+            # in principle this should never be reached?
             return pt.repeat(self.sub_equation_parts[0].pt(**refs), seq_length)
         if "__TIMESERIES__" in refs:
             name = self.sub_equation_parts[0].qual_name()
@@ -356,20 +390,38 @@ class orient_timeseries(reno.components.Operation):
             # ones.
             if refs["__TIMESERIES__"] == "init":
                 name += "_h"
-                return refs[name]
+                # TODO: this doesn't work if no timeref included.
+                # t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                # have to concatenate to reorder, since pymc is passing in
+                # history (taps) according to the current timestep.
+                return pt.concatenate([refs[name][-1:], refs[name][:-1]])
             elif refs["__TIMESERIES__"] == "scan":
                 name += "_h"
                 # TODO: this doesn't work if no timeref included.
                 t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
                 # have to concatenate to reorder, since pymc is passing in
                 # history (taps) according to the current timestep.
-                return pt.concatenate([refs[name][-t:], refs[name][:-t]])
+                return pt.concatenate([refs[name][-(t + 1) :], refs[name][: -(t + 1)]])
             return refs[name]
         return self.sub_equation_parts[0].pt(**refs)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
+        # have to have a time ref for this to work
+        if self.sub_equation_parts[0].model.find_timeref_name() is None:
+            self.sub_equation_parts.append(reno.components.TimeRef())
+
+        # for static underlying values, we reconstruct an array as if that
+        # underlying value were building up through an array of all zeros,
+        # so ""fill"" accordingly based on timestep
         if self.sub_equation_parts[0].is_static():
             seq_length = refs["__PT_SEQ_LEN__"]
+            if "__TIMESERIES__" in refs:
+                if refs["__TIMESERIES__"] == "init":
+                    return f"pt.concatenate([[{self.sub_equation_parts[0].pt_str(**refs)}], pt.as_tensor(0).repeat({seq_length - 1})])"
+                elif refs["__TIMESERIES__"] == "scan":
+                    t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                    return f"pt.concatenate([{self.sub_equation_parts[0].pt_str(**refs)}.repeat(t + 1), pt.as_tensor(0).repeat({seq_length} - ({t} + 1))])"
+            # in principle this should never be reached?
             return (
                 f"pt.repeat({self.sub_equation_parts[0].pt_str(**refs)}, {seq_length})"
             )
@@ -377,11 +429,12 @@ class orient_timeseries(reno.components.Operation):
             name = self.sub_equation_parts[0].qual_name()
             if refs["__TIMESERIES__"] == "init":
                 name += "_h"
-                return refs[name]
+                # t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
+                return f"pt.concatenate([{refs[name]}[-1:], {refs[name]}[:-1]])"
             elif refs["__TIMESERIES__"] == "scan":
                 name += "_h"
                 t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
-                return f"pt.concatenate([{refs[name]}[-{refs[t]}:], {refs[name]}[:-{refs[t]}]])"
+                return f"pt.concatenate([{refs[name]}[-({t}+1):], {refs[name]}[:-({t}+1)]])"
         else:
             return self.sub_equation_parts[0].pt_str(**refs)
 
