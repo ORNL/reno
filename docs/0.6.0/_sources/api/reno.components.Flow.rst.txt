@@ -1,0 +1,66 @@
+reno.components.Flow
+====================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Flow
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Flow.__init__
+      ~Flow.astype
+      ~Flow.clip
+      ~Flow.debug_equation
+      ~Flow.display
+      ~Flow.equal
+      ~Flow.equation
+      ~Flow.eval
+      ~Flow.find_refs_of_type
+      ~Flow.from_dict
+      ~Flow.get_shape
+      ~Flow.get_type
+      ~Flow.history
+      ~Flow.initial_vals
+      ~Flow.is_static
+      ~Flow.latex
+      ~Flow.max_refs
+      ~Flow.min_refs
+      ~Flow.not_equal
+      ~Flow.populate
+      ~Flow.pt
+      ~Flow.pt_str
+      ~Flow.qual_name
+      ~Flow.resolve_init_array
+      ~Flow.seek_refs
+      ~Flow.series_max
+      ~Flow.series_min
+      ~Flow.sum
+      ~Flow.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Flow.dtype
+      ~Flow.shape
+      ~Flow.timeseries
+      ~Flow.model
+      ~Flow.init
+      ~Flow.dim
+      ~Flow.implicit
+      ~Flow.computed_mask
+      ~Flow.label
+      ~Flow.doc

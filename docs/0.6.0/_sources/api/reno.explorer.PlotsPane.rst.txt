@@ -1,0 +1,80 @@
+reno.explorer.PlotsPane
+=======================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: PlotsPane
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~PlotsPane.__init__
+      ~PlotsPane.clone
+      ~PlotsPane.controls
+      ~PlotsPane.embed
+      ~PlotsPane.fire_on_cache_invalidated
+      ~PlotsPane.from_dict
+      ~PlotsPane.from_param
+      ~PlotsPane.from_values
+      ~PlotsPane.get_root
+      ~PlotsPane.jscallback
+      ~PlotsPane.jslink
+      ~PlotsPane.link
+      ~PlotsPane.on_cache_invalidated
+      ~PlotsPane.render
+      ~PlotsPane.save
+      ~PlotsPane.select
+      ~PlotsPane.servable
+      ~PlotsPane.server_doc
+      ~PlotsPane.show
+      ~PlotsPane.to_dict
+      ~PlotsPane.to_html
+      ~PlotsPane.update_plot_type
+      ~PlotsPane.update_subset
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PlotsPane.align
+      ~PlotsPane.aspect_ratio
+      ~PlotsPane.columns
+      ~PlotsPane.css_classes
+      ~PlotsPane.design
+      ~PlotsPane.fig_height
+      ~PlotsPane.fig_width
+      ~PlotsPane.height
+      ~PlotsPane.height_policy
+      ~PlotsPane.loading
+      ~PlotsPane.margin
+      ~PlotsPane.max_height
+      ~PlotsPane.max_width
+      ~PlotsPane.min_height
+      ~PlotsPane.min_width
+      ~PlotsPane.name
+      ~PlotsPane.param
+      ~PlotsPane.plot_type
+      ~PlotsPane.ref_subset
+      ~PlotsPane.rx
+      ~PlotsPane.sizing_mode
+      ~PlotsPane.styles
+      ~PlotsPane.stylesheets
+      ~PlotsPane.subset
+      ~PlotsPane.tags
+      ~PlotsPane.value
+      ~PlotsPane.visible
+      ~PlotsPane.width
+      ~PlotsPane.width_policy
+      ~PlotsPane.base64repr

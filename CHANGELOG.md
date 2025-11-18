@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       f0, f1 = Flow(3), Flow(2)
       [f0, f1] >> s1
   ```
+* `stack` operation for creating a multidim value from multiple single dim
+  values.
 
 ### Changed
 

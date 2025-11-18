@@ -1,0 +1,51 @@
+reno.ops.slice
+==============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: slice
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~slice.__init__
+      ~slice.astype
+      ~slice.clip
+      ~slice.equal
+      ~slice.eval
+      ~slice.find_refs_of_type
+      ~slice.get_shape
+      ~slice.get_type
+      ~slice.is_static
+      ~slice.latex
+      ~slice.not_equal
+      ~slice.op_eval
+      ~slice.op_repr
+      ~slice.op_types
+      ~slice.pt
+      ~slice.pt_str
+      ~slice.seek_refs
+      ~slice.series_max
+      ~slice.series_min
+      ~slice.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~slice.OP_REPR
+      ~slice.dtype
+      ~slice.shape
+      ~slice.timeseries
