@@ -5,6 +5,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.0] - 2025-11-18
+
+### Added
+
+* Implicit inflows to Stocks. If an equation (rather than a flow) is given
+  (either through `>>` or `+=` syntax) to a stock, an implicit flow wrapping
+  that equation is used. (Previously, only flows were allowed to be explicitly
+  used with stocks.) This allows "conversion" of the outputs of one stock to
+  the inputs of another without having to explicitly create a new flow to support
+  it. Example:
+
+  ```python
+  m = Model()
+  with m:
+      s0, s1 = Stock(), Stock()
+      f0 = Flow(3)
+      s0 >> f0
+      (f0 - 1) >> s1
+  ```
+* Handling lists of inflows to Stocks. To simultaneously add multiple flows as
+  inflows, pass them in a list either via `>>` or `+=` syntax:
+
+  ```python
+  m = Model()
+  with m:
+      s0 = Stock(), Stock()
+      f0, f1 = Flow(3), Flow(2)
+      [f0, f1] >> s1
+  ```
+
+### Changed
+
+* The `.timeseries` operation is now allowed for non-metric equations in both
+  regular Reno and PyMC math. This should not be used in place of `.history`
+  when only individual values from a reference's history is needed,
+  `.timeseries` is intended for operating across multiple values in history e.g.
+  summing up values across a range of historical timesteps:
+
+  ```python
+  m = Model()
+  t = TimeRef()
+  with m:
+      v0 = Variable(t + 2)
+      v1 = Variable(v0.timeseries[t-3:t-1].sum())
+  ```
+
+### Fixed
+
+* Bugs in how `.timeseries` was handled for static variables (was inconsistent
+  with an equivalent dynamic variable with the same values)
+
+
+
+
 ## [0.5.0] - 2025-11-15
 
 ### Added

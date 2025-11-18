@@ -125,8 +125,6 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
                 per_timestep_dist_objs.append(obj)
 
         for obj in ref_compute_order:
-            print(obj, obj.is_static())
-            print(historical_refs_from_tracked)
             if isinstance(obj, reno.components.Stock):
                 # no need to do stocks, already handled above
                 continue
@@ -137,7 +135,6 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
 
                 # ensure a full history correctly has the new value at the end.
                 if obj in historical_refs_from_tracked:
-                    print("UPDATING NON-STOCK HISTORICAL IN SCAN", obj.qual_name())
                     refs[f"{obj.qual_name()}_h"] = pt.concatenate(
                         [refs[f"{obj.qual_name()}_h"][1:], pt.as_tensor([pt_eq])]
                     )
@@ -484,8 +481,6 @@ def to_pymc_model(
                     # static because a timeseries of a static won't show up in
                     # inits_by_obj
                     inner_array_final_value = None
-                    print(inits_by_obj)
-                    print(statics_by_obj)
                     if obj in inits_by_obj:
                         inner_array_final_value = inits_by_obj[obj]
                     elif obj in statics_by_obj:
@@ -536,9 +531,6 @@ def to_pymc_model(
         for obj in model.all_flows() + model.all_vars():
             if obj in statics_by_obj:
                 statics.append(statics_by_obj[obj])
-
-        print("static", statics)
-        print("outputs", inits)
 
         seqs, updates = pytensor.scan(
             fn=pt_sim_step(model, steps),
