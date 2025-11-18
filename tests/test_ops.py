@@ -722,15 +722,7 @@ def test_timeseries_slice_nonmetric():
         v0 = Variable(t + 2)
         v1 = Variable(v0.timeseries[t - 3 : t - 1].sum())
     ds = m()
-    assert (
-        ds.v1.values[0][0:4]
-        == [
-            0,
-            0,
-            2,
-            5,
-        ]
-    ).all()
+    assert (ds.v1.values[0][0:4] == [0, 0, 2, 5]).all()
 
 
 def test_timeseries_slice_nonmetric_pymc():
@@ -742,12 +734,59 @@ def test_timeseries_slice_nonmetric_pymc():
         v0 = Variable(t + 2)
         v1 = Variable(v0.timeseries[t - 3 : t - 1].sum())
     ds = m.pymc(1, compute_prior_only=True)
-    assert (
-        ds.prior.v1.values[0][0][0:4]
-        == [
-            0,
-            0,
-            2,
-            5,
-        ]
-    ).all()
+    assert (ds.prior.v1.values[0][0][0:4] == [0, 0, 2, 5]).all()
+
+
+def test_dynamic_timeseries_static_slice():
+    """A timeseries on a regular component with static slice endpoints should correctly compute
+    as if the underlying component is indeed dynamic."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(2 + t)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+
+    ds = m()
+    assert (ds.v2.values[0][0:4] == [2, 5, 9, 14]).all()
+
+
+def test_dynamic_timeseries_static_slice_pymc():
+    """A timeseries on a regular component with static slice endpoints should correctly compute
+    as if the underlying component is indeed dynamic."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(2 + t)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (ds.prior.v2.values[0][0][0:4] == [2, 5, 9, 14]).all()
+
+
+def test_static_timeseries_static_slice():
+    """A timeseries on a static component with static slice endpoints should correctly compute
+    as if the underlying component is actually dynamic (filling up zeros over time)."""
+    m = model.Model()
+    with m:
+        v0 = Variable(2)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+
+    ds = m()
+    assert (ds.v2.values[0][0:4] == [2, 4, 6, 8]).all()
+
+
+def test_static_timeseries_static_slice_pymc():
+    """A timeseries on a static component with static slice endpoints should correctly compute
+    as if the underlying component is actually dynamic (filling up zeros over time)."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(2)
+        v1 = Variable(v0.timeseries[0:4], dim=4)
+        v2 = Variable(v1.sum())
+
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (ds.prior.v2.values[0][0][0:4] == [2, 4, 6, 8]).all()
