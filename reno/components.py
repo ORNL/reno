@@ -1416,6 +1416,7 @@ class TrackedReference(Reference):
                 self.computed_mask = np.zeros((n, steps), dtype=bool)
                 if self.dim == 1:
                     self.value = np.zeros((n, steps), dtype=dtype)
+                    # self.value = np.zeros((n, steps, 1), dtype=dtype)
                 else:
                     self.value = np.zeros((n, steps, self.dim), dtype=dtype)
             self.initial_vals()
@@ -1870,6 +1871,7 @@ class Flow(TrackedReference):
             elif self._static and self._sample_dim:
                 # case 2, sample dimension, (sample,) or (sample, dim)
                 assignment_dims = [slice(None, None)]
+                # assignment_dims.append(slice(None, None))
                 if self.dim > 1:
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section
@@ -1879,6 +1881,7 @@ class Flow(TrackedReference):
             else:
                 # case 3, non-statics
                 assignment_dims = [slice(None, None), 0]
+                # assignment_dims.append(slice(None, None))
                 if self.dim > 1:
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section
@@ -2029,6 +2032,7 @@ class Variable(TrackedReference):
             else:
                 # case 3, non-statics
                 assignment_dims = [slice(None, None), 0]
+                # assignment_dims.append(slice(None, None))
                 if self.dim > 1:
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section

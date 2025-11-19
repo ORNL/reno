@@ -713,6 +713,80 @@ def test_stack_pymc():
     assert (ds.prior.s0.values[0][0][2] == [2, 4, 6]).all()
 
 
+def test_stack_n():
+    """Stacking statics with a non-sample-static variable in a n>1 case should still work."""
+    m = model.Model()
+    with m:
+        v0 = Variable(ops.Bernoulli(1.0))
+        v1 = Variable(2.0)
+        v2 = Variable(ops.stack(v0, v1))
+
+    ds1 = m(n=1)
+    assert (ds1.v2.values[0] == [1.0, 2.0]).all()
+
+    ds2 = m(n=2)
+    assert (ds1.v2.values[0] == [[1.0, 2.0], [1.0, 2.0]]).all()
+
+
+def test_stack_n_pymc():
+    """Stacking statics with a non-sample-static variable in a n>1 case should still work."""
+    m = model.Model()
+    with m:
+        v0 = Variable(ops.Bernoulli(1.0))
+        v1 = Variable(2.0)
+        v2 = Variable(ops.stack(v0, v1))
+
+    ds1 = m.pymc(n=1, compute_prior_only=True)
+    assert (ds1.prior.v2.values[0][0] == [1.0, 2.0]).all()
+
+    ds2 = m(n=2, compute_prior_only=True)
+    assert (ds1.prior.v2.values[0][0] == [[1.0, 2.0], [1.0, 2.0]]).all()
+
+
+def test_math_w_multidim_and_n():
+    """Mixing n and multidim for statics shouldn't impact math."""
+    m = model.Model()
+    with m:
+        v0 = Variable([0, 1, 2, 3])
+        v1 = Variable(2)
+        v2 = Variable(v0 + v1)
+
+    ds1 = m(n=1)
+    assert (ds1.v2.values[0] == [2, 3, 4, 5]).all()
+
+    ds2 = m(n=2)
+    assert (ds2.v2.values[0] == [2, 3, 4, 5]).all()
+
+
+def test_math_w_multidim_and_n_w_dynamic():
+    m = model.Model()
+    with m:
+        v0 = Variable(ops.Bernoulli(1.0), dim=3)
+        v1 = Variable(2.0)
+        v2 = Variable(v0 + v1)
+
+    ds1 = m(n=1)
+    assert (ds1.v2.values[0] == [3.0, 3.0, 3.0]).all()
+
+    ds2 = m(n=2)
+    assert (ds2.v2.values[0] == [[3.0, 3.0, 3.0], [3.0, 3.0, 3.0]]).all()
+
+
+def test_math_w_multidim_and_n_w_really_dynamic():
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(ops.Bernoulli(1.0), dim=3)
+        v1 = Variable(1.0 + t)
+        v2 = Variable(v0 + v1)
+
+    ds1 = m(n=1)
+    assert (ds1.v2.values[0][1] == [3.0, 3.0, 3.0]).all()
+
+    ds2 = m(n=2)
+    assert (ds2.v2.values[0][1] == [[3.0, 3.0, 3.0], [3.0, 3.0, 3.0]]).all()
+
+
 def test_timeseries_slice_nonmetric():
     """Using timeseries in a regular component (rather than a metric computed after simulation)
     should still work."""

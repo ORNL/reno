@@ -441,6 +441,23 @@ class orient_timeseries(reno.components.Operation):
 # ==================================================
 
 
+def adjust_shapes_for_n(*parts, **kwargs):
+    """for numpy calculations, while () can broadcast to (dim,)
+    but not (n,) to (n,dim), so handle converting (n,) to (n,1)
+    if necessary, given the other components.
+
+    Note that this runs and returns the evaluations for each part.
+    """
+    dims = [part.shape for part in parts]
+    vals = [part.eval(**kwargs) for part in parts]
+    if max(dims) == 1:
+        return vals
+    for i, val in enumerate(vals):
+        if dims[i] == 1:
+            vals[i] = np.expand_dims(val, -1)
+    return vals
+
+
 class add(reno.components.Operation):
     """a + b"""
 
@@ -453,9 +470,8 @@ class add(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} + {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) + self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a + b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) + self.sub_equation_parts[1].pt(
@@ -478,9 +494,8 @@ class sub(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} - {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) - self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a - b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) - self.sub_equation_parts[1].pt(
@@ -503,9 +518,8 @@ class mul(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} * {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) * self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a * b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) * self.sub_equation_parts[1].pt(
@@ -528,9 +542,8 @@ class div(reno.components.Operation):
         return f"\\frac{{{self.sub_equation_parts[0].latex(**kwargs)}}}{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) / self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a / b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) / self.sub_equation_parts[1].pt(
@@ -553,9 +566,8 @@ class mod(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\% {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) % self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a % b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.mod(
@@ -600,9 +612,8 @@ class lt(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) < self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a < b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) < self.sub_equation_parts[1].pt(
@@ -628,9 +639,8 @@ class lte(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) <= self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a <= b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) <= self.sub_equation_parts[1].pt(
@@ -656,9 +666,8 @@ class gt(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) > self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a > b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) > self.sub_equation_parts[1].pt(
@@ -684,9 +693,8 @@ class gte(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) >= self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a >= b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) >= self.sub_equation_parts[1].pt(
@@ -712,9 +720,8 @@ class eq(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) == self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a == b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.eq(
@@ -741,9 +748,8 @@ class ne(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) != self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a != b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.neq(
@@ -771,9 +777,8 @@ class bool_and(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) & self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a & b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) & self.sub_equation_parts[1].pt(
@@ -800,9 +805,8 @@ class bool_or(reno.components.Operation):
         return bool
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) | self.sub_equation_parts[
-            1
-        ].eval(**kwargs)
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return a | b
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs) | self.sub_equation_parts[1].pt(
@@ -823,10 +827,8 @@ class minimum(reno.components.Operation):
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
-        return np.minimum(
-            self.sub_equation_parts[0].eval(**kwargs),
-            self.sub_equation_parts[1].eval(**kwargs),
-        )
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return np.minimum(a, b)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.minimum(
@@ -848,10 +850,8 @@ class maximum(reno.components.Operation):
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
-        return np.maximum(
-            self.sub_equation_parts[0].eval(**kwargs),
-            self.sub_equation_parts[1].eval(**kwargs),
-        )
+        a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+        return np.maximum(a, b)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.maximum(
@@ -1079,10 +1079,25 @@ class stack(reno.components.Operation):
 
     def op_eval(self, **kwargs):
         to_stack = [part.eval(**kwargs) for part in self.sub_equation_parts]
+
+        # have to find the actual n-shape to correctly handle
+        implied_n = 1
+        for i, part in enumerate(self.sub_equation_parts):
+            if (
+                part.shape == 1
+                and hasattr(to_stack[i], "shape")
+                and to_stack[i].shape[0] != 1
+            ):
+                implied_n = to_stack[i].shape[0]
+
         for index, item in enumerate(to_stack):
-            if isinstance(item, np.ndarray):
-                to_stack[index] = item[0]  # TODO: throw error if len of this dim > 1
-        return np.stack(to_stack)
+            if implied_n > 1:
+                to_stack[index] = np.broadcast_to(item, (implied_n,))
+
+        for i, part in enumerate(to_stack):
+            if not isinstance(part, np.ndarray):
+                to_stack[i] = np.array([part])
+        return np.stack(to_stack, axis=-1)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.stack([part.pt(**refs) for part in self.sub_equation_parts])
@@ -1314,8 +1329,10 @@ def dist_shape(
     """Compute the shape/dimensions needed to populate the passed distribution"""
     if not dist.per_timestep and dim == 1:
         shape = n
+        # shape = (n, 1)
     elif dist.per_timestep and dim == 1:
         shape = (n, steps)
+        # shape = (n, steps, 1)
     elif dist.per_timestep and dim > 1:
         shape = (n, steps, dim)
     else:
