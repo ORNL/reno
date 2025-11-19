@@ -361,9 +361,12 @@ def add_stocks(
                             stock.qual_name(), traces, ax=ax, legend=False, title=""
                         )
                     else:
-                        # TODO: can probably still use compare_seq for regular
-                        # reno run plot? (since traces can be xrDataset)
-                        stock.plot(ax)
+                        if traces is None:
+                            ds = stock.model.dataset()
+                            traces = [ds]
+                        reno.viz.compare_seq(
+                            stock.qual_name(), traces, ax=ax, legend=False, title=""
+                        )
                     ax.xaxis.set_ticks([])
                     fig.tight_layout()
                     os.makedirs(".plotcache", exist_ok=True)

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `stack` and several element-wise operations breaking when model run with n>1
   due to numpy broadcasting issues
 * Variables added to diagram from stock min/max refs even if show_vars False
+* Stock sparklines inconsistent with flow sparklines in diagrams
 
 
 
