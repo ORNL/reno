@@ -146,6 +146,7 @@ def is_free_var(eq: "reno.components.EquationPart") -> bool:
             ),
         )
         or eq is None
+        or (isinstance(eq, reno.ops.assign) and is_free_var(eq.sub_equation_parts[0]))
     ):
         return True
     return False

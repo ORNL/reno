@@ -124,6 +124,7 @@ def stock_flow_diagram(
         sparklines=sparklines,
         traces=traces,
         universe=universe,
+        show_vars=show_vars,
     )
     out_of_scope_var_connections = []
     if show_vars:
@@ -182,6 +183,12 @@ def stock_flow_diagram(
                 # check if we are at the correct level model to draw this,
                 # or do we pass it on up?
                 if src.model == model or dst.model == model:
+                    if universe is not None and (
+                        src not in universe or dst not in universe
+                    ):
+                        continue
+                    if src in exclude_var_names or dst in exclude_var_names:
+                        continue
                     draw_appropriate_edge(g, src, dst)
                 else:
                     missing_connections.append((src, dst))
@@ -275,6 +282,7 @@ def draw_appropriate_edge(g: Digraph, src: TrackedReference, dst: TrackedReferen
     ):
         add_stock_io_edge(g, src, dst)
     elif isinstance(dst, Stock) and (src in dst.min_refs() or src in dst.max_refs()):
+        print("INCORPORAINT", dst, src)
         add_stock_limit_edge(g, src, dst)
     elif isinstance(dst, Flow):
         add_to_flow_edge(g, src, dst)
@@ -305,6 +313,7 @@ def add_stocks(
     sparklines: bool = False,
     traces: list[xr.Dataset] = None,
     universe: list[TrackedReference] = None,
+    show_vars: bool = True,
 ):
     """Add nodes and edges for all passed stocks to the passed graph.
 
@@ -402,8 +411,10 @@ def add_stocks(
         remaining.extend(stock.min_refs())
         remaining.extend(stock.max_refs())
         for ref in remaining:
+            if isinstance(ref, Variable) and not show_vars:
+                continue
             if ref not in handled_refs:
-                if universe is not None and flow not in universe:
+                if universe is not None and ref not in universe:
                     continue
                 if reno.utils.is_ref_in_parent_scope(ref, stock):
                     # add refs themselves not qualname, need to access model

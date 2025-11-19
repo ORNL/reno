@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [unreleased]
+
+### Changed
+
+* Implicit flows having very unhelpful names, making debugging annoying and
+  difficult.
+
+
+### Fixed
+
+* Index operation incorrectly handling non-timeseries values
+* `stack` and several element-wise operations breaking when model run with n>1
+  due to numpy broadcasting issues
+* Variables added to diagram from stock min/max refs even if show_vars False
+
+
+
+
 ## [0.6.0] - 2025-11-18
 
 ### Added
