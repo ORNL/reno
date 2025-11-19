@@ -5,12 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [unreleased]
+## [0.6.1] - 2025-11-19
 
 ### Changed
 
 * Implicit flows having very unhelpful names, making debugging annoying and
-  difficult.
+  difficult. (They now are named according to the stock they target and which
+  index inflow they are on that stock)
 
 
 ### Fixed
