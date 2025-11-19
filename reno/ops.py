@@ -193,10 +193,7 @@ class index(reno.components.Operation):
 
     def op_eval(self, **kwargs):
         # TODO: support for static?
-        value = self.sub_equation_parts[0].value
-        if value is None:
-            value = self.sub_equation_parts[0].eval(**kwargs)
-        # TODO: this is going to cause an issue if non-sample-dim statics used
+        value = self.sub_equation_parts[0].eval(**kwargs)
         return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1081,7 +1078,11 @@ class stack(reno.components.Operation):
         return building_str
 
     def op_eval(self, **kwargs):
-        return np.stack([part.eval(**kwargs) for part in self.sub_equation_parts])
+        to_stack = [part.eval(**kwargs) for part in self.sub_equation_parts]
+        for index, item in enumerate(to_stack):
+            if isinstance(item, np.ndarray):
+                to_stack[index] = item[0]  # TODO: throw error if len of this dim > 1
+        return np.stack(to_stack)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.stack([part.pt(**refs) for part in self.sub_equation_parts])
@@ -1140,7 +1141,7 @@ class repeated_pulse(reno.components.Operation):
         super().__init__(start, interval, width, self.sub_eq)
 
     def latex(self, **kwargs):
-        return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
+        return f"\\text{{repeated_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[3].eval(**kwargs)

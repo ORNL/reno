@@ -45,7 +45,7 @@ def tub_model():
     m.water_level += m.faucet
     m.water_level -= m.drain
 
-    m.final_water_level = Metric(ops.index(m.water_level, -1))
+    m.final_water_level = Metric(ops.index(m.water_level.timeseries, -1))
 
     return m
 

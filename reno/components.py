@@ -1408,6 +1408,7 @@ class TrackedReference(Reference):
                 self.computed_mask = np.zeros((n,), dtype=bool)
                 if self.dim == 1:
                     self.value = np.zeros((n,), dtype=dtype)
+                    # self.value = np.zeros((n, 1), dtype=dtype)
                 else:
                     self.value = np.zeros((n, self.dim), dtype=dtype)
             else:
@@ -2018,6 +2019,7 @@ class Variable(TrackedReference):
             elif self._static and self._sample_dim:
                 # case 2, sample dimension, (sample,) or (sample, dim)
                 assignment_dims = [slice(None, None)]
+                # assignment_dims.append(slice(None, None))
                 if self.dim > 1:
                     # see note about why this is necessary in
                     # TrackedReference.eval assignment section
@@ -2182,6 +2184,8 @@ class Stock(TrackedReference):
             # create implicit inflow
             implicit_inflow = Flow(obj)
             implicit_inflow.implicit = True
+            implicit_inflow._implicit_target = self
+            implicit_inflow._implicit_target_index = len(self.in_flows)
             name = "_implicit_inflow_" + str(id(implicit_inflow))
             implicit_inflow.name = name
             self.add_inflow(implicit_inflow)

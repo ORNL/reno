@@ -164,7 +164,10 @@ class Model:
                     continue
             name = reno.utils._get_assigned_var_name(ref)
             if name is None and ref.implicit:
-                name = "_implicit_ref_" + str(id(ref))
+                if hasattr(ref, "_implicit_target"):
+                    name = f"_{ref._implicit_target.qual_name()}_inflow_{ref._implicit_target_index}"
+                else:
+                    name = "_implicit_ref_" + str(id(ref))
             setattr(self, name, self._unnamed_references[index])
         self._unnamed_references = []
 
