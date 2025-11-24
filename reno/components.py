@@ -1192,6 +1192,8 @@ class TrackedReference(Reference):
         group (str): An optional string to help group related references together,
             primarily only used for visually tightening up elements in the stock/flow
             graphs.
+        cgroup (str): An optional string to refer to related elements and specify
+            colors in the stock/flow graphs or easier hiding.
         dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
 
     Note:
@@ -1225,11 +1227,13 @@ class TrackedReference(Reference):
         init: int | float | Distribution | Scalar | EquationPart = None,
         dim: int = 1,
         group: str = "",
+        cgroup: str = "",
         dtype: type = None,
     ):
         super().__init__(label, doc)
         self.eq = eq
         self.group = group
+        self.cgroup = cgroup
 
         self.min = ensure_scalar(min)
         self.max = ensure_scalar(max)
@@ -1826,10 +1830,19 @@ class Flow(TrackedReference):
         max: EquationPart = None,
         dim: int = 1,
         group: str = "",
+        cgroup: str = "",
         dtype: type = None,
     ):
         super().__init__(
-            eq, label, doc, min=min, max=max, dim=dim, group=group, dtype=dtype
+            eq,
+            label,
+            doc,
+            min=min,
+            max=max,
+            dim=dim,
+            group=group,
+            cgroup=cgroup,
+            dtype=dtype,
         )
 
     # ---- MATH OVERLOADING ----
@@ -1984,6 +1997,7 @@ class Variable(TrackedReference):
         dim: int = 1,
         user: bool = False,
         group: str = "",
+        cgroup: str = "",
         dtype: type = None,
     ):
         # TODO: missing init parameter?
@@ -1995,7 +2009,15 @@ class Variable(TrackedReference):
             eq = Scalar(eq)
 
         super().__init__(
-            eq, label, doc, min=min, max=max, dim=dim, group=group, dtype=dtype
+            eq,
+            label,
+            doc,
+            min=min,
+            max=max,
+            dim=dim,
+            group=group,
+            cgroup=cgroup,
+            dtype=dtype,
         )
 
     def initial_vals(self):
@@ -2106,6 +2128,7 @@ class Stock(TrackedReference):
         max: EquationPart = None,
         dim: int = 1,
         group: str = "",
+        cgroup: str = "",
         dtype: type = None,
     ):
         super().__init__(
@@ -2116,6 +2139,7 @@ class Stock(TrackedReference):
             dim=dim,
             init=init,
             group=group,
+            cgroup=cgroup,
             dtype=dtype,
         )
 

@@ -24,10 +24,17 @@ level will go one color farther into this array.
 A decent option for dark mode: ``["#334455", "#443355"]``
 """
 NODE_COLOR = "lightgreen"
-"""Background color to use for variable nodes.
+"""Default background color to use for variable nodes.
 
 A decent option for dark mode: ``"darkgreen"``
 """
+STOCK_COLOR = "transparent"
+"""Default background color to use for stock nodes."""
+FLOW_COLOR = "transparent"
+"""Default background color to use for flow nodes."""
+
+# TODO: a set of light/dark colors with names that can be referenced
+# in model.group_colors
 
 
 def set_dark_mode(dark: bool = False):
@@ -307,7 +314,37 @@ def filter_variables(
     return filtered
 
 
-def add_stocks(
+def get_reference_color(ref) -> str:
+    # TODO: dark/light handling
+    if isinstance(ref, reno.Stock):
+        color = STOCK_COLOR
+    elif isinstance(ref, reno.Variable):
+        color = NODE_COLOR
+    elif isinstance(ref, reno.Flow):
+        color = FLOW_COLOR
+    # cgroup takes precedence
+    if ref.cgroup != "" and ref.cgroup in ref.model.group_colors:
+        color = ref.model.group_colors[ref.cgroup]
+    elif ref.group != "" and ref.group in ref.model.group_colors:
+        color = ref.model.group_colors[ref.group]
+    return color
+
+
+def should_render(ref, universe) -> bool:
+    if universe is not None and ref not in universe:
+        return False
+    if (
+        ref.cgroup in ref.model.default_hide_groups
+        or ref.group in ref.model.default_hide_groups
+    ):
+        return False
+    # somehow breaks add_stock_io_edge when this is on??
+    # if hasattr(ref, "implicit") and ref.implicit:
+    #     return False
+    return True
+
+
+def add_stocks(  # noqa: C901
     g: Digraph,
     stocks: list[Stock],
     sparklines: bool = False,
@@ -325,7 +362,7 @@ def add_stocks(
     render_in_parent_scope = []
 
     for stock in stocks:
-        if universe is not None and stock not in universe:
+        if not should_render(stock, universe):
             continue
 
         # add a node for each stock
@@ -335,6 +372,8 @@ def add_stocks(
                 label=stock.label,
                 shape="rect",
                 group=stock.group,
+                style="filled",
+                fillcolor=get_reference_color(stock),
             )
         else:
             # to force the sparkline graph image node to render right next to
@@ -345,6 +384,8 @@ def add_stocks(
                     label=stock.label,
                     shape="rect",
                     group=stock.group,
+                    style="filled",
+                    fillcolor=get_reference_color(stock),
                 )
 
                 # generate the sparkline graph
@@ -393,7 +434,7 @@ def add_stocks(
         # (this works even if the flow "nodes" haven't been added yet.)
         handled_refs = []
         for flow in stock.in_flows:
-            if universe is not None and flow not in universe:
+            if not should_render(flow, universe):
                 continue
             if reno.utils.is_ref_in_parent_scope(flow, stock):
                 # add refs themselves not qualname, need to access model
@@ -402,7 +443,7 @@ def add_stocks(
             add_stock_io_edge(g, stock, flow)
             handled_refs.append(flow.qual_name())
         for flow in stock.out_flows:
-            if universe is not None and flow not in universe:
+            if not should_render(flow, universe):
                 continue
             if reno.utils.is_ref_in_parent_scope(flow, stock):
                 # add refs themselves not qualname, need to access model
@@ -417,7 +458,7 @@ def add_stocks(
             if isinstance(ref, Variable) and not show_vars:
                 continue
             if ref not in handled_refs:
-                if universe is not None and ref not in universe:
+                if not should_render(ref, universe):
                     continue
                 if reno.utils.is_ref_in_parent_scope(ref, stock):
                     # add refs themselves not qualname, need to access model
@@ -440,7 +481,9 @@ def add_vars(
     rendered_edges = []
     render_in_parent_scope = []
     for variable in variables:
-        if universe is not None and variable not in universe:
+        # if universe is not None and variable not in universe:
+        #     continue
+        if not should_render(variable, universe):
             continue
         if not sparkdensities or (
             sparkdensities
@@ -450,7 +493,7 @@ def add_vars(
                 name=variable.qual_name(),
                 label=variable.label,
                 style="rounded,filled",
-                fillcolor=NODE_COLOR,
+                fillcolor=get_reference_color(variable),
                 shape="rect",
                 fontsize="10pt",
                 height=".2",
@@ -464,7 +507,7 @@ def add_vars(
                     name=variable.qual_name(),
                     label=variable.label,
                     style="rounded,filled",
-                    fillcolor=NODE_COLOR,
+                    fillcolor=get_reference_color(variable),
                     shape="rect",
                     fontsize="10pt",
                     height=".2",
@@ -508,11 +551,9 @@ def add_vars(
         # add any edges between variables
         # -- unclear if correct --
         for ref in variable.seek_refs():
-            if (
-                universe is not None
-                and ref not in universe
-                or (hasattr(ref, "implicit") and ref.implicit)
-            ):
+            if not should_render(ref):
+                continue
+            if hasattr(ref, "implicit") and ref.implicit:
                 continue
             if (
                 not isinstance(ref, reno.components.TimeRef)
@@ -546,11 +587,16 @@ def add_flows(
     render_in_parent_scope = []
 
     for flow in flows:
-        if universe is not None and flow not in universe:
+        if not should_render(flow, universe):
             continue
         if not sparkall:
             g.node(
-                name=flow.qual_name(), label=flow.name, shape="plain", group=flow.group
+                name=flow.qual_name(),
+                label=flow.name,
+                shape="plain",
+                group=flow.group,
+                style="filled",
+                fillcolor=get_reference_color(flow),
             )
         else:
             # to force the sparkline graph image node to render right next to
@@ -561,6 +607,8 @@ def add_flows(
                     label=flow.name,
                     shape="plain",
                     group=flow.group,
+                    style="filled",
+                    fillcolor=get_reference_color(flow),
                 )
 
                 # generate the sparkline graph
@@ -609,11 +657,9 @@ def add_flows(
                 )
 
         for ref in flow.seek_refs():
-            if (
-                universe is not None
-                and ref not in universe
-                or (hasattr(ref, "implicit") and ref.implicit)
-            ):
+            if not should_render(ref, universe):
+                continue
+            if hasattr(ref, "implicit") and ref.implicit:
                 continue
             if (
                 (

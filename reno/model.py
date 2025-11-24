@@ -140,8 +140,29 @@ class Model:
         """TrackedReferences added within a context manager go here so names can be
         assigned based on local frame variable names when it exits."""
 
+        self.group_colors: dict[str, str] = {}
+        """Specify colors for groups/cgroups, group name is the key."""
+
+        self.default_hide_groups: list[str] = []
+        """If there are any groups/cgroups that shouldn't be displayed in the stock
+        flow diagram by default, list them here."""
+
         if Model.get_context() is not None:
             Model.get_context()._unnamed_references.append(self)
+
+    @property
+    def groups(self) -> list[str]:
+        """Get the list of groups and cgroups in the model. These can
+        be used to control colors of components in stock/flow diagrams
+        (see ``model.group_color``) and default show/hide behavior (see
+        ``model.default_hide_groups``)"""
+        group_list = []
+        for ref in self.all_refs():
+            if ref.group != "" and ref.group not in group_list:
+                group_list.append(ref.group)
+            if ref.cgroup != "" and ref.cgroup not in group_list:
+                group_list.append(ref.cgroup)
+        return group_list
 
     @classmethod
     def get_context(cls):
