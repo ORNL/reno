@@ -32,6 +32,7 @@ STOCK_COLOR = "transparent"
 """Default background color to use for stock nodes."""
 FLOW_COLOR = "transparent"
 """Default background color to use for flow nodes."""
+EDGE_COLOR = "black"
 
 # TODO: a set of light/dark colors with names that can be referenced
 # in model.group_colors
@@ -218,6 +219,11 @@ def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow, dir: str = None):
                 add_stock_io_edge(g, stock, ref, "out")
         return
 
+    color = EDGE_COLOR
+    if get_reference_color(flow, no_default=True) is not None:
+        color = get_reference_color(flow)
+    elif get_reference_color(stock, no_default=True) is not None:
+        color = get_reference_color(stock)
     if flow in stock.in_flows or dir == "in":
         name1 = flow.qual_name()
         name2 = stock.qual_name()
@@ -228,7 +234,20 @@ def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow, dir: str = None):
         raise Exception(
             f"Could not draw edge for flow {flow.qual_name()} and stock {stock.qual_name()}, stock does not use flow."
         )
-    g.edge(name1, name2, style="bold", weight="50")
+    g.edge(name1, name2, style="bold", weight="50", color=color)
+
+
+def add_stock_io_like_edge(g: Digraph, to_flow: Flow, in_flow: Flow):
+    """Allow a stock-io-like edge between two flows (if one is explicitly listed
+    as an inflow to another flow)"""
+    color = EDGE_COLOR
+    if get_reference_color(in_flow, no_default=True) is not None:
+        color = get_reference_color(in_flow)
+    elif get_reference_color(to_flow, no_default=True) is not None:
+        color = get_reference_color(to_flow)
+    name1 = in_flow.qual_name()
+    name2 = to_flow.qual_name()
+    g.edge(name1, name2, style="bold", weight="50", color=color)
 
 
 def add_stock_limit_edge(g: Digraph, ref, stock: Stock):
@@ -242,11 +261,13 @@ def add_stock_limit_edge(g: Digraph, ref, stock: Stock):
     )
 
 
-def add_to_flow_edge(g: Digraph, ref, flow: Flow):
+def add_to_flow_edge(g: Digraph, ref, flow: Flow, deemphasize: bool = False):
     """Non-stock-inflow/outflow-related edges that point to flows
     are slightly de-emphasized."""
     style = "dotted" if isinstance(ref, Variable) else "dashed"
-    constraint = "false" if isinstance(ref, Stock) else "true"
+    constraint = "false" if isinstance(ref, Stock) or deemphasize else "true"
+    weight = "1" if not deemphasize else "0"
+    # constraint = "false"
     # TODO: constraint should maybe take same model scope into account?
     # (stock to out flows edges already handled, any others
     # shouldn't affect rank)
@@ -256,6 +277,7 @@ def add_to_flow_edge(g: Digraph, ref, flow: Flow):
         style=style,
         arrowsize=".5",
         constraint=constraint,
+        weight=weight,
     )
 
 
@@ -314,7 +336,7 @@ def filter_variables(
     return filtered
 
 
-def get_reference_color(ref) -> str:
+def get_reference_color(ref, no_default: bool = False) -> str:
     # TODO: dark/light handling
     if isinstance(ref, reno.Stock):
         color = STOCK_COLOR
@@ -322,6 +344,8 @@ def get_reference_color(ref) -> str:
         color = NODE_COLOR
     elif isinstance(ref, reno.Flow):
         color = FLOW_COLOR
+    if no_default:
+        color = None
     # cgroup takes precedence
     if ref.cgroup != "" and ref.cgroup in ref.model.group_colors:
         color = ref.model.group_colors[ref.cgroup]
@@ -656,7 +680,7 @@ def add_flows(
                     dir="none",
                 )
 
-        for ref in flow.seek_refs():
+        for ref, ref_types in flow.seek_refs(include_ref_types=True).items():
             if not should_render(ref, universe):
                 continue
             if hasattr(ref, "implicit") and ref.implicit:
@@ -687,7 +711,10 @@ def add_flows(
                     render_in_parent_scope.append((ref, flow))
                     continue
 
-                add_to_flow_edge(g, ref, flow)
+                if "inflow" in ref_types:
+                    add_stock_io_like_edge(g, flow, ref)
+                else:
+                    add_to_flow_edge(g, ref, flow, deemphasize="outflows" in ref_types)
                 rendered_edges.append((ref.qual_name(), flow.qual_name()))
 
     return g, render_in_parent_scope

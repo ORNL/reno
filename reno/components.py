@@ -228,50 +228,110 @@ class EquationPart:
         sub_equation_parts."""
         return str(self.value)
 
-    def seek_refs(self):
-        """Immediate refs only, depth=1."""
+    def seek_refs(self, include_ref_types: bool = False):  # noqa: C901
+        """Immediate refs only, depth=1.
+
+        Either provides a list of references that appear underneath these equations
+        or a dictionary with the "roles" or types that those references play
+        """
         # TODO: really not sure this is the best way of doing this, and it
         # heavily impacts quality of graph viz rendering/determining how
         # flows connect to what stocks and eachother etc. (can be implicit
         # connections if equations are set up weird.)
         try:
-            refs = []
+            # find the equation parts to look into for references
             check_parts = [*self.sub_equation_parts]
+            check_part_source_description = [None] * len(self.sub_equation_parts)
+            # (use sources for helping determine ref type in certain cases)
             if isinstance(self.value, EquationPart):
                 # TODO: I think this handles cases where you've directly assigned a
                 # scalar as a value to something?
                 check_parts.append(self.value)
+                check_part_source_description.append(None)
             if isinstance(self, TrackedReference):
                 if self.min is not None:
                     check_parts.append(self.min)
+                    check_part_source_description.append("limit")
                 if self.max is not None:
                     check_parts.append(self.max)
-            for part in check_parts:
+                    check_part_source_description.append("limit")
+
+            if include_ref_types:
+                refs = {}
+            else:
+                refs = []
+            for i, part in enumerate(check_parts):
                 if isinstance(part, Function):
-                    refs.extend(part.seek_refs())
+                    sub_refs = part.seek_refs(include_ref_types)
+                    if include_ref_types:
+                        for ref in sub_refs:
+                            if ref not in refs:
+                                refs[ref] = []
+                            refs[ref].extend(sub_refs[ref])
+                            if check_part_source_description[i] is not None:
+                                refs[ref].append(check_part_source_description[i])
+                    else:
+                        refs.extend(sub_refs)
                 elif isinstance(part, Operation):
-                    refs.extend(part.seek_refs())
+                    sub_refs = part.seek_refs(include_ref_types)
+                    if include_ref_types:
+                        for ref in sub_refs:
+                            if ref not in refs:
+                                refs[ref] = []
+                            refs[ref].extend(sub_refs[ref])
+                            if check_part_source_description[i] is not None:
+                                refs[ref].append(check_part_source_description[i])
+                    else:
+                        refs.extend(sub_refs)
                 elif isinstance(part, Piecewise):
-                    refs.extend(part.seek_refs())
-
+                    sub_refs = part.seek_refs(include_ref_types)
+                    if include_ref_types:
+                        for ref in sub_refs:
+                            if ref not in refs:
+                                refs[ref] = []
+                            refs[ref].extend(sub_refs[ref])
+                            if check_part_source_description[i] is not None:
+                                refs[ref].append(check_part_source_description[i])
+                    else:
+                        refs.extend(sub_refs)
                 elif isinstance(part, HistoricalValue):
-                    refs.append(part.tracked_ref)
-                    refs.append(part)  # TODO: (2025.02.03) ?????
-                    # I feel like I'm still missing something between eq setting, assign op, seek_refs and static checks, but test_static_check_eq_with_historical_value breaks without this
-                    refs.extend(part.index_eq.seek_refs())
-                elif isinstance(part, Reference):
-                    refs.append(part)
+                    if include_ref_types:
+                        if part.tracked_ref not in refs:
+                            refs[part.tracked_ref] = []
+                        if part not in refs:
+                            refs[part] = []
+                        refs[part.tracked_ref].append("history")
+                        refs[part].append("history")
 
-                # make sure anything with limits counts stuff in those?
-                # (not sure if this is actually necessary?)
-                # if isinstance(part, Variable) or isinstance(part, Flow):
-                #     if part.min is not None:
-                #         print("Adding min refs")
-                #         refs.extend(part.min.seek_refs())
-                #     if part.max is not None:
-                #         print("Adding min refs")
-                #         refs.extend(part.max.seek_refs())
+                        sub_refs = part.index_eq.seek_refs(include_ref_types)
+                        for ref in sub_refs:
+                            if ref not in refs:
+                                refs[ref] = []
+                            refs[ref].extend(sub_refs[ref])
+                            if check_part_source_description[i] is not None:
+                                refs[ref].append(check_part_source_description[i])
+                        if check_part_source_description[i] is not None:
+                            refs[part.tracked_ref].append(
+                                check_part_source_description[i]
+                            )
+                            refs[part].append(check_part_source_description[i])
+                    else:
+                        refs.append(part.tracked_ref)
+                        refs.append(part)  # TODO: (2025.02.03) ?????
+                        # I feel like I'm still missing something between eq setting, assign op, seek_refs and static checks, but test_static_check_eq_with_historical_value breaks without this
+                        refs.extend(part.index_eq.seek_refs(include_ref_types))
+                elif isinstance(part, Reference):
+                    if include_ref_types:
+                        if part not in refs:
+                            refs[part] = []
+                        if check_part_source_description[i] is not None:
+                            refs[part].append(check_part_source_description[i])
+                    else:
+                        refs.append(part)
+
             # be sure to remove duplicates
+            if include_ref_types:
+                return refs
             return list(set(refs))
         except Exception as e:
             e.add_note(f"Was trying to find sub-references of {self}")

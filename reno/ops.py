@@ -50,6 +50,7 @@ __all__ = [
     "delay3",
     "smooth",
     # -- meta --
+    "inflow",
     "outflows",
     # -- distributions --
     "Normal",
@@ -1281,17 +1282,58 @@ class smooth(reno.components.ExtendedOperation):
 # ==================================================
 
 
+class inflow(reno.components.Operation):
+    """A purely semantic op to aid in diagramming that allows specifying a flow
+    as an "inflow" to another flow. This does not impact any equations, but alters
+    rendering to show a thicker "material" line between the two flows.
+
+    This is relevant e.g. when a flow is purely a modification on some other flow,
+    and is subsequently used as an inflow to a stock. This op helps avoid the
+    separated "islands" that can crop up in certain circumstances"""
+
+    def __init__(self, flow):
+        super().__init__(flow)
+        if not isinstance(flow, reno.components.Flow):
+            raise TypeError(f"The inflow op must be on a Flow, not a {type(flow)}")
+
+    def seek_refs(self, include_ref_types: bool = False):
+        if not include_ref_types:
+            return [self.sub_equation_parts[0]]
+        return {self.sub_equation_parts[0]: ["inflow"]}
+
+    def get_shape(self) -> int:
+        return self.sub_equation_parts[0].shape
+
+    def get_type(self) -> type:
+        return self.sub_equation_parts[0].dtype
+
+    def latex(self, **kwargs):
+        return self.sub_equation_parts[0].latex(**kwargs)
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[0].eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[0].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.sub_equation_parts[0].pt_str(**refs)
+
+
 class outflows(reno.components.Operation):
     def __init__(self, stock):
         # WAIT: optionally include a list of flows to exclude??
         super().__init__(stock)
         if not isinstance(stock, reno.components.Stock):
-            raise TypeError(f"The outflows op must be a Stock, not a {type(stock)}")
+            raise TypeError(f"The outflows op must be on a Stock, not a {type(stock)}")
 
-    def seek_refs(self):
+    def seek_refs(self, include_ref_types: bool = False):
         # have to override because outflows is "substituting in" the sum of flows.
         # print("In outflows seek refs!")
-        return self.sub_equation_parts[0].out_flows
+        if not include_ref_types:
+            return self.sub_equation_parts[0].out_flows
+        else:
+            return {flow: ["outflows"] for flow in self.sub_equation_parts[0].out_flows}
 
     def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{outflows}}"
