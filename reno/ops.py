@@ -433,6 +433,7 @@ class orient_timeseries(reno.components.Operation):
                 name += "_h"
                 t = refs[self.sub_equation_parts[0].model.find_timeref_name()]
                 return f"pt.concatenate([{refs[name]}[-({t}+1):], {refs[name]}[:-({t}+1)]])"
+            return refs[name]
         else:
             return self.sub_equation_parts[0].pt_str(**refs)
 

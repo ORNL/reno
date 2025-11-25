@@ -463,7 +463,7 @@ class Model:
         lr: bool = False,
         hide_groups: list[str] = None,
         show_groups: list[str] = None,
-        group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
+        group_colors: dict[str | tuple["reno.components.TrackedReference"], str] = None,
     ) -> Digraph:
         """Generate a graphviz dot graph for all the stocks and flows of the passed model,
         optionally including sparklines if a simulation has been run.
@@ -494,8 +494,8 @@ class Model:
                 model.default_hide_groups.
             show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
                 model.default_hide_groups.
-            group_colors dict[str | list["reno.components.TrackedReference"], str]: Dictionary specifying
-                colors to render groups with. An ad-hoc group defined by a list of references can also be
+            group_colors dict[str | tuple["reno.components.TrackedReference"], str]: Dictionary specifying
+                colors to render groups with. An ad-hoc group defined by a tuple of references can also be
                 used as a key if the appropriate cgroup does not already exist on the references.
 
         Returns:
