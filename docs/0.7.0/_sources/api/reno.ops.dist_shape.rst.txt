@@ -1,0 +1,6 @@
+reno.ops.dist\_shape
+====================
+
+.. currentmodule:: reno.ops
+
+.. autofunction:: dist_shape

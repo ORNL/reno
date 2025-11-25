@@ -1,0 +1,6 @@
+reno.diagrams.FLOW\_COLOR
+=========================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: FLOW_COLOR
