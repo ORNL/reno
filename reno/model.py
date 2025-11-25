@@ -151,7 +151,7 @@ class Model:
             Model.get_context()._unnamed_references.append(self)
 
     @property
-    def groups(self) -> dict:
+    def groups(self) -> dict[str, "reno.components.TrackedReference"]:
         """Get the list of groups and cgroups in the model. These can
         be used to control colors of components in stock/flow diagrams
         (see ``model.group_color``) and default show/hide behavior (see
@@ -463,6 +463,7 @@ class Model:
         lr: bool = False,
         hide_groups: list[str] = None,
         show_groups: list[str] = None,
+        group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
     ) -> Digraph:
         """Generate a graphviz dot graph for all the stocks and flows of the passed model,
         optionally including sparklines if a simulation has been run.
@@ -493,6 +494,9 @@ class Model:
                 model.default_hide_groups.
             show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
                 model.default_hide_groups.
+            group_colors dict[str | list["reno.components.TrackedReference"], str]: Dictionary specifying
+                colors to render groups with. An ad-hoc group defined by a list of references can also be
+                used as a key if the appropriate cgroup does not already exist on the references.
 
         Returns:
             The populated Digraph instance (Jupyter can natively render this in a cell output.)
@@ -513,6 +517,7 @@ class Model:
             lr,
             hide_groups,
             show_groups,
+            group_colors,
         )
         return diagram
 

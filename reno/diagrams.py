@@ -75,6 +75,7 @@ def stock_flow_diagram(
     lr: bool = False,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
+    group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
     _level: int = 0,
 ) -> tuple[Digraph, list[tuple[str, str]]]:
     """Generate a graphviz dot graph for all the stocks and flows of the passed model,
@@ -106,6 +107,9 @@ def stock_flow_diagram(
             model.default_hide_groups.
         show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
             model.default_hide_groups.
+        group_colors dict[str | list["reno.components.TrackedReference"], str]: Dictionary specifying
+            colors to render groups with. An ad-hoc group defined by a list of references can also be
+            used as a key if the appropriate cgroup does not already exist on the references.
 
     Returns:
         The populated Digraph instance (Jupyter can natively render this in a cell output.) and
@@ -141,6 +145,7 @@ def stock_flow_diagram(
         show_vars=show_vars,
         hide_groups=hide_groups,
         show_groups=show_groups,
+        group_colors=group_colors,
     )
     out_of_scope_var_connections = []
     if show_vars:
@@ -157,6 +162,7 @@ def stock_flow_diagram(
             universe=universe,
             hide_groups=hide_groups,
             show_groups=show_groups,
+            group_colors=group_colors,
         )
     else:
         variables = []
@@ -169,6 +175,7 @@ def stock_flow_diagram(
         universe=universe,
         hide_groups=hide_groups,
         show_groups=show_groups,
+        group_colors=group_colors,
     )
 
     missing_connections = (
@@ -199,6 +206,7 @@ def stock_flow_diagram(
                 lr=lr,
                 hide_groups=hide_groups,
                 show_groups=show_groups,
+                group_colors=group_colors,
                 _level=_level + 1,
             )
             for src, dst in remaining_connections:
@@ -218,26 +226,34 @@ def stock_flow_diagram(
     return g, missing_connections
 
 
-def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow, dir: str = None):
+def add_stock_io_edge(
+    g: Digraph, stock: Stock, flow: Flow, dir: str = None, group_colors: dict = None
+):
     """Edge with attributes for heavily highlighting in flows and
     outflows from stocks."""
 
     if flow.implicit and flow in stock.in_flows:
         for ref in flow.seek_refs():
             if isinstance(ref, Flow):
-                add_stock_io_edge(g, stock, ref, "in")
+                add_stock_io_edge(g, stock, ref, "in", group_colors)
         return
     elif flow.implicit and flow in stock.out_flows:
         for ref in flow.seek_refs():
             if isinstance(ref, Flow):
-                add_stock_io_edge(g, stock, ref, "out")
+                add_stock_io_edge(g, stock, ref, "out", group_colors)
         return
 
     color = EDGE_COLOR
-    if get_reference_color(flow, no_default=True) is not None:
-        color = get_reference_color(flow)
-    elif get_reference_color(stock, no_default=True) is not None:
-        color = get_reference_color(stock)
+    if (
+        get_reference_color(flow, no_default=True, group_colors=group_colors)
+        is not None
+    ):
+        color = get_reference_color(flow, group_colors=group_colors)
+    elif (
+        get_reference_color(stock, no_default=True, group_colors=group_colors)
+        is not None
+    ):
+        color = get_reference_color(stock, group_colors=group_colors)
     if flow in stock.in_flows or dir == "in":
         name1 = flow.qual_name()
         name2 = stock.qual_name()
@@ -251,14 +267,22 @@ def add_stock_io_edge(g: Digraph, stock: Stock, flow: Flow, dir: str = None):
     g.edge(name1, name2, style="bold", weight="50", color=color)
 
 
-def add_stock_io_like_edge(g: Digraph, to_flow: Flow, in_flow: Flow):
+def add_stock_io_like_edge(
+    g: Digraph, to_flow: Flow, in_flow: Flow, group_colors: dict = None
+):
     """Allow a stock-io-like edge between two flows (if one is explicitly listed
     as an inflow to another flow)"""
     color = EDGE_COLOR
-    if get_reference_color(in_flow, no_default=True) is not None:
-        color = get_reference_color(in_flow)
-    elif get_reference_color(to_flow, no_default=True) is not None:
-        color = get_reference_color(to_flow)
+    if (
+        get_reference_color(in_flow, no_default=True, group_colors=group_colors)
+        is not None
+    ):
+        color = get_reference_color(in_flow, group_colors=group_colors)
+    elif (
+        get_reference_color(to_flow, no_default=True, group_colors=group_colors)
+        is not None
+    ):
+        color = get_reference_color(to_flow, group_colors=group_colors)
     name1 = in_flow.qual_name()
     name2 = to_flow.qual_name()
     g.edge(name1, name2, style="bold", weight="50", color=color)
@@ -310,20 +334,22 @@ def add_to_var_edge(g: Digraph, ref, variable: Variable):
 # in different scopes
 # TODO: pretty sure there's still a mistake in this, will sometimes still try to
 # include out of scope variable and just gets added as default ellipse.
-def draw_appropriate_edge(g: Digraph, src: TrackedReference, dst: TrackedReference):
+def draw_appropriate_edge(
+    g: Digraph, src: TrackedReference, dst: TrackedReference, group_colors: dict = None
+):
     """Switch between edge types correctly based on the types of src/dst nodes."""
     if (
         isinstance(src, Flow)
         and isinstance(dst, Stock)
         and (src in dst.in_flows or src in dst.out_flows)
     ):
-        add_stock_io_edge(g, dst, src)
+        add_stock_io_edge(g, dst, src, group_colors=group_colors)
     elif (
         isinstance(src, Stock)
         and isinstance(dst, Flow)
         and (dst in src.in_flows or dst in src.out_flows)
     ):
-        add_stock_io_edge(g, src, dst)
+        add_stock_io_edge(g, src, dst, group_colors=group_colors)
     elif isinstance(dst, Stock) and (src in dst.min_refs() or src in dst.max_refs()):
         print("INCORPORAINT", dst, src)
         add_stock_limit_edge(g, src, dst)
@@ -350,7 +376,9 @@ def filter_variables(
     return filtered
 
 
-def get_reference_color(ref, no_default: bool = False) -> str:
+def get_reference_color(  # noqa: C901
+    ref, no_default: bool = False, group_colors: dict = None
+) -> str:
     # TODO: dark/light handling
     if isinstance(ref, reno.Stock):
         color = STOCK_COLOR
@@ -360,17 +388,38 @@ def get_reference_color(ref, no_default: bool = False) -> str:
         color = FLOW_COLOR
     if no_default:
         color = None
-    # cgroup takes precedence
+
+    if group_colors is None:
+        group_colors = {}
+
+    # manually specified group_colors take precedence
+    for group in group_colors:
+        if isinstance(group, tuple):
+            if ref in group:
+                return group_colors[group]
+
+    # cgroup takes next precedence
     if isinstance(ref.cgroup, list):
         for cgroup in ref.cgroup:
+            # manually specified takes precedence
+            if cgroup in group_colors:
+                return group_colors[cgroup]
+
+            # otherwise check model default
             if cgroup in ref.model.group_colors:
-                color = ref.model.group_colors[cgroup]
-                return color
-    if ref.cgroup != "" and ref.cgroup in ref.model.group_colors:
-        color = ref.model.group_colors[ref.cgroup]
-        return color
-    elif ref.group != "" and ref.group in ref.model.group_colors:
-        color = ref.model.group_colors[ref.group]
+                return ref.model.group_colors[cgroup]
+
+    # model-defined defaults take precedence next, with cgroup over group
+    if ref.cgroup != "":
+        if ref.cgroup in group_colors:
+            return group_colors[ref.cgroup]
+        if ref.cgroup in ref.model.group_colors:
+            return ref.model.group_colors[ref.cgroup]
+    if ref.group != "":
+        if ref.group in group_colors:
+            return group_colors[ref.group]
+        if ref.group in ref.model.group_colors:
+            return ref.model.group_colors[ref.group]
     return color
 
 
@@ -424,6 +473,7 @@ def add_stocks(  # noqa: C901
     show_vars: bool = True,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
+    group_colors: dict = None,
 ):
     """Add nodes and edges for all passed stocks to the passed graph.
 
@@ -446,7 +496,7 @@ def add_stocks(  # noqa: C901
                 shape="rect",
                 group=stock.group,
                 style="filled",
-                fillcolor=get_reference_color(stock),
+                fillcolor=get_reference_color(stock, group_colors=group_colors),
             )
         else:
             # to force the sparkline graph image node to render right next to
@@ -458,7 +508,7 @@ def add_stocks(  # noqa: C901
                     shape="rect",
                     group=stock.group,
                     style="filled",
-                    fillcolor=get_reference_color(stock),
+                    fillcolor=get_reference_color(stock, group_colors=group_colors),
                 )
 
                 # generate the sparkline graph
@@ -513,7 +563,7 @@ def add_stocks(  # noqa: C901
                 # add refs themselves not qualname, need to access model
                 render_in_parent_scope.append((flow, stock))
                 continue
-            add_stock_io_edge(g, stock, flow)
+            add_stock_io_edge(g, stock, flow, group_colors=group_colors)
             handled_refs.append(flow.qual_name())
         for flow in stock.out_flows:
             if not should_render(flow, universe, hide_groups, show_groups):
@@ -522,7 +572,7 @@ def add_stocks(  # noqa: C901
                 # add refs themselves not qualname, need to access model
                 render_in_parent_scope.append((flow, stock))
                 continue
-            add_stock_io_edge(g, stock, flow)
+            add_stock_io_edge(g, stock, flow, group_colors=group_colors)
             handled_refs.append(flow.qual_name())
         remaining = []
         remaining.extend(stock.min_refs())
@@ -551,6 +601,7 @@ def add_vars(
     universe: list[TrackedReference] = None,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
+    group_colors: dict = None,
 ):
     """Add variables and edges between variables to the passed graphviz graph."""
     rendered_edges = []
@@ -568,7 +619,7 @@ def add_vars(
                 name=variable.qual_name(),
                 label=variable.label,
                 style="rounded,filled",
-                fillcolor=get_reference_color(variable),
+                fillcolor=get_reference_color(variable, group_colors=group_colors),
                 shape="rect",
                 fontsize="10pt",
                 height=".2",
@@ -582,7 +633,7 @@ def add_vars(
                     name=variable.qual_name(),
                     label=variable.label,
                     style="rounded,filled",
-                    fillcolor=get_reference_color(variable),
+                    fillcolor=get_reference_color(variable, group_colors=group_colors),
                     shape="rect",
                     fontsize="10pt",
                     height=".2",
@@ -657,6 +708,7 @@ def add_flows(
     universe: list[TrackedReference] = None,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
+    group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
 ):
     """Add flows and edges from variables to the passed graphviz graph."""
     rendered_edges = []
@@ -673,7 +725,7 @@ def add_flows(
                 shape="plain",
                 group=flow.group,
                 style="filled",
-                fillcolor=get_reference_color(flow),
+                fillcolor=get_reference_color(flow, group_colors=group_colors),
             )
         else:
             # to force the sparkline graph image node to render right next to
@@ -685,7 +737,7 @@ def add_flows(
                     shape="plain",
                     group=flow.group,
                     style="filled",
-                    fillcolor=get_reference_color(flow),
+                    fillcolor=get_reference_color(flow, group_colors=group_colors),
                 )
 
                 # generate the sparkline graph
@@ -765,7 +817,7 @@ def add_flows(
                     continue
 
                 if "inflow" in ref_types:
-                    add_stock_io_like_edge(g, flow, ref)
+                    add_stock_io_like_edge(g, flow, ref, group_colors=group_colors)
                 else:
                     add_to_flow_edge(g, ref, flow, deemphasize="outflows" in ref_types)
                 rendered_edges.append((ref.qual_name(), flow.qual_name()))
