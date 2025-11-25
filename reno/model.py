@@ -151,17 +151,27 @@ class Model:
             Model.get_context()._unnamed_references.append(self)
 
     @property
-    def groups(self) -> list[str]:
+    def groups(self) -> dict:
         """Get the list of groups and cgroups in the model. These can
         be used to control colors of components in stock/flow diagrams
         (see ``model.group_color``) and default show/hide behavior (see
         ``model.default_hide_groups``)"""
-        group_list = []
+        group_list = {}
         for ref in self.all_refs():
-            if ref.group != "" and ref.group not in group_list:
-                group_list.append(ref.group)
-            if ref.cgroup != "" and ref.cgroup not in group_list:
-                group_list.append(ref.cgroup)
+            if ref.group != "":
+                if ref.group not in group_list:
+                    group_list[ref.group] = []
+                group_list[ref.group].append(ref)
+            if ref.cgroup != "":
+                if isinstance(ref.cgroup, list):
+                    for cgroup in ref.cgroup:
+                        if ref.cgroup not in group_list:
+                            group_list[ref.cgroup] = []
+                        group_list[ref.cgroup].append(ref)
+                else:
+                    if ref.cgroup not in group_list:
+                        group_list[ref.cgroup] = []
+                    group_list[ref.cgroup].append(ref)
         return group_list
 
     @classmethod
@@ -451,6 +461,8 @@ class Model:
         traces: list[xr.Dataset] = None,
         universe: list[reno.components.TrackedReference] = None,
         lr: bool = False,
+        hide_groups: list[str] = None,
+        show_groups: list[str] = None,
     ) -> Digraph:
         """Generate a graphviz dot graph for all the stocks and flows of the passed model,
         optionally including sparklines if a simulation has been run.
@@ -477,6 +489,10 @@ class Model:
                 and ``exclude_var_names`` still applies after this.)
             lr (bool): By default the graphviz plot tries to orient top-down. Specify ``True`` to
                 try to orient it left-right.
+            hide_groups (list[str]): A list of group/cgroup names to hide during diagramming, overriding
+                model.default_hide_groups.
+            show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
+                model.default_hide_groups.
 
         Returns:
             The populated Digraph instance (Jupyter can natively render this in a cell output.)
@@ -495,6 +511,8 @@ class Model:
             traces,
             universe,
             lr,
+            hide_groups,
+            show_groups,
         )
         return diagram
 

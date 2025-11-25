@@ -1252,8 +1252,9 @@ class TrackedReference(Reference):
         group (str): An optional string to help group related references together,
             primarily only used for visually tightening up elements in the stock/flow
             graphs.
-        cgroup (str): An optional string to refer to related elements and specify
-            colors in the stock/flow graphs or easier hiding.
+        cgroup (str | list[str]): An optional string to refer to related elements and
+            specify colors in the stock/flow graphs or easier hiding. Can specify a list
+            to allow multiple ways of grouping.
         dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
 
     Note:
@@ -1287,7 +1288,7 @@ class TrackedReference(Reference):
         init: int | float | Distribution | Scalar | EquationPart = None,
         dim: int = 1,
         group: str = "",
-        cgroup: str = "",
+        cgroup: str | list[str] = "",
         dtype: type = None,
     ):
         super().__init__(label, doc)

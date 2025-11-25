@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [unreleased]
+
+### Added
+
+* `cgroup` parameter to `TrackedReference`, allowing control over display and
+  coloring
+* `group_colors` in `Model` to allow specifying colors to use for `cgroup` or
+  `group` in diagrams
+* `default_hide_groups` in `Model` to specify whether to hide specific `cgroup`
+  or `group` labeled references by default in diagrams
+* `inflow` operation to allow semantically stating that a flow is actually an
+  inflow to another flow (only impacts diagrams, to help indicate "flow of
+  material" when a particular flow should indirectly be the inflow to a stock
+
+### Changed
+
+* `seek_refs` can now return additional "type" information for each reference in
+  an equation, allowing more fine grained control during diagramming
+
+
+
+
 ## [0.6.1] - 2025-11-19
 
 ### Changed

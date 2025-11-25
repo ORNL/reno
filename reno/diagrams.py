@@ -73,6 +73,8 @@ def stock_flow_diagram(
     traces: list[xr.Dataset] = None,
     universe: list[TrackedReference] = None,
     lr: bool = False,
+    hide_groups: list[str] = None,
+    show_groups: list[str] = None,
     _level: int = 0,
 ) -> tuple[Digraph, list[tuple[str, str]]]:
     """Generate a graphviz dot graph for all the stocks and flows of the passed model,
@@ -100,6 +102,10 @@ def stock_flow_diagram(
             and ``exclude_var_names`` still applies after this.)
         lr (bool): By default the graphviz plot tries to orient top-down. Specify ``True`` to
             try to orient it left-right.
+        hide_groups (list[str]): A list of group/cgroup names to hide during diagramming, overriding
+            model.default_hide_groups.
+        show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
+            model.default_hide_groups.
 
     Returns:
         The populated Digraph instance (Jupyter can natively render this in a cell output.) and
@@ -133,6 +139,8 @@ def stock_flow_diagram(
         traces=traces,
         universe=universe,
         show_vars=show_vars,
+        hide_groups=hide_groups,
+        show_groups=show_groups,
     )
     out_of_scope_var_connections = []
     if show_vars:
@@ -147,6 +155,8 @@ def stock_flow_diagram(
             sparkall,
             traces,
             universe=universe,
+            hide_groups=hide_groups,
+            show_groups=show_groups,
         )
     else:
         variables = []
@@ -157,6 +167,8 @@ def stock_flow_diagram(
         sparkall,
         traces,
         universe=universe,
+        hide_groups=hide_groups,
+        show_groups=show_groups,
     )
 
     missing_connections = (
@@ -185,6 +197,8 @@ def stock_flow_diagram(
                 traces=traces,
                 universe=universe,
                 lr=lr,
+                hide_groups=hide_groups,
+                show_groups=show_groups,
                 _level=_level + 1,
             )
             for src, dst in remaining_connections:
@@ -347,15 +361,48 @@ def get_reference_color(ref, no_default: bool = False) -> str:
     if no_default:
         color = None
     # cgroup takes precedence
+    if isinstance(ref.cgroup, list):
+        for cgroup in ref.cgroup:
+            if cgroup in ref.model.group_colors:
+                color = ref.model.group_colors[cgroup]
+                return color
     if ref.cgroup != "" and ref.cgroup in ref.model.group_colors:
         color = ref.model.group_colors[ref.cgroup]
+        return color
     elif ref.group != "" and ref.group in ref.model.group_colors:
         color = ref.model.group_colors[ref.group]
     return color
 
 
-def should_render(ref, universe) -> bool:
+def should_render(
+    ref, universe, hide_groups: list[str] = None, show_groups: list[str] = None
+) -> bool:
+    if show_groups is None:
+        show_groups = []
+    if hide_groups is None:
+        hide_groups = []
+
     if universe is not None and ref not in universe:
+        return False
+    # show_groups takes precedence over hide_groups
+    if isinstance(ref.cgroup, list):
+        # manually passed takes precedence
+        found_hide = False
+        for cgroup in ref.cgroup:
+            if cgroup in show_groups:
+                return True
+            if cgroup in hide_groups:
+                found_hide = True
+        if found_hide:
+            return False
+
+        # otherwise look at default
+        for cgroup in ref.model.default_hide_groups:
+            if cgroup in ref.cgroup:
+                return False
+    if ref.cgroup in show_groups or ref.group in show_groups:
+        return True
+    if ref.cgroup in hide_groups or ref.group in hide_groups:
         return False
     if (
         ref.cgroup in ref.model.default_hide_groups
@@ -375,6 +422,8 @@ def add_stocks(  # noqa: C901
     traces: list[xr.Dataset] = None,
     universe: list[TrackedReference] = None,
     show_vars: bool = True,
+    hide_groups: list[str] = None,
+    show_groups: list[str] = None,
 ):
     """Add nodes and edges for all passed stocks to the passed graph.
 
@@ -386,7 +435,7 @@ def add_stocks(  # noqa: C901
     render_in_parent_scope = []
 
     for stock in stocks:
-        if not should_render(stock, universe):
+        if not should_render(stock, universe, hide_groups, show_groups):
             continue
 
         # add a node for each stock
@@ -458,7 +507,7 @@ def add_stocks(  # noqa: C901
         # (this works even if the flow "nodes" haven't been added yet.)
         handled_refs = []
         for flow in stock.in_flows:
-            if not should_render(flow, universe):
+            if not should_render(flow, universe, hide_groups, show_groups):
                 continue
             if reno.utils.is_ref_in_parent_scope(flow, stock):
                 # add refs themselves not qualname, need to access model
@@ -467,7 +516,7 @@ def add_stocks(  # noqa: C901
             add_stock_io_edge(g, stock, flow)
             handled_refs.append(flow.qual_name())
         for flow in stock.out_flows:
-            if not should_render(flow, universe):
+            if not should_render(flow, universe, hide_groups, show_groups):
                 continue
             if reno.utils.is_ref_in_parent_scope(flow, stock):
                 # add refs themselves not qualname, need to access model
@@ -482,7 +531,7 @@ def add_stocks(  # noqa: C901
             if isinstance(ref, Variable) and not show_vars:
                 continue
             if ref not in handled_refs:
-                if not should_render(ref, universe):
+                if not should_render(ref, universe, hide_groups, show_groups):
                     continue
                 if reno.utils.is_ref_in_parent_scope(ref, stock):
                     # add refs themselves not qualname, need to access model
@@ -500,6 +549,8 @@ def add_vars(
     sparkall: bool = False,
     traces: list[xr.Dataset] = None,
     universe: list[TrackedReference] = None,
+    hide_groups: list[str] = None,
+    show_groups: list[str] = None,
 ):
     """Add variables and edges between variables to the passed graphviz graph."""
     rendered_edges = []
@@ -507,7 +558,7 @@ def add_vars(
     for variable in variables:
         # if universe is not None and variable not in universe:
         #     continue
-        if not should_render(variable, universe):
+        if not should_render(variable, universe, hide_groups, show_groups):
             continue
         if not sparkdensities or (
             sparkdensities
@@ -575,7 +626,7 @@ def add_vars(
         # add any edges between variables
         # -- unclear if correct --
         for ref in variable.seek_refs():
-            if not should_render(ref):
+            if not should_render(ref, universe, hide_groups, show_groups):
                 continue
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
@@ -604,6 +655,8 @@ def add_flows(
     sparkall: bool = False,
     traces: list[xr.Dataset] = None,
     universe: list[TrackedReference] = None,
+    hide_groups: list[str] = None,
+    show_groups: list[str] = None,
 ):
     """Add flows and edges from variables to the passed graphviz graph."""
     rendered_edges = []
@@ -611,7 +664,7 @@ def add_flows(
     render_in_parent_scope = []
 
     for flow in flows:
-        if not should_render(flow, universe):
+        if not should_render(flow, universe, hide_groups, show_groups):
             continue
         if not sparkall:
             g.node(
@@ -681,7 +734,7 @@ def add_flows(
                 )
 
         for ref, ref_types in flow.seek_refs(include_ref_types=True).items():
-            if not should_render(ref, universe):
+            if not should_render(ref, universe, hide_groups, show_groups):
                 continue
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
