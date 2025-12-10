@@ -1451,7 +1451,9 @@ class Normal(reno.components.Distribution):
         return float
 
     def __repr__(self):
-        return f"Normal({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
+        if not self.per_timestep:
+            return f"Normal({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
+        return f"Normal({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)
@@ -1486,7 +1488,9 @@ class Uniform(reno.components.Distribution):
         )
 
     def __repr__(self):
-        return f"Uniform({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
+        if not self.per_timestep:
+            return f"Uniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
+        return f"Uniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)
@@ -1523,7 +1527,11 @@ class DiscreteUniform(reno.components.Distribution):
         )
 
     def __repr__(self):
-        return f"DiscreteUniform({self.sub_equation_parts[0]}, {self.sub_equation_parts[1]}, {self.per_timestep})"
+        if not self.per_timestep:
+            return (
+                f"DiscreteUniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
+            )
+        return f"DiscreteUniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)
@@ -1557,7 +1565,9 @@ class Bernoulli(reno.components.Distribution):
         return int
 
     def __repr__(self):
-        return f"Bernoulli({self.sub_equation_parts[0]}, {self.use_p_dist}, {self.per_timestep})"
+        if not self.use_p_dist and not self.per_timestep:
+            return f"Bernoulli({self.clean_part_repr(0)})"
+        return f"Bernoulli({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)
@@ -1612,7 +1622,7 @@ class Categorical(reno.components.Distribution):
         )
 
     def __repr__(self):
-        return f"Categorical({self.sub_equation_parts[0]}, {self.use_p_dist}, {self.per_timestep})"
+        return f"Categorical({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         name, dim, dim_name, seq = dist_params(self, refs)

@@ -374,7 +374,6 @@ class EquationPart:
                 check_parts.append(part.tracked_ref)
 
         for part in check_parts:
-            print(part)
             if part in already_checked:
                 continue
             already_checked.append(part)
@@ -561,6 +560,12 @@ class Distribution(EquationPart):
             return self.value
         else:
             return self.value[:, t]
+
+    def clean_part_repr(self, part_index: int) -> str:
+        part = self.sub_equation_parts[part_index]
+        if isinstance(part, Scalar):
+            return str(part.value)
+        return part
 
 
 class Operation(EquationPart):

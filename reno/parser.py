@@ -103,14 +103,16 @@ def parse_value(string: str) -> float | int | str:
         except ValueError:
             val = None
 
-    # leaving out for now, not sure where this
-    # would be needed?
     # try to convert to bool
-    # if val is None:
-    #     try:
-    #         val = bool(string)
-    #     except ValueError:
-    #         val = None
+    if val is None:
+        if string.strip() == "False":
+            val = False
+        elif string.strip() == "True":
+            val = True
+        # try:
+        #     val = bool(string)
+        # except ValueError:
+        #     val = None
 
     if val is None:
         if str(string).startswith("[") and str(string).endswith("]"):
@@ -258,7 +260,7 @@ def parse_class_or_scalar(string) -> reno.components.EquationPart:
 
     # check if it's just a float or int
     try_simple_convert_first = parse_value(string)
-    if isinstance(try_simple_convert_first, (float, int)):
+    if isinstance(try_simple_convert_first, (float, int, bool)):
         return try_simple_convert_first
 
     # must be an op, pull the params
