@@ -574,11 +574,14 @@ class Model:
         else:
             # otherwise find and list each of the free variables within each submodel
             for model in self.models:
+                # print(model.name)
+                # for ref in model.free_refs(recursive):
+                #     print(ref, type(ref))
                 free.extend(
                     [
                         f"{model.name}.{ref}"
                         for ref in model.free_refs(recursive)
-                        if not ref.implicit
+                        # if not ref.implicit
                     ]
                 )
 
