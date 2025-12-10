@@ -35,12 +35,25 @@ def test_int_float_parsing(string, expected, expected_type):
         ("Normal(5.0, std =13.2)", [5.0], {"std": 13.2}),
         ("Scalar(1.0)", [1.0], {}),
         ("Scalar([1.0, 6.0, 2.0])", [[1.0, 6.0, 2.0]], {}),
+        ("Normal(Scalar(5.0), Scalar(10.0))", [Scalar(5.0), Scalar(10.0)], {}),
+        ("Normal(Scalar(5.0), 10.0)", [Scalar(5.0), 10.0], {}),
+        ("Normal(Scalar(5.0), std=Scalar(10.0))", [Scalar(5.0)], {"std": Scalar(10.0)}),
     ],
 )
 def test_param_parsing(string, expected_args, expected_kwargs):
     args, kwargs, *_ = parser.parse_function_args(string)
-    assert args == expected_args
-    assert kwargs == expected_kwargs
+    for i, arg in enumerate(args):
+        if isinstance(arg, Scalar):
+            assert arg.value == expected_args[i].value
+        else:
+            assert arg == expected_args[i]
+    for kw, arg in kwargs.items():
+        if isinstance(arg, Scalar):
+            assert arg.value == expected_kwargs[kw].value
+        else:
+            assert arg == expected_kwargs[kw]
+    # assert args == expected_args
+    # assert kwargs == expected_kwargs
 
 
 def test_full_op_parse():

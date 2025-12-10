@@ -374,6 +374,7 @@ class EquationPart:
                 check_parts.append(part.tracked_ref)
 
         for part in check_parts:
+            print(part)
             if part in already_checked:
                 continue
             already_checked.append(part)
@@ -2175,9 +2176,7 @@ class Stock(TrackedReference):
     Note that stock update equations are based on the previous timestep's values
     for all references (as opposed to flows/vars), e.g.:
 
-    ```
-    stock(t) = stock(t-1) + in_flows(t-1) - out_flows(t-1)
-    ```
+    ``stock(t) = stock(t-1) + in_flows(t) - out_flows(t)``
     """
 
     def __init__(

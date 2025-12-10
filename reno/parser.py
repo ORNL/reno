@@ -204,7 +204,8 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
     if ")" not in string:
         raise SyntaxError(f"Was attempting to find ')' for parameters of '{string}'")
     start = string.index("(") + 1
-    end = string.index(")")
+    # end = string.index(")")
+    end = string.rindex(")")
 
     pieces = []
     braces_stack = 0
@@ -231,10 +232,19 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
         if "=" in piece:
             key = piece[: piece.index("=")].strip()
             value = piece[piece.index("=") + 1 :].strip()
-            kwargs[key] = parse_value(value)
+            try:
+                # try to recursively parse (e.g. Normal(Scalar(1.0)))
+                sub_value = parse_class_or_scalar(value)
+                kwargs[key] = sub_value
+            except SyntaxError:
+                kwargs[key] = parse_value(value)
             # TODO: missing parsing of lists, bools, etc.
         else:
-            args.append(parse_value(piece))
+            try:
+                sub_value = parse_class_or_scalar(piece)
+                args.append(sub_value)
+            except SyntaxError:
+                args.append(parse_value(piece))
 
     return args, kwargs, start, end
 
