@@ -50,16 +50,18 @@ def set_dark_mode(dark: bool = False):
         dark (bool): Pass ``False`` for light theme, ``True`` for dark theme.
     """
 
-    global DARK_MODE, SUBGRAPH_COLORS, NODE_COLOR
+    global DARK_MODE, SUBGRAPH_COLORS, NODE_COLOR, EDGE_COLOR
     DARK_MODE = dark
     if not dark:
         plt.style.use("default")
         SUBGRAPH_COLORS = ["#BBDDFF", "#DDBBFF"]
         NODE_COLOR = "lightgreen"
+        EDGE_COLOR = "black"
     else:
         plt.style.use("dark_background")
         SUBGRAPH_COLORS = ["#334455", "#443355"]
         NODE_COLOR = "darkgreen"
+        EDGE_COLOR = "white"
 
 
 def stock_flow_diagram(
@@ -432,6 +434,8 @@ def should_render(
         hide_groups = []
 
     if universe is not None and ref not in universe:
+        return False
+    if isinstance(ref, TimeRef):
         return False
     # show_groups takes precedence over hide_groups
     if isinstance(ref.cgroup, list):
