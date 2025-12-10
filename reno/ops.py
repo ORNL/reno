@@ -1547,7 +1547,7 @@ class Bernoulli(reno.components.Distribution):
         self.use_p_dist = use_p_dist
 
     def latex(self, **kwargs):
-        return f"\\text{{Bernoulli}}({self.sub_equation_parts[0]})"
+        return f"\\text{{Bernoulli}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
         dims = dist_shape(self, n, steps, dim)

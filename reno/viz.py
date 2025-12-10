@@ -794,7 +794,10 @@ class ModelLatex:
 
                 if ref.doc is not None and self.show_docs:
                     string += latex_eqline_wrap_doc(
-                        ref.name.replace("_", "\\_") + ": " + ref.doc, highlight
+                        ref.name.replace("_", "\\_")
+                        + ": "
+                        + ref.doc.replace("_", "\\_"),
+                        highlight,
                     )
             else:
                 if self.debug:
@@ -804,7 +807,9 @@ class ModelLatex:
 
                 string += latex_eqline_wrap(equation_str, highlight)
                 if ref.doc is not None and self.show_docs:
-                    string += latex_eqline_wrap_doc(ref.doc, highlight)
+                    string += latex_eqline_wrap_doc(
+                        ref.doc.replace("_", "\\_"), highlight
+                    )
 
         string += "\\end{align*}$"
         return string
