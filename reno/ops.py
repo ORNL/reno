@@ -322,6 +322,11 @@ class orient_timeseries(reno.components.Operation):
     def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{timeseries}}"
 
+    def __repr__(self):
+        """Explicit repr is necessary to avoid including a timeref in sub equation parts if added from
+        the pt() or pt_str() calls."""
+        return f"({self.op_repr()} {self.sub_equation_parts[0].__repr__()})"
+
     # TODO: how best to get timeseries length for get_shape?
 
     def op_eval(self, t, **kwargs):
@@ -353,7 +358,8 @@ class orient_timeseries(reno.components.Operation):
         return value
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        # have to have a time ref for this to work
+        # NOTE: have to have a time ref for this to work, so we add one if none
+        # found. As a result, have to make sure
         if self.sub_equation_parts[0].model.find_timeref_name() is None:
             self.sub_equation_parts.append(reno.components.TimeRef())
 
