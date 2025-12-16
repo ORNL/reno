@@ -1,12 +1,18 @@
-Welcome to Reno's Documentation!
-================================
+Reno System Dynamics (reno-sd)
+==============================
 
-..
-    .. toctree::
-        :maxdepth: 2
-        :caption: User Guide
+Welcome to Reno! Reno is a library for building, running, and analyzing `system
+dynamics models <https://en.wikipedia.org/wiki/System_dynamics>`__ in Python.
 
-        user_guide.rst
+Some of the features of this library include:
+
+TODO
+
+.. toctree::
+    :maxdepth: 2
+    :caption: User Guide
+
+    user_guide.rst
 
 .. toctree::
     :maxdepth: 2
