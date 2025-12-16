@@ -195,7 +195,11 @@ class index(reno.components.Operation):
     def op_eval(self, **kwargs):
         # TODO: support for static?
         value = self.sub_equation_parts[0].eval(**kwargs)
-        return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
+        # if len(value.shape) > 1:
+        #     return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
+        # else:
+        #     return value[self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
+        return value[..., self.sub_equation_parts[1].value]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs)[

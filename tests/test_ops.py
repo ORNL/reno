@@ -116,6 +116,18 @@ def test_slice_on_scalar():
     assert v.timeseries[:].eval(4).shape == np.array([[5, 5, 5, 5, 5]]).shape
 
 
+def test_index_directly_on_scalar():
+    """Getting an index on a 1d scalar should still work."""
+    s = Scalar([1, 2, 3])
+    assert s[1].eval() == 2
+
+
+def test_slice_directly_on_scalar():
+    """Getting indices on a 1d scalar should still work."""
+    s = Scalar([1, 2, 3])
+    assert (s[1:].eval() == [2, 3]).all()
+
+
 def test_slice_staticness_static_slice():
     """A slice with defined bounds (or static bounds) of a non-timeseries multidim should be considered
     static."""

@@ -86,6 +86,10 @@ separately from instantiation by setting the ``.eq`` attribute:
     tub.faucet_flow_rate.eq = 5
 
 
+For more info on how equations in Reno work and how to construct them, see TODO
+(math page)
+
+
 Model ``with`` blocks
 ---------------------
 
@@ -267,6 +271,17 @@ every stock/flow/variable at each timestep.
 
 
 As seen above, variables that are static values (e.g. ``faucet_off_time``) don't
-replicate across each step, since they don't change. A copy of the values of
-each free variable in that run's configuration are included in the
+include the step dimension, since they don't change over time. A copy of the values
+of each free variable in that run's configuration are included in the
 ``Attributes`` section of the output.
+
+
+Visualizing results
+===================
+
+
+
+
+
+
+TODO: links to the rest of the user guide

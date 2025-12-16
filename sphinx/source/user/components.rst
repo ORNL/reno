@@ -183,8 +183,13 @@ model parameters.
 TODO
 
 
+Metrics
+=======
+
+TODO
+
 
 Other arguments for components
 ==============================
 
-(doc, min/max, init)
+(doc, min/max, init, dim, type)
