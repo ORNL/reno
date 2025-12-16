@@ -521,7 +521,9 @@ class Model:
         )
         return diagram
 
-    def latex(self, docs: bool = True, t: int = None, sample: int = 0):
+    def latex(
+        self, docs: bool = True, t: int = None, sample: int = 0, raw_str: bool = False
+    ):
         """Get an interactive latex ipywidget listing all of the equations in system. Each equation
         line is clickable, clicking will highlight where else in the system that equation's result
         is being used.
@@ -531,12 +533,16 @@ class Model:
             t (int): If specified, show the values of every reference at the specified timestep (note
                 that stock values will be from the previous timestep)
             sample (int): Which sample (row) to show the values from if ``t`` was specified.
+            raw_str (bool): Set this to True to just get the string of latex instead of
+                the interactive widget.
         """
         debug = False
         if t is not None:
             debug = True
 
         latex_obj = reno.viz.ModelLatex(self, docs, t=t, sample=sample, debug=debug)
+        if raw_str:
+            return latex_obj.latex.data
         return latex_obj.widget
 
     def plot_stocks(self, cols: int = None, rows: int = None, **figargs):
