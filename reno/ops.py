@@ -1683,7 +1683,7 @@ class List(reno.components.Distribution):
             return float
         elif isinstance(value, np.integer):
             return int
-        elif isinstance(value, np.bool):
+        elif isinstance(value, bool):
             return bool
         return type(value)
 

@@ -1150,8 +1150,11 @@ class Model:
                 sampling_kwargs = dict(draws=n)
             if trace_prior is None:
                 trace_prior = pm.sample_prior_predictive(
-                    n, compile_kwargs=compile_kwargs
+                    n, compile_kwargs=dict(**compile_kwargs)
                 )
+                # NOTE: sample_prior_predictive will mutate the passed in
+                # dictionary, since I'm using it later, I make a separate copy
+                # for the sample_prior_predictive call
             if not compute_prior_only:
                 # sample_smc throws a fit with extremely few samples and the
                 # exception it raises isn't obviously talking about this (a 0-d
@@ -1167,6 +1170,7 @@ class Model:
                 # 5.12.0?) An older version of pymc is sometimes necessary if
                 # there's weird stalling issues:
                 # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
+                print("???", compile_kwargs)
                 if len(compile_kwargs) > 0:
                     sampling_kwargs["compile_kwargs"] = compile_kwargs
                 trace = sample_func(

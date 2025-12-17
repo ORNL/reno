@@ -29,7 +29,7 @@ ignore-paths = "^sphinx/.*$,^tests/.*$"
 packages = ["reno"]
 
 [tool.setuptools.package-data]
-"res"=["res/*.vue", "res/*.js"]
+reno = ["res/*.vue", "res/*.js"]
 
 [tool.setuptools.dynamic]
 version = {attr = "reno.__version__"}

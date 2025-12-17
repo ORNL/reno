@@ -1,0 +1,117 @@
+Bayesian Inference
+##################
+
+
+Reno provides a mechanism for taking a model with multiple probability
+distributions and running Bayesian inference based on one or more observed
+values in the system in order to produce posterior probability distributions.
+
+This is done through the PyMC library - since math equations in Reno have the
+ability to produce a PyTensor equivalent, Reno can recreate the entire system
+dynamics model as a PyMC model along with the mechanisms to compute the full
+timeseries outputs, and then take advantage of PyMC's samplers to approximate
+posterior distributions.
+
+The value of doing this through Reno as opposed to directly through PyMC is due
+to a few reasons:
+
+* ...
+
+
+
+Running a Reno model with PyMC is very similar to a normal run by using the
+model's :py:func:`.pymc() <reno.model.Model.pymc>` call. This acts similarly to
+the model's :py:func:`__call__() <reno.model.Model.__call__>`, optionally taking
+any free variable/initial value conditions, plus some pymc-specific sampling
+arguments.
+
+A normal "forward-run" of the model using PyMC, or running the simulations just based on
+prior probabilities can be done by specifying the ``compute_prior_only=True``
+argument.
+
+
+.. code-block:: python
+
+    import reno
+
+    t = reno.TimeRef()
+    tub = reno.Model("tub", steps=30, doc="Model the amount of water in a bathtub based on a drain and faucet rate")
+    with tub:
+        faucet, drain = reno.Flow(), reno.Flow()
+        water_level = reno.Stock()
+
+        faucet_off_time = reno.Variable(5, doc="Timestep to turn the faucet off in the simulation.")
+
+        faucet >> water_level >> drain
+
+        # the faucet should be some waterflow amount until the faucet is turned
+        # off, so we use a piecewise operation to make a conditional based on time
+        faucet.eq = reno.Piecewise([5, 0], [t < faucet_off_time, t >= faucet_off_time])
+
+        drain.eq = reno.sin(t) + 2
+        # the drain can't move negative water, and can't drain more than exists
+        # in the tub
+        drain.min = 0
+        drain.max = water_level
+
+        final_water_level = reno.Metric(water_level.timeseries[-1])
+
+
+.. code-block:: python
+
+   trace = tub.pymc(n=1000, faucet_off_time=reno.Normal(10, 5), compute_prior_only=True)
+
+``.pymc`` calls return Arviz ``InferenceData`` objects, which contain a
+``.prior`` XArray dataset (very similar to what the normal Reno model call
+returns) and when not passing ``compute_prior_only=True`` a ``.posterior``
+XArray dataset as well.
+
+We can confirm the normal distribution on the variable by plotting it from the
+trace:
+
+.. code-block:: python
+
+    reno.plot_trace_refs(tub, [trace.prior], [tub.faucet_off_time])
+
+
+.. figure:: ../_static/tub_prior_faucet_dist.png
+   :align: center
+
+
+Bayesian inference comes in when we know some additional piece of data or have
+an observed value for a metric somewhere, and want to determine how the
+probability distributions change to produce that observed value. These are
+provided to the ``.pymc`` call through the ``observations`` argument, which
+takes a list of :py:class:`reno.ops.Observation` instance. These effectively
+define a normal likelihood function around a metric, with specified observed
+mean and standard deviation.
+
+As an example, suppose we observed that the final level in the tub was 12, with
+some allowance for uncertainty, and we want to find out what the likely cut off
+time for the faucet was. We run the ``.pymc`` function with an observation on
+the ``final_water_level`` metric:
+
+.. code-block:: python
+
+    trace = tub.pymc(
+        n=1000,
+        faucet_off_time=reno.Normal(10, 5),
+        observations=[reno.Observation(tub.final_water_level, 2.0, [12.0])]
+    )
+
+And observe the change from prior to posterior:
+
+.. code-block:: python
+
+    reno.plot_trace_refs(
+        tub,
+        {"prior": trace.prior, "post": trace.posterior},
+        [tub.faucet_off_time, tub.faucet, tub.drain, tub.water_level]
+    )
+
+Technical process
+=================
+
+
+Transpiling
+===========

@@ -11,6 +11,7 @@ User Guide
     user/viz.rst
     user/explorer.rst
     user/submodels.rst
+    user/extending.rst
 
 
 TODO: page on more in-depth controls for graphing

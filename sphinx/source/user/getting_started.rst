@@ -276,6 +276,43 @@ of each free variable in that run's configuration are included in the
 ``Attributes`` section of the output.
 
 
+Running with distributions
+--------------------------
+
+TODO: this possibly belongs on the math page instead (wanted to introduce early so
+the viz made more sense)
+
+Running a model thus far with an ``n``/samples more than 1 hasn't made much sense since
+these are deterministic - each sample should run the exact same way. Samples come
+into play when distributions are used in variables, which are randomly drawn from
+for each sample (and optionally each timestep.) The simplest "distribution"
+(which isn't techncially a distribution) is :py:class:`reno.ops.List`, which
+simply iterates which item is selected for each sample, making it easier to
+quickly test multiple variable values:
+
+.. code-block::
+
+    >>> tub.final_water_level = reno.Metric(tub.water_level.timeseries[-1])
+    >>> results = tub(n=3, faucet_off_time=reno.List([2, 4, 6]))
+    >>> results.final_water_level.values
+    array([ 0.      ,  2.456909, 12.456909])
+
+Looking at the water level in the final timestep is now different in each
+sample, corresponding to the different faucet off time in each simulation.
+
+Actually random distributions are currently available through:
+
+* :py:class:`reno.ops.Normal`
+* :py:class:`reno.ops.Uniform`
+* :py:class:`reno.ops.DiscreteUniform`
+* :py:class:`reno.ops.Bernoulli`
+* :py:class:`reno.ops.Categorical`
+
+TODO: example with normal
+
+Much more can be done with this, discussed further on the TODO: link bayes page.
+
+
 Visualizing results
 ===================
 
