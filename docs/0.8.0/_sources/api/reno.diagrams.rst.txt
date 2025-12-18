@@ -1,0 +1,41 @@
+﻿reno.diagrams
+=============
+
+.. automodule:: reno.diagrams
+
+
+
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+      :toctree:
+
+      DARK_MODE
+      SUBGRAPH_COLORS
+      NODE_COLOR
+      STOCK_COLOR
+      FLOW_COLOR
+
+
+
+
+
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+
+      add_flows
+      add_stock_io_edge
+      add_stock_io_like_edge
+      add_stock_limit_edge
+      add_stocks
+      add_to_flow_edge
+      add_to_var_edge
+      add_vars
+      draw_appropriate_edge
+      filter_variables
+      get_reference_color
+      set_dark_mode
+      should_render
+      stock_flow_diagram

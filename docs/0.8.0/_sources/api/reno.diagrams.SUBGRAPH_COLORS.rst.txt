@@ -1,0 +1,6 @@
+reno.diagrams.SUBGRAPH\_COLORS
+==============================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: SUBGRAPH_COLORS

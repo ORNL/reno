@@ -1,0 +1,51 @@
+reno.ops.minimum
+================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: minimum
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~minimum.__init__
+      ~minimum.astype
+      ~minimum.clip
+      ~minimum.equal
+      ~minimum.eval
+      ~minimum.find_refs_of_type
+      ~minimum.get_shape
+      ~minimum.get_type
+      ~minimum.is_static
+      ~minimum.latex
+      ~minimum.not_equal
+      ~minimum.op_eval
+      ~minimum.op_repr
+      ~minimum.op_types
+      ~minimum.pt
+      ~minimum.pt_str
+      ~minimum.seek_refs
+      ~minimum.series_max
+      ~minimum.series_min
+      ~minimum.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~minimum.OP_REPR
+      ~minimum.dtype
+      ~minimum.shape
+      ~minimum.timeseries

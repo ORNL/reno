@@ -44,4 +44,4 @@ from reno.viz import plot_trace_refs  # noqa: F401
 
 warnings.simplefilter("always", RuntimeWarning)
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"

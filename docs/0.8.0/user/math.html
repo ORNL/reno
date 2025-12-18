@@ -1,0 +1,733 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Math in Reno &#8212; Reno 0.8.0 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=486e5634"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user/math';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ornl.github.io/reno/stable/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.8.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bayesian Inference" href="bayes.html" />
+    <link rel="prev" title="Components" href="components.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <dialog id="pst-search-dialog">
+
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+
+
+
+
+
+    <p class="title logo__title">Reno 0.8.0 documentation</p>
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+
+
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+
+
+
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+
+
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Components</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Math in Reno</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayes.html">Bayesian Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="viz.html">Visualizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explorer.html">Model Explorer UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submodels.html">Submodels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending Reno</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../user_guide.html" class="nav-link">User Guide</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Math in Reno</span></li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="math-in-reno">
+<h1>Math in Reno<a class="headerlink" href="#math-in-reno" title="Link to this heading">#</a></h1>
+<p>TODO: this top paragraph feels like a good description of what Reno offers
+technically, move to main user_guide/main doc page?</p>
+<p>A system dynamics model allows exploration of the behavior of a set
+of equations describing information or material flow over time. Reno provides a
+framework for creating and evaluating these equations similar to something like
+PyMC or PyTorch - symbolically setting them up in a form of compute graph that
+can then be populated with different values/data and run to create simulations.</p>
+<p>The math API itself looks similar to numpy, but a lot of the functions are being
+added as I go/need them, if you need a numpy function that doesn’t yet exist in
+Reno, please submit an issue!</p>
+<p>All aspects of models and their equations are made up of Reno’s
+<a class="reference internal" href="../api/reno.components.EquationPart.html#reno.components.EquationPart" title="reno.components.EquationPart"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.components.EquationPart</span></code></a> class, essentially a tree data
+structure that can be made up of sub equation parts and has an
+<a class="reference internal" href="../api/reno.components.EquationPart.html#reno.components.EquationPart.eval" title="reno.components.EquationPart.eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">.eval()</span></code></a> function to
+populate and execute the equation compute graph.</p>
+<p>Execution of an equation triggers recursive <code class="docutils literal notranslate"><span class="pre">.eval()</span></code> calls throughout the
+full tree, each component running corresponding numpy operations
+on the results from its sub-equation parts.</p>
+<p>A simple example for an equation adding two constants is shown below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span>
+<span class="go">(+ Scalar(3.0) Scalar(2.0))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="go">reno.ops.add</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span><span class="o">.</span><span class="n">sub_equation_parts</span>
+<span class="go">[Scalar(3.0), Scalar(2.0)]</span>
+</pre></div>
+</div>
+<p>(Note that the <code class="docutils literal notranslate"><span class="pre">repr</span></code>  for any equation part is a lisp-like prefix-notation string, this
+is used and parsed for model saving/loading.)</p>
+<p><code class="docutils literal notranslate"><span class="pre">eq</span></code> in the code above is the “root” of an equation tree, in this case an addition
+operation (<a class="reference internal" href="../api/reno.components.Operation.html#reno.components.Operation" title="reno.components.Operation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.components.Operation</span></code></a> is a subclass of
+<code class="docutils literal notranslate"><span class="pre">EquationPart</span></code>) which has two child nodes (“sub equation parts”), each a constant scalar value.</p>
+<p>No math has actually occurred yet, to execute you can run <code class="docutils literal notranslate"><span class="pre">eq.eval()</span></code>, which
+recursively evaluates through the equation tree and returns the equation value. (A
+<a class="reference internal" href="../api/reno.components.Scalar.html#reno.components.Scalar" title="reno.components.Scalar"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scalar</span></code></a> simply evaluates to its assigned
+value.)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">5.0</span>
+</pre></div>
+</div>
+<p>Reno automatically converts constants into a <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> when it sees them, so the
+following are all equivalent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">(+ Scalar(3.0) Scalar(2.0))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">2.0</span>
+<span class="go">(+ Scalar(3.0) Scalar(2.0))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">3.0</span> <span class="o">+</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">(+ Scalar(3.0) Scalar(2.0))</span>
+</pre></div>
+</div>
+<p>(at least one Reno component/operation is required for this to work, otherwise
+Python just evaluates the math as normal.)</p>
+<section id="operations">
+<h2>Operations<a class="headerlink" href="#operations" title="Link to this heading">#</a></h2>
+<p>Symbolic operations, like what’s shown above, are the core of how Reno’s math
+system works. A full list can be found at <a class="reference internal" href="../api/reno.ops.html#module-reno.ops" title="reno.ops"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reno.ops</span></code></a>. Conceptually
+Reno’s math is intended to act similarly to PyTensor (what PyMC uses under the hood),
+though in our implementation acting as a thunk for Numpy operations, while providing
+a way to translate directly into the PyTensor math system for TODO: link bayesian reasons.</p>
+<p>Reno’s operations are a growing list of mappings to various numpy functions,
+but there are some special types of operations and considerations discussed
+below.</p>
+<p>TODO: not sure where this belongs or if necessary, but a defense of why we’re
+“reinventing the wheel”:</p>
+<ul class="simple">
+<li><p>Reno operations can be parsed from strings/supporting easy save/load and
+(possibly eventually) user entry</p></li>
+<li><p>simpler to use directly than PyTensor, at obvious cost of not being the
+hyper-optimized/compilation method that they enable/not having
+nearly the feature set they support</p></li>
+<li><p>directly encodes how to compute both in numpy _and_ in pytensor</p></li>
+<li><p>simpler to build out custom operations</p></li>
+<li><p>Reno is geared very specifically towards SDM, several considerations that merit
+having much more/easier control over equation compute graph/ability to parse and
+evaluate it in specific ways (e.g. component references, specific shape
+expectations, static values, etc.)</p></li>
+</ul>
+<p>As shown above, Reno operations overload many common python operators
+when Reno components are involved, (e.g. <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">%</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>), but these operations (and
+the rest) are subclasses of <code class="docutils literal notranslate"><span class="pre">Operation</span></code> and can all be used directly by
+instantiating them with the appropriate operands:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(- (+ Scalar(3) Scalar(2)) Scalar(1))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">reno</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(- (+ Scalar(3) Scalar(2)) Scalar(1))</span>
+</pre></div>
+</div>
+<section id="timeseries-and-series-operations">
+<h3>Timeseries and series operations<a class="headerlink" href="#timeseries-and-series-operations" title="Link to this heading">#</a></h3>
+<p>Reno has several operations that work across a series rather than a single
+sample value. These include <a class="reference internal" href="../api/reno.ops.series_min.html#reno.ops.series_min" title="reno.ops.series_min"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.series_min</span></code></a>/<a class="reference internal" href="../api/reno.ops.series_max.html#reno.ops.series_max" title="reno.ops.series_max"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.series_max</span></code></a>,
+<a class="reference internal" href="../api/reno.ops.slice.html#reno.ops.slice" title="reno.ops.slice"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.slice</span></code></a>, <a class="reference internal" href="../api/reno.ops.sum.html#reno.ops.sum" title="reno.ops.sum"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.sum</span></code></a>, etc. These operations can
+be applied directly to values that already have an additional dimension, (TODO:
+link to components multidim) for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">6</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+<p>The normal python indexing/slicing syntax with <code class="docutils literal notranslate"><span class="pre">[]</span></code> can be applied
+to any <code class="docutils literal notranslate"><span class="pre">EquationPart</span></code> and it will be turned into the appropriate Reno
+operation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_scalar</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Scalar</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scalar</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">(index Scalar([1, 2, 3]) Scalar(1))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scalar</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">array(2)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scalar</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">(slice Scalar([1, 2, 3]) Scalar(1) Scalar(3))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scalar</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">array([2, 3])</span>
+</pre></div>
+</div>
+<p>Series operations can also act across a component’s values over time, done by
+running the <a class="reference internal" href="../api/reno.ops.orient_timeseries.html#reno.ops.orient_timeseries" title="reno.ops.orient_timeseries"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.orient_timeseries</span></code></a> operation on the component,
+or the more semantically friendly way by calling the component’s <a class="reference internal" href="../api/reno.components.EquationPart.html#reno.components.EquationPart.timeseries" title="reno.components.EquationPart.timeseries"><code class="xref py py-attr docutils literal notranslate"><span class="pre">timeseries</span></code></a> property. This is
+often useful in <a class="reference internal" href="../api/reno.components.Metric.html#reno.components.Metric" title="reno.components.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> equations, but
+it can also be used in flows/variables if a flow should be based on some set of
+past values. Note that during a simulation run, the timeseries is the full
+length of the simulation, but all values after the current timestep are populated
+with 0’s.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">TimeRef</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">increase_over_time</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">total_accumulation</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">increase_over_time</span><span class="o">.</span><span class="n">timeseries</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">m</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">increase_over_time</span><span class="o">.</span><span class="n">values</span>
+<span class="go">array([[ 2,  3,  4,  5,  6,  7,  8,  9, 10, 11]])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">total_accumulation</span><span class="o">.</span><span class="n">values</span>
+<span class="go">array([[ 2,  5,  9, 14, 20, 27, 35, 44, 54, 65]])</span>
+</pre></div>
+</div>
+</section>
+<section id="historical-values">
+<h3>Historical values<a class="headerlink" href="#historical-values" title="Link to this heading">#</a></h3>
+</section>
+</section>
+<section id="broadcasting">
+<h2>Broadcasting?<a class="headerlink" href="#broadcasting" title="Link to this heading">#</a></h2>
+<p>Maybe this belongs in the components section?</p>
+</section>
+<section id="component-references">
+<h2>Component references<a class="headerlink" href="#component-references" title="Link to this heading">#</a></h2>
+</section>
+<section id="extended-operations">
+<h2>Extended Operations<a class="headerlink" href="#extended-operations" title="Link to this heading">#</a></h2>
+</section>
+<section id="shape-and-type-info">
+<h2>Shape and type info<a class="headerlink" href="#shape-and-type-info" title="Link to this heading">#</a></h2>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="components.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Components</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="bayes.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Bayesian Inference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operations">Operations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#timeseries-and-series-operations">Timeseries and series operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#historical-values">Historical values</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#broadcasting">Broadcasting?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#component-references">Component references</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extended-operations">Extended Operations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shape-and-type-info">Shape and type info</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user/math.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2025, UT Battelle, LLC.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

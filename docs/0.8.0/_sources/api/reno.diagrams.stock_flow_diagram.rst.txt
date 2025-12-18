@@ -1,0 +1,6 @@
+reno.diagrams.stock\_flow\_diagram
+==================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: stock_flow_diagram

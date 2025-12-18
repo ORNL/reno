@@ -1,0 +1,51 @@
+reno.ops.outflows
+=================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: outflows
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~outflows.__init__
+      ~outflows.astype
+      ~outflows.clip
+      ~outflows.equal
+      ~outflows.eval
+      ~outflows.find_refs_of_type
+      ~outflows.get_shape
+      ~outflows.get_type
+      ~outflows.is_static
+      ~outflows.latex
+      ~outflows.not_equal
+      ~outflows.op_eval
+      ~outflows.op_repr
+      ~outflows.op_types
+      ~outflows.pt
+      ~outflows.pt_str
+      ~outflows.seek_refs
+      ~outflows.series_max
+      ~outflows.series_min
+      ~outflows.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~outflows.OP_REPR
+      ~outflows.dtype
+      ~outflows.shape
+      ~outflows.timeseries

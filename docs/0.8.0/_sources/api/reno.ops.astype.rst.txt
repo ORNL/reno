@@ -1,0 +1,52 @@
+reno.ops.astype
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: astype
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~astype.__init__
+      ~astype.astype
+      ~astype.clip
+      ~astype.equal
+      ~astype.eval
+      ~astype.find_refs_of_type
+      ~astype.get_shape
+      ~astype.get_type
+      ~astype.is_static
+      ~astype.latex
+      ~astype.not_equal
+      ~astype.op_eval
+      ~astype.op_repr
+      ~astype.op_types
+      ~astype.parse
+      ~astype.pt
+      ~astype.pt_str
+      ~astype.seek_refs
+      ~astype.series_max
+      ~astype.series_min
+      ~astype.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~astype.OP_REPR
+      ~astype.dtype
+      ~astype.shape
+      ~astype.timeseries

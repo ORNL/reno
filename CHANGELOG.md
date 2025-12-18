@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.8.0] - 2025-12-18
+
+### Added
+
+* `raw_str` parameter to `.latex()` calls to allow getting the output latex as a
+  string rather than an interactive widget
+
+### Fixed
+
+* Incorrect diagram edge colors in dark mode
+* Recursive parsing not working for non-prefix-notation parser
+* Minor latex issues (some names not escaping correctly, missing sub equation
+    part latex calls)
+* Incorrect boolean parsing
+* Free refs list not handling implicit components correctly
+* `orient_timeseries` breaking parsing when no timeref included in the model by
+    default
+* `index` operation breaking on 1D arrays
+* interactive_latex.vue not being included in package resources correctly
+* A `compile_kwargs` bug when running with earlier PyMC versions
+
+
+
+
 ## [0.7.0] - 2025-11-25
 
 ### Added
