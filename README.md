@@ -46,33 +46,31 @@ Implementing these in Reno would look something like:
 ```python
 import reno
 
-m = reno.Model(name="m", steps=200, doc="Classic predator-prey interaction model example")
+predator_prey = reno.Model(name="predator_prey", steps=200, doc="Classic predator-prey interaction model example")
 
-# make stocks to monitor the predator/prey populations over time
-m.rabbits = reno.Stock(init=100.0)
-m.foxes = reno.Stock(init=100.0)
+with predator_prey:
+    # make stocks to monitor the predator/prey populations over time
+    rabbits = reno.Stock(init=100.0)
+    foxes = reno.Stock(init=100.0)
 
-# free variables that can quickly be changed to influence equilibrium
-m.rabbit_growth_rate = reno.Variable(.1, doc="Alpha")
-m.rabbit_death_rate = reno.Variable(.001, doc="Beta")
-m.fox_death_rate = reno.Variable(.1, doc="Gamma")
-m.fox_growth_rate = reno.Variable(.001, doc="Delta")
+    # free variables that can quickly be changed to influence equilibrium
+    rabbit_growth_rate = reno.Variable(.1, doc="Alpha")
+    rabbit_death_rate = reno.Variable(.001, doc="Beta")
+    fox_death_rate = reno.Variable(.1, doc="Gamma")
+    fox_growth_rate = reno.Variable(.001, doc="Delta")
 
-# flows that define how the stocks are influenced
-m.rabbit_births = reno.Flow(m.rabbit_growth_rate * m.rabbits)
-m.rabbit_deaths = reno.Flow(m.rabbit_death_rate * m.rabbits * m.foxes, max=m.rabbits)
-m.fox_deaths = reno.Flow(m.fox_death_rate * m.foxes, max=m.foxes)
-m.fox_births = reno.Flow(m.fox_growth_rate * m.rabbits * m.foxes)
+    # flows that define how much the stocks change in a timestep
+    rabbit_births = reno.Flow(rabbit_growth_rate * rabbits)
+    rabbit_deaths = reno.Flow(rabbit_death_rate * rabbits * foxes, max=rabbits)
+    fox_deaths = reno.Flow(fox_death_rate * foxes, max=foxes)
+    fox_births = reno.Flow(fox_growth_rate * rabbits * foxes)
 
-# hook up inflows/outflows for stocks
-m.rabbits += m.rabbit_births
-m.rabbits -= m.rabbit_deaths
-
-m.foxes += m.fox_births
-m.foxes -= m.fox_deaths
+    # hook up inflows/outflows for stocks
+    rabbit_births >> rabbits >> rabbit_deaths
+    fox_births >> foxes >> fox_deaths
 ```
 
-The stock and flow diagram for this model (obtainable via `m.graph()`) looks
+The stock and flow diagram for this model (obtainable via `predator_prey.graph()`) looks
 like this: (green boxes are variables, white boxes are stocks, the labels between
 arrows are the flows)
 
@@ -80,15 +78,15 @@ arrows are the flows)
 
 Once a model is defined it can be called like a function, optionally configuring
 any free variables/initial values by passing them as arguments. You can print the
-output of `m.get_docs()` to see a docstring showing all possible arguments and
+output of `predator_prey.get_docs()` to see a docstring showing all possible arguments and
 what calling it should look like:
 
 ```
->>> print(m.get_docs())
+>>> print(predator_prey.get_docs())
 Classic predator-prey interaction model example
 
 Example:
-	m(rabbit_growth_rate=0.1, rabbit_death_rate=0.001, fox_death_rate=0.1, fox_growth_rate=0.001, rabbits_0=100.0, foxes_0=100.0)
+	predator_prey(rabbit_growth_rate=0.1, rabbit_death_rate=0.001, fox_death_rate=0.1, fox_growth_rate=0.001, rabbits_0=100.0, foxes_0=100.0)
 
 Args:
 	rabbit_growth_rate: Alpha
@@ -102,8 +100,8 @@ Args:
 To run and plot the population stocks:
 
 ```python
-m(fox_growth_rate=.002, rabbit_death_rate=.002, rabbits_0=120.0)
-reno.plot_refs([(m.rabbits, m.foxes)])
+predator_prey(fox_growth_rate=.002, rabbit_death_rate=.002, rabbits_0=120.0)
+reno.plot_refs([(predator_prey.rabbits, predator_prey.foxes)])
 ```
 
 ![basic_run](https://github.com/ORNL/reno/blob/main/images/predator_prey_basic_run.png?raw=true)
@@ -117,16 +115,17 @@ one will need to be defined as a prior probability distribution), observations
 to target, and any sampling/pymc parameters:
 
 ```python
-m.minimum_foxes = reno.Metric(reno.series_min(m.foxes))
-m.maximum_foxes = reno.Metric(reno.series_max(m.foxes))
+with predator_prey:
+    minimum_foxes = reno.Metric(foxes.timeseries.series_min())
+    maximum_foxes = reno.Metric(foxes.timeseries.series_max())
 
-trace = m.pymc(
+trace = predator_prey.pymc(
     n=1000,
     fox_growth_rate=reno.Normal(.001, .0001),  # specify some variables as distributions to sample from
     rabbit_growth_rate=reno.Normal(.1, .01),   # specify some variables as distributions to sample from
     observations=[
-        reno.Observation(m.minimum_foxes, 5, [20]),  # likelihood normally distributed around 20 with SD of 5
-        reno.Observation(m.maximum_foxes, 5, [120]), # likelihood normally distributed around 120 with SD of 5
+        reno.Observation(minimum_foxes, 5, [20]),  # likelihood normally distributed around 20 with SD of 5
+        reno.Observation(maximum_foxes, 5, [120]), # likelihood normally distributed around 120 with SD of 5
     ]
 )
 ```
@@ -136,9 +135,16 @@ variables and some of the relevant stocks using ``plot_trace_refs``:
 
 ```python
 reno.plot_trace_refs(
-    m,
+    predator_prey,
     {"prior": trace.prior, "post": trace.posterior},
-    ref_list=[m.minimum_foxes, m.maximum_foxes, m.fox_growth_rate, m.rabbit_growth_rate, m.foxes, m.rabbits],
+    ref_list=[
+        predator_prey.minimum_foxes,
+        predator_prey.maximum_foxes,
+        predator_prey.fox_growth_rate,
+        predator_prey.rabbit_growth_rate,
+        predator_prey.foxes,
+        predator_prey.rabbits
+    ],
     figsize=(8, 5),
 )
 ```
