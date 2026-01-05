@@ -792,7 +792,8 @@ class Model:
         all_refs = [ref for ref in all_refs if not ref.implicit]
         ds = xr.Dataset(
             {
-                ref.name: (["sample", "step"], ref.value)
+                # ref.name: (["sample", "step"], ref.value)
+                ref.qual_name(): (["sample", "step"], ref.value)
                 for ref in all_refs
                 if not ref.is_static() and ref.dim == 1
             },
@@ -842,7 +843,7 @@ class Model:
                     val = ref.value
 
                 da = xr.DataArray(data=val, dims=dims, coords=coords)
-                multidim_vars[ref.name] = da
+                multidim_vars[ref.qual_name()] = da
         ds = ds.assign(multidim_vars)
 
         # handle any static refs (don't change wrt to step)
@@ -871,7 +872,7 @@ class Model:
                     val = np.broadcast_to(ref.value, (self.last_n,))
                 elif len(ref.value.shape) == 0:
                     val = np.broadcast_to(ref.value, (self.last_n,))
-                static_refs[ref.name] = (["sample"], val)
+                static_refs[ref.qual_name()] = (["sample"], val)
         ds = ds.assign(static_refs)
 
         # add metrics, note that some metrics will be 1 per sample, others will
@@ -884,7 +885,7 @@ class Model:
             else:
                 # 1 per step (e.g. flags)
                 coords = ["sample", "step"]
-            new_vars[metric.name] = (coords, metric.value)
+            new_vars[metric.qual_name()] = (coords, metric.value)
         ds = ds.assign(new_vars)
 
         # merge in any sub datasets
@@ -898,11 +899,12 @@ class Model:
             sub_ds = sub_ds.assign_attrs(renamed_attrs)
             all_attrs.update(renamed_attrs)
 
-            # update var names
-            renamed_vars = {
-                name: f"{sub_ds_name}_{name}" for name in list(sub_ds.keys())
-            }
-            sub_ds = sub_ds.rename_vars(renamed_vars)
+            # BUG: still not working
+            # update var names (no longer necessary, fixed with qual_name usage up above)
+            # renamed_vars = {
+            #     name: f"{sub_ds_name}_{name}" for name in list(sub_ds.keys())
+            # }
+            # sub_ds = sub_ds.rename_vars(renamed_vars)
             sub_dses[sub_ds_name] = sub_ds  # TODO: how was this not necessary before??
 
         ds_to_merge = [ds]  # , *list(sub_dses.values())]

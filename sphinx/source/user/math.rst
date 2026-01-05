@@ -93,10 +93,10 @@ TODO: not sure where this belongs or if necessary, but a defense of why we're
 
 * Reno operations can be parsed from strings/supporting easy save/load and
   (possibly eventually) user entry
-* simpler to use directly than PyTensor, at obvious cost of not being the
+* simpler to use and modify directly than PyTensor, at obvious cost of not being the
   hyper-optimized/compilation method that they enable/not having
   nearly the feature set they support
-* directly encodes how to compute both in numpy _and_ in pytensor
+* directly encodes how to compute both in numpy *and* in pytensor
 * simpler to build out custom operations
 * Reno is geared very specifically towards SDM, several considerations that merit
   having much more/easier control over equation compute graph/ability to parse and
@@ -187,6 +187,8 @@ with 0's.
 
 Historical values
 -----------------
+
+
 
 
 Broadcasting?
