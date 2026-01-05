@@ -12,7 +12,8 @@ can then be populated with different values/data and run to create simulations.
 
 The math API itself looks similar to numpy, but a lot of the functions are being
 added as I go/need them, if you need a numpy function that doesn't yet exist in
-Reno, please submit an issue!
+Reno, please submit an issue! (Or add them yourself locally in your project, see
+TODO: extending)
 
 All aspects of models and their equations are made up of Reno's
 :py:class:`reno.components.EquationPart` class, essentially a tree data
@@ -188,7 +189,32 @@ with 0's.
 Historical values
 -----------------
 
+Related to the timeseries operation is the :py:class:`HistoricalValue
+<reno.components.HistoricalValue>` component, retrieved through any component's
+:py:func:`history() <reno.components.TrackedReference.history>` function. This
+allows specifying an index equation to retrieve a single previous value in that
+component's timeseries. For non-metric equations that don't require slices from
+the timeseries **this approach should be
+preferred**, as any index equation that takes the form ``[TimeRef] - [static
+value]`` results in a significantly simpler (and faster) PyMC output.
 
+In general then, single previous timeseries values in stock/flow/variable
+equations should take the form:
+
+.. code-block:: python
+
+    t = reno.TimeRef()
+    my_flow.eq = my_stock.history(t - 3)
+
+
+while any metric equations or stock/flow/variable equations that require more
+complex indexing or slicing should take the timeseries form:
+
+.. code-block:: python
+
+   t = reno.TimeRef()
+   some_var = reno.Variable()
+   my_flow.eq = my_stock.timeseries[t - some_var:t - 1].sum()
 
 
 Broadcasting?
@@ -202,9 +228,25 @@ Component references
 ====================
 
 
-Extended Operations
+Extended operations
 ===================
 
+Extended or "higher order" operations are any operations that wrap/abstract some set
+of hidden sub-components or are based on other Reno operations in order to run
+some more complex process. A simple example of this would be the
+:py:class:`reno.ops.pulse` operation, which returns a 1 for a specified number
+of timesteps at a specified start time, and 0 at any other timestep. Under the
+hood this uses a ``Piecewise`` component.
+
+More complex examples include higher order material delays such as
+:py:class:`reno.ops.delay1` and :py:class:`reno.ops.delay2`, both of which
+require using one or more "implicit" or inner stocks to allow accumulation of material
+flowing through the op while ensuring none is lost (e.g. the total amount of
+material that flows in = the total amount of material that eventully flows out.)
+
+
+Meta operations
+===============
 
 
 Shape and type info
