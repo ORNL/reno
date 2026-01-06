@@ -185,7 +185,6 @@ with 0's.
     array([[ 2,  5,  9, 14, 20, 27, 35, 44, 54, 65]])
 
 
-
 Historical values
 -----------------
 
@@ -223,7 +222,6 @@ Broadcasting?
 Maybe this belongs in the components section?
 
 
-
 Component references
 ====================
 
@@ -235,18 +233,108 @@ Extended or "higher order" operations are any operations that wrap/abstract some
 of hidden sub-components or are based on other Reno operations in order to run
 some more complex process. A simple example of this would be the
 :py:class:`reno.ops.pulse` operation, which returns a 1 for a specified number
-of timesteps at a specified start time, and 0 at any other timestep. Under the
-hood this uses a ``Piecewise`` component.
+of timesteps at a specified start time, and 0 at any other timestep. To achieve
+this, it uses a ``Piecewise`` component rather than directly defining a
+numpy/pytensor operation.
 
 More complex examples include higher order material delays such as
-:py:class:`reno.ops.delay1` and :py:class:`reno.ops.delay2`, both of which
-require using one or more "implicit" or inner stocks to allow accumulation of material
-flowing through the op while ensuring none is lost (e.g. the total amount of
-material that flows in = the total amount of material that eventully flows out.)
+:py:class:`reno.ops.delay1` and :py:class:`reno.ops.delay3`, both of which
+require using one or more "implicit"/inner stocks to allow accumulation of
+material flowing through the op while ensuring none is lost (e.g. the total
+amount of material that flows in = the total amount of material that eventully
+flows out.) Components created in :py:class:`ExtendedOperation
+<reno.components.ExtendedOperation>` instances set a special :py:attr:`implicit
+<reno.components.TrackedReference.implicit>` attribute to ``True``, so that they
+aren't separately rendered in diagrams/latex equations etc.
 
 
 Meta operations
 ===============
+
+Meta operations are any that set up their underlying equations at runtime or
+instruct Reno to handle something in a specific way.
+
+
+inflow
+------
+
+:py:class:`reno.ops.inflow` is a purely semantic operation that tells Reno to
+treat a flow used in another flow equation as an "inflow", as if it were a
+stock. This doesn't change the math or underlying equation, it only modifies how
+the stock and flow diagram gets rendered -- the thicker inflow/outflow line gets
+applied to the flow to flow reference edge, which in some cases can help retain
+consistency in visualizing how material is moving in the overarching structure.
+
+As an example, suppose we have a system with two stocks, and two flows in
+between them:
+
+.. code-block:: python
+
+    m = reno.Model()
+    with m:
+        s1, s2 = reno.Stock(), reno.Stock()
+        f1, f2 = reno.Flow(), reno.Flow()
+
+        s1 >> f1
+        f2.eq = f1 - 1  # some material lost between s1 and s2
+        f2 >> s2
+
+At a high level, stuff from ``s1`` is flowing into ``s2`` through ``f1`` but
+with some amount of loss in between, handled by ``f2``. The thick material edges
+from ``s1`` moving to ``s2`` is then shown indirectly, since Reno doesn't know
+if ``f2`` is just referencing ``f1`` in its equation, or modfiying it as an
+inflow to ``s2``. This indirectness is apparent in the diagram:
+
+.. figure:: ../_static/flow_to_flow.png
+   :align: center
+
+Wrapping a flow reference with ``inflow()``, e.g. ``f2.eq = reno.inflow(f1)`` tells Reno to render the ``f1 -> f2`` edge as a normal flow/stock line:
+
+.. code-block:: python
+
+    m = reno.Model()
+    with m:
+        s1, s2 = reno.Stock(), reno.Stock()
+        f1, f2 = reno.Flow(), reno.Flow()
+
+        s1 >> f1
+        f2.eq = reno.inflow(f1) - 1
+        f2 >> s2
+
+Resulting in a more representative diagram:
+
+.. figure:: ../_static/inflow_flow_to_flow.png
+   :align: center
+
+
+It is worth noting that for some situations this can also be achieved more
+cleanly using :ref:`implicit stock in-flows`, where ``f2`` is entirely cut out
+as an explicit flow, and the diagram renders more simply:
+
+.. code-block:: python
+
+    m = reno.Model()
+    with m:
+        s1, s2 = reno.Stock(), reno.Stock()
+        f1 = reno.Flow()
+
+        s1 >> f1
+        (f1 - 1) >> s2
+
+with a more straightforward diagram:
+
+.. figure:: ../_static/implicit_flow_to_flow.png
+   :align: center
+
+
+
+outflows
+--------
+
+
+
+space
+-----
 
 
 Shape and type info
