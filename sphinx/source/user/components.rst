@@ -2,22 +2,23 @@ Components
 ##########
 
 
-Reno models are based primarily on `stocks and flows <https://en.wikipedia.org/wiki/Stock_and_flow>`__.
-A model is created by defining all of the components and the corresponding
-equations that make them up.
+Reno models are based primarily on `stocks and flows
+<https://en.wikipedia.org/wiki/Stock_and_flow>`__. A model is created by
+defining all of these components and the corresponding equations that make them
+up.
 
-TODO: equations (sep page?) - include tips on what can do with equations e.g.
-piecewise
+The equations themselves and how to construct them are discussed in more depth
+on the :ref:`math in reno` page, while this page primarily focuses on the higher
+level Flow/Stock/Variable components.
 
 
 Flows
 =====
 
-Flows are equations that define rates of change, representing how much material or
-information move over time.
+Flows are equations that define rates of change, or represent how much
+material/information moves over time.
 
-
-Flows are created with the :ref:`reno.Flow <reno.components.Flow>` class, and the equation can either be
+Flows are created with the :py:class:`reno.Flow <reno.components.Flow>` class, and the equation can either be
 directly provided in the constructor or by setting the ``.eq`` attribute later
 on:
 
@@ -113,7 +114,7 @@ Implicit stock in-flows
 -----------------------
 
 When an in-flow to a stock is set (either through ``+=`` or ``>>``/``<<``)
-with an equation rather than just a flow, an implicit flow defined by that
+with an equation rather than just a flow, an **implicit** flow defined by that
 equation is created and applied.
 
 (e.g. if there's some loss involved between the outflow of one stock and the
@@ -129,7 +130,6 @@ flows as well)
 
     inflow >> stock1 >> midflow
     (midflow - 3) >> stock2 >> outflow
-
 
 by combining operations together on the same line with commas, you can still do
 a full chain-like definition when an inflow needs to be a slightly modified version:
@@ -153,9 +153,6 @@ between circular references involving stocks and those between flows)
 Referencing a stock always refers to the stock's value in the *previous*
 timestep. This allows a form of circular reference between stocks
 
-
-(Is this actually a circular reference?)
-
 .. code-block:: python
 
     from reno import Stock, Flow
@@ -171,16 +168,46 @@ In this example, ``my_stock`` is incremented by the value of ``my_flow``
 in the current timestep `t`, while the value of ``my_flow`` for timestep ``t``
 is 10 minus the value of ``my_stock`` in timestep ``t - 1``.
 
+In other words, the equations for these would translate to:
+
+* my_stock(t) = my_stock(t-1) + my_flow(t)
+* my_flow(t) = 10 - my_stock(t-1)
+
 
 Variables
 =========
 
-A variable is any other equation or value that can be referenced in flow
-equations (and other variable equations) and helps define the user-settable
-model parameters.
+A variable is any other equation or value that can be referenced in flow (and
+other variable) equations and helps define the user-settable model parameters.
+Variables should be used to specify what can be modified about a
+simulation/what values you want to experiment with.
 
 
-TODO
+.. code-block:: python
+
+    coffee_process = reno.Model(steps=10)
+    with coffee_process:
+        drip_speed = reno.Variable(3.0)
+
+        water = reno.Stock(init=100.0)
+        coffee = reno.Stock()
+        coffee_machine = reno.Flow(drip_speed, max=water)
+
+        water >> coffee_machine >> coffee
+
+In the above model, ``drip_speed`` is a variable that directly impacts the
+``coffee_machine`` flow/the rate at which ``coffee`` increases. Since it is a
+free variable/not defined in terms of any other variables, it can be specified
+during a model run to configure the simulation. We can run a couple simulations
+and compare the final coffee stock values (at timestep 10):
+
+.. code-block:: python
+
+    >>> coffee_process(drip_speed=4.0).coffee.values[0, -1]
+    36.0
+
+    >>> coffee_process(drip_speed=1.0).coffee.values[0, -1]
+    9.0
 
 
 Metrics
