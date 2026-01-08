@@ -447,7 +447,8 @@ PyMC or PyTorch - symbolically setting them up in a form of compute graph that
 can then be populated with different values/data and run to create simulations.</p>
 <p>The math API itself looks similar to numpy, but a lot of the functions are being
 added as I go/need them, if you need a numpy function that doesn’t yet exist in
-Reno, please submit an issue!</p>
+Reno, please submit an issue! (Or add them yourself locally in your project, see
+TODO: extending)</p>
 <p>All aspects of models and their equations are made up of Reno’s
 <a class="reference internal" href="../api/reno.components.EquationPart.html#reno.components.EquationPart" title="reno.components.EquationPart"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.components.EquationPart</span></code></a> class, essentially a tree data
 structure that can be made up of sub equation parts and has an
@@ -510,10 +511,10 @@ below.</p>
 <ul class="simple">
 <li><p>Reno operations can be parsed from strings/supporting easy save/load and
 (possibly eventually) user entry</p></li>
-<li><p>simpler to use directly than PyTensor, at obvious cost of not being the
+<li><p>simpler to use and modify directly than PyTensor, at obvious cost of not being the
 hyper-optimized/compilation method that they enable/not having
 nearly the feature set they support</p></li>
-<li><p>directly encodes how to compute both in numpy _and_ in pytensor</p></li>
+<li><p>directly encodes how to compute both in numpy <em>and</em> in pytensor</p></li>
 <li><p>simpler to build out custom operations</p></li>
 <li><p>Reno is geared very specifically towards SDM, several considerations that merit
 having much more/easier control over equation compute graph/ability to parse and
@@ -588,6 +589,26 @@ with 0’s.</p>
 </section>
 <section id="historical-values">
 <h3>Historical values<a class="headerlink" href="#historical-values" title="Link to this heading">#</a></h3>
+<p>Related to the timeseries operation is the <a class="reference internal" href="../api/reno.components.HistoricalValue.html#reno.components.HistoricalValue" title="reno.components.HistoricalValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">HistoricalValue</span></code></a> component, retrieved through any component’s
+<a class="reference internal" href="../api/reno.components.TrackedReference.html#reno.components.TrackedReference.history" title="reno.components.TrackedReference.history"><code class="xref py py-func docutils literal notranslate"><span class="pre">history()</span></code></a> function. This
+allows specifying an index equation to retrieve a single previous value in that
+component’s timeseries. For non-metric equations that don’t require slices from
+the timeseries <strong>this approach should be
+preferred</strong>, as any index equation that takes the form <code class="docutils literal notranslate"><span class="pre">[TimeRef]</span> <span class="pre">-</span> <span class="pre">[static</span>
+<span class="pre">value]</span></code> results in a significantly simpler (and faster) PyMC output.</p>
+<p>In general then, single previous timeseries values in stock/flow/variable
+equations should take the form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">TimeRef</span><span class="p">()</span>
+<span class="n">my_flow</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">my_stock</span><span class="o">.</span><span class="n">history</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>while any metric equations or stock/flow/variable equations that require more
+complex indexing or slicing should take the timeseries form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">TimeRef</span><span class="p">()</span>
+<span class="n">some_var</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">()</span>
+<span class="n">my_flow</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">my_stock</span><span class="o">.</span><span class="n">timeseries</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">some_var</span><span class="p">:</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="broadcasting">
@@ -598,10 +619,96 @@ with 0’s.</p>
 <h2>Component references<a class="headerlink" href="#component-references" title="Link to this heading">#</a></h2>
 </section>
 <section id="extended-operations">
-<h2>Extended Operations<a class="headerlink" href="#extended-operations" title="Link to this heading">#</a></h2>
+<h2>Extended operations<a class="headerlink" href="#extended-operations" title="Link to this heading">#</a></h2>
+<p>Extended or “higher order” operations are any operations that wrap/abstract some set
+of hidden sub-components or are based on other Reno operations in order to run
+some more complex process. A simple example of this would be the
+<a class="reference internal" href="../api/reno.ops.pulse.html#reno.ops.pulse" title="reno.ops.pulse"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.pulse</span></code></a> operation, which returns a 1 for a specified number
+of timesteps at a specified start time, and 0 at any other timestep. To achieve
+this, it uses a <code class="docutils literal notranslate"><span class="pre">Piecewise</span></code> component rather than directly defining a
+numpy/pytensor operation.</p>
+<p>More complex examples include higher order material delays such as
+<a class="reference internal" href="../api/reno.ops.delay1.html#reno.ops.delay1" title="reno.ops.delay1"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.delay1</span></code></a> and <a class="reference internal" href="../api/reno.ops.delay3.html#reno.ops.delay3" title="reno.ops.delay3"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.delay3</span></code></a>, both of which
+require using one or more “implicit”/inner stocks to allow accumulation of
+material flowing through the op while ensuring none is lost (e.g. the total
+amount of material that flows in = the total amount of material that eventully
+flows out.) Components created in <a class="reference internal" href="../api/reno.components.ExtendedOperation.html#reno.components.ExtendedOperation" title="reno.components.ExtendedOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtendedOperation</span></code></a> instances set a special <a class="reference internal" href="../api/reno.components.TrackedReference.html#reno.components.TrackedReference.implicit" title="reno.components.TrackedReference.implicit"><code class="xref py py-attr docutils literal notranslate"><span class="pre">implicit</span></code></a> attribute to <code class="docutils literal notranslate"><span class="pre">True</span></code>, so that they
+aren’t separately rendered in diagrams/latex equations etc.</p>
+</section>
+<section id="meta-operations">
+<h2>Meta operations<a class="headerlink" href="#meta-operations" title="Link to this heading">#</a></h2>
+<p>Meta operations are any that set up their underlying equations at runtime or
+instruct Reno to handle something in a specific way.</p>
+<section id="inflow">
+<h3>inflow<a class="headerlink" href="#inflow" title="Link to this heading">#</a></h3>
+<p><a class="reference internal" href="../api/reno.ops.inflow.html#reno.ops.inflow" title="reno.ops.inflow"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.inflow</span></code></a> is a purely semantic operation that tells Reno to
+treat a flow used in another flow equation as an “inflow”, as if it were a
+stock. This doesn’t change the math or underlying equation, it only modifies how
+the stock and flow diagram gets rendered – the thicker inflow/outflow line gets
+applied to the flow to flow reference edge, which in some cases can help retain
+consistency in visualizing how material is moving in the overarching structure.</p>
+<p>As an example, suppose we have a system with two stocks, and two flows in
+between them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+    <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">f1</span><span class="p">,</span> <span class="n">f2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">()</span>
+
+    <span class="n">s1</span> <span class="o">&gt;&gt;</span> <span class="n">f1</span>
+    <span class="n">f2</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># some material lost between s1 and s2</span>
+    <span class="n">f2</span> <span class="o">&gt;&gt;</span> <span class="n">s2</span>
+</pre></div>
+</div>
+<p>At a high level, stuff from <code class="docutils literal notranslate"><span class="pre">s1</span></code> is flowing into <code class="docutils literal notranslate"><span class="pre">s2</span></code> through <code class="docutils literal notranslate"><span class="pre">f1</span></code> but
+with some amount of loss in between, handled by <code class="docutils literal notranslate"><span class="pre">f2</span></code>. The thick material edges
+from <code class="docutils literal notranslate"><span class="pre">s1</span></code> moving to <code class="docutils literal notranslate"><span class="pre">s2</span></code> is then shown indirectly, since Reno doesn’t know
+if <code class="docutils literal notranslate"><span class="pre">f2</span></code> is just referencing <code class="docutils literal notranslate"><span class="pre">f1</span></code> in its equation, or modfiying it as an
+inflow to <code class="docutils literal notranslate"><span class="pre">s2</span></code>. This indirectness is apparent in the diagram:</p>
+<figure class="align-center">
+<img alt="../_images/flow_to_flow.png" src="../_images/flow_to_flow.png" />
+</figure>
+<p>Wrapping a flow reference with <code class="docutils literal notranslate"><span class="pre">inflow()</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">f2.eq</span> <span class="pre">=</span> <span class="pre">reno.inflow(f1)</span></code> tells Reno to render the <code class="docutils literal notranslate"><span class="pre">f1</span> <span class="pre">-&gt;</span> <span class="pre">f2</span></code> edge as a normal flow/stock line:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+    <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">f1</span><span class="p">,</span> <span class="n">f2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">()</span>
+
+    <span class="n">s1</span> <span class="o">&gt;&gt;</span> <span class="n">f1</span>
+    <span class="n">f2</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">inflow</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">f2</span> <span class="o">&gt;&gt;</span> <span class="n">s2</span>
+</pre></div>
+</div>
+<p>Resulting in a more representative diagram:</p>
+<figure class="align-center">
+<img alt="../_images/inflow_flow_to_flow.png" src="../_images/inflow_flow_to_flow.png" />
+</figure>
+<p>It is worth noting that for some situations this can also be achieved more
+cleanly using <a class="reference internal" href="components.html#implicit-stock-in-flows"><span class="std std-ref">Implicit stock in-flows</span></a>, where <code class="docutils literal notranslate"><span class="pre">f2</span></code> is entirely cut out
+as an explicit flow, and the diagram renders more simply:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+    <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">()</span>
+
+    <span class="n">s1</span> <span class="o">&gt;&gt;</span> <span class="n">f1</span>
+    <span class="p">(</span><span class="n">f1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">s2</span>
+</pre></div>
+</div>
+<p>with a more straightforward diagram:</p>
+<figure class="align-center">
+<img alt="../_images/implicit_flow_to_flow.png" src="../_images/implicit_flow_to_flow.png" />
+</figure>
+</section>
+<section id="outflows">
+<h3>outflows<a class="headerlink" href="#outflows" title="Link to this heading">#</a></h3>
+</section>
+<section id="space">
+<h3>space<a class="headerlink" href="#space" title="Link to this heading">#</a></h3>
+</section>
 </section>
 <section id="shape-and-type-info">
 <h2>Shape and type info<a class="headerlink" href="#shape-and-type-info" title="Link to this heading">#</a></h2>
+<p>(cover multidim here)</p>
 </section>
 </section>
 
@@ -659,7 +766,13 @@ with 0’s.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#broadcasting">Broadcasting?</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#component-references">Component references</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extended-operations">Extended Operations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extended-operations">Extended operations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-operations">Meta operations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inflow">inflow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outflows">outflows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#space">space</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shape-and-type-info">Shape and type info</a></li>
 </ul>
   </nav></div>

@@ -503,7 +503,7 @@ trace:</p>
 an observed value for a metric somewhere, and want to determine how the
 probability distributions change to produce that observed value. These are
 provided to the <code class="docutils literal notranslate"><span class="pre">.pymc</span></code> call through the <code class="docutils literal notranslate"><span class="pre">observations</span></code> argument, which
-takes a list of <a class="reference internal" href="../api/reno.ops.Observation.html#reno.ops.Observation" title="reno.ops.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.Observation</span></code></a> instance. These effectively
+takes a list of <a class="reference internal" href="../api/reno.ops.Observation.html#reno.ops.Observation" title="reno.ops.Observation"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.ops.Observation</span></code></a> instances. These effectively
 define a normal likelihood function around a metric, with specified observed
 mean and standard deviation.</p>
 <p>As an example, suppose we observed that the final level in the tub was 12, with
@@ -531,9 +531,97 @@ the <code class="docutils literal notranslate"><span class="pre">final_water_lev
 </figure>
 <section id="technical-process">
 <h2>Technical process<a class="headerlink" href="#technical-process" title="Link to this heading">#</a></h2>
+<p>Under the hood, Reno produces the PyMC model made up of the following things:</p>
+<ol class="arabic simple">
+<li><p>A PyMC variable per component set to the initial conditions/values of that
+component. (When no separate <code class="docutils literal notranslate"><span class="pre">init</span></code> is provided for a component, this is
+just the equation itself run at timestep 0)</p></li>
+<li><p>The full timeseries sequences for each component are iterated/produced using
+PyTensor’s <a class="reference external" href="https://pytensor.readthedocs.io/en/latest/library/scan.html">scan function</a>, inside of
+which runs the difference equation for every component (produced recursively
+through <code class="docutils literal notranslate"><span class="pre">EquationPart</span></code>’s <a class="reference internal" href="../api/reno.components.EquationPart.html#reno.components.EquationPart.pt" title="reno.components.EquationPart.pt"><code class="xref py py-func docutils literal notranslate"><span class="pre">.pt()</span></code></a>)</p></li>
+<li><p>Initial conditions and timeseries sequences are combined, and any metric
+equations are defined as additional PyMC deterministics.</p></li>
+<li><p>Reno adds any likelihood functions for provided observations, using normal
+distributions around the specified metric.</p></li>
+</ol>
+<p>Some of the details and code samples for what this looks like can be found in the
+<a class="reference internal" href="../api/reno.pymc.html#module-reno.pymc" title="reno.pymc"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reno.pymc</span></code></a> module.</p>
+<p>TODO: describe the scan arguments in more depth?</p>
 </section>
 <section id="transpiling">
 <h2>Transpiling<a class="headerlink" href="#transpiling" title="Link to this heading">#</a></h2>
+<p>In addition to directly producing a PyMC model, Reno models can also transpile
+into a raw string of python code that creates the equivalent PyMC model. This is
+useful for a couple reasons - if you need to run a more complex bayesian problem
+than a Reno model provides (e.g. more complicated/custom likelihood functions,
+performance optimizations that require manual adjustment, or using the Reno model
+in some larger overarching model), then Reno can be used as a starting point for
+writing the code (and takes care of a lot of the complexity around using the
+scan function.) It can also be helpful for debugging issues in a PyMC model - if
+you’ve implemented a custom Reno operation (TODO: link to extending) and a pytensor conversion isn’t
+working correctly, minor changes to the PyMC code might be tested more quickly than
+modifying the Reno operation code first.</p>
+<p>For example, the transpiled code from the model above produced by running
+<code class="docutils literal notranslate"><span class="pre">print(tub.pymc_str())</span></code> (see function documentation for
+<a class="reference internal" href="../api/reno.model.Model.html#reno.model.Model.pymc_str" title="reno.model.Model.pymc_str"><code class="xref py py-func docutils literal notranslate"><span class="pre">reno.model.Model.pymc_str()</span></code></a>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">tub_step</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">water_level</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">faucet</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">drain</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">faucet_off_time</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+    <span class="c1"># Difference/recurrence equations</span>
+    <span class="n">water_level_next</span> <span class="o">=</span> <span class="p">(</span><span class="n">water_level</span> <span class="o">+</span> <span class="p">(</span><span class="n">faucet</span> <span class="o">-</span> <span class="n">drain</span><span class="p">))</span>
+    <span class="n">drain_next</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">minimum</span><span class="p">((</span><span class="n">pt</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">water_level_next</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">faucet_next</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">switch</span><span class="p">((</span><span class="n">t</span> <span class="o">&lt;</span> <span class="n">faucet_off_time</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># Type checks</span>
+    <span class="n">water_level_next</span> <span class="o">=</span> <span class="n">water_level_next</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">water_level</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">water_level_next</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">water_level</span><span class="o">.</span><span class="n">dtype</span> <span class="k">else</span> <span class="n">water_level_next</span>
+    <span class="n">drain_next</span> <span class="o">=</span> <span class="n">drain_next</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">drain</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">drain_next</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">drain</span><span class="o">.</span><span class="n">dtype</span> <span class="k">else</span> <span class="n">drain_next</span>
+    <span class="n">faucet_next</span> <span class="o">=</span> <span class="n">faucet_next</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">faucet</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">faucet_next</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">faucet</span><span class="o">.</span><span class="n">dtype</span> <span class="k">else</span> <span class="n">faucet_next</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">water_level_next</span><span class="p">,</span> <span class="n">faucet_next</span><span class="p">,</span> <span class="n">drain_next</span><span class="p">],</span> <span class="n">pm</span><span class="o">.</span><span class="n">pytensorf</span><span class="o">.</span><span class="n">collect_default_updates</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">water_level_next</span><span class="p">,</span> <span class="n">faucet_next</span><span class="p">,</span> <span class="n">drain_next</span><span class="p">])</span>
+
+<span class="n">coords</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="k">with</span> <span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span> <span class="k">as</span> <span class="n">tub_pymc_m</span><span class="p">:</span>
+    <span class="c1"># Initial values/timestep 0 equations</span>
+    <span class="n">water_level_init</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;water_level_init&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)))</span>
+    <span class="n">drain_init</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;drain_init&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">minimum</span><span class="p">((</span><span class="n">pt</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">water_level_init</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+    <span class="n">faucet_off_time</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;faucet_off_time&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+    <span class="n">faucet_init</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;faucet_init&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">switch</span><span class="p">((</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">faucet_off_time</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+    <span class="n">timestep_seq</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+    <span class="c1"># Run autoregressive step function/timestep-wise updates to fill sequences</span>
+    <span class="p">[</span><span class="n">water_level_seq</span><span class="p">,</span> <span class="n">faucet_seq</span><span class="p">,</span> <span class="n">drain_seq</span><span class="p">],</span> <span class="n">updates</span> <span class="o">=</span> <span class="n">pytensor</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span>
+        <span class="n">fn</span><span class="o">=</span><span class="n">tub_step</span><span class="p">,</span>
+        <span class="n">sequences</span><span class="o">=</span><span class="p">[</span><span class="n">timestep_seq</span><span class="p">],</span>
+        <span class="n">non_sequences</span><span class="o">=</span><span class="p">[</span><span class="n">faucet_off_time</span><span class="p">],</span>
+        <span class="n">outputs_info</span><span class="o">=</span><span class="p">[</span><span class="n">water_level_init</span><span class="p">,</span> <span class="n">faucet_init</span><span class="p">,</span> <span class="n">drain_init</span><span class="p">],</span>
+        <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="o">=</span><span class="mi">9</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Collect full sequence data for all stocks/flows/vars into pymc variables</span>
+    <span class="n">water_level</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;water_level&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">water_level_init</span><span class="p">]),</span> <span class="n">water_level_seq</span><span class="p">]),</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+    <span class="n">faucet</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;faucet&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">faucet_init</span><span class="p">]),</span> <span class="n">faucet_seq</span><span class="p">]),</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+    <span class="n">drain</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;drain&quot;</span><span class="p">,</span> <span class="n">pt</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">drain_init</span><span class="p">]),</span> <span class="n">drain_seq</span><span class="p">]),</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">)</span>
+    <span class="n">final_water_level</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;final_water_level&quot;</span><span class="p">,</span> <span class="n">water_level</span><span class="p">[</span><span class="n">pt</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>The above output code assumes certain imports already exist (e.g. pymc and
+pytensor), these assumptions can also be retrieved as a string using
+<a class="reference internal" href="../api/reno.pymc.pymc_model_imports.html#reno.pymc.pymc_model_imports" title="reno.pymc.pymc_model_imports"><code class="xref py py-func docutils literal notranslate"><span class="pre">reno.pymc.pymc_model_imports()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">reno</span><span class="o">.</span><span class="n">pymc</span><span class="o">.</span><span class="n">pymc_model_imports</span><span class="p">())</span>
+<span class="go">import pytensor</span>
+<span class="go">import pytensor.tensor as pt</span>
+<span class="go">import pymc as pm</span>
+<span class="go">import numpy as np</span>
+</pre></div>
+</div>
 </section>
 </section>
 

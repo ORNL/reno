@@ -438,6 +438,109 @@
 
   <section id="submodels">
 <h1>Submodels<a class="headerlink" href="#submodels" title="Link to this heading">#</a></h1>
+<p>Models can be split up, shared, re-used, and composed. Assigning a model as an
+attribute on another model (as if it were any other component) makes it a
+<em>submodel</em>. Some of the implications of having a submodel:</p>
+<ul class="simple">
+<li><p>Diagrams show all the components of a given submodel within the same
+sub-graph, visually distinguishing and grouping them from the parent model.</p></li>
+<li><p>Parameterizing the submodel in a parent model’s <code class="docutils literal notranslate"><span class="pre">__call__()</span></code> is done by passing a
+dictionary containing the call parameters of the submodel.</p></li>
+<li><p>Submodel components will render with model name subtext in their latex
+equations.</p></li>
+</ul>
+<p>Submodels are currently limited in operating on the same timescale/timesteps as
+if they were all within a single model.</p>
+<p>As an example, suppose there’s some generic chain of processing to turn a raw material
+into a processed material, with delay times and maximum amounts that can be processed
+and moved at once.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">reno</span>
+
+<span class="n">processing_chain</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">processing_chain</span><span class="p">:</span>
+    <span class="c1"># variables to control process</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">max_processing</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">inventory1</span><span class="p">,</span> <span class="n">inventory2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">inflow</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">()</span>
+
+    <span class="c1"># both the processing step itself and moving material out</span>
+    <span class="c1"># are controlled here by the processing/rate, a simplistic form of delay</span>
+    <span class="n">processing</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="n">reno</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">inventory1</span> <span class="o">/</span> <span class="n">rate</span><span class="p">,</span> <span class="n">max_processing</span> <span class="o">/</span> <span class="n">rate</span><span class="p">))</span>
+    <span class="n">outflow</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="n">reno</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">inventory2</span> <span class="o">/</span> <span class="p">(</span><span class="n">rate</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">max_processing</span> <span class="o">/</span> <span class="n">rate</span><span class="p">))</span>
+
+    <span class="c1"># hook up the stocks and flows</span>
+    <span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">inventory1</span> <span class="o">&gt;&gt;</span> <span class="n">processing</span> <span class="o">&gt;&gt;</span> <span class="n">inventory2</span> <span class="o">&gt;&gt;</span> <span class="n">outflow</span>
+</pre></div>
+</div>
+<p>This model by itself looks like:</p>
+<figure class="align-center">
+<img alt="../_images/submodel_processing_chain_example.png" src="../_images/submodel_processing_chain_example.png" />
+</figure>
+<p>Suppose we want to have multiple of these chains running in parallel, possibly
+with different settings for the variables  - we can do this by directly
+assigning copies of the model onto a parent model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">parent_model</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span> <span class="o">=</span> <span class="n">processing_chain</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span> <span class="o">=</span> <span class="n">processing_chain</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<span class="c1"># change a parameter in just one of the chains</span>
+<span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="k">with</span> <span class="n">parent_model</span><span class="p">:</span>
+    <span class="c1"># have a common max processing variable across both chains</span>
+    <span class="n">max_processing</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span><span class="o">.</span><span class="n">max_processing</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">max_processing</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">max_processing</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">max_processing</span>
+
+    <span class="c1"># both chains draw from a common beginning stock, and output to a</span>
+    <span class="c1"># common output stock</span>
+    <span class="n">raw</span><span class="p">,</span> <span class="n">processed</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span><span class="o">.</span><span class="n">inflow</span> <span class="o">&lt;&lt;</span> <span class="n">raw</span> <span class="o">&gt;&gt;</span> <span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">inflow</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span><span class="o">.</span><span class="n">outflow</span> <span class="o">&gt;&gt;</span> <span class="n">processed</span> <span class="o">&lt;&lt;</span> <span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">outflow</span>
+
+    <span class="c1"># split beginning input up evenly between both chains</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span><span class="o">.</span><span class="n">inflow</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">raw</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain1</span><span class="o">.</span><span class="n">inflow</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="n">max_processing</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">inflow</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">raw</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">parent_model</span><span class="o">.</span><span class="n">chain2</span><span class="o">.</span><span class="n">inflow</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="n">max_processing</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The full model diagram:</p>
+<figure class="align-center">
+<img alt="../_images/submodel_full_example.png" src="../_images/submodel_full_example.png" />
+</figure>
+<p>Running the parent model works as normal, with the exception that parameterizing any submodel free variables
+is done through a dictionary passed for the submodel name argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">parent_model</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">chain1</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{&#39;max_processing&#39;: Scalar(15),</span>
+<span class="go"> &#39;raw_0&#39;: (= (= Scalar(100))),</span>
+<span class="go"> &#39;processed_0&#39;: 0,</span>
+<span class="go"> &#39;chain1.rate&#39;: Scalar(4),</span>
+<span class="go"> &#39;chain1.inventory1_0&#39;: 0,</span>
+<span class="go"> &#39;chain1.inventory2_0&#39;: 0,</span>
+<span class="go"> &#39;chain2.rate&#39;: Scalar(6),</span>
+<span class="go"> &#39;chain2.inventory1_0&#39;: 0,</span>
+<span class="go"> &#39;chain2.inventory2_0&#39;: 0}</span>
+</pre></div>
+</div>
+<p>Plotting the results with sparklines highlights the difference between the two
+separate submodels:</p>
+<figure class="align-center">
+<img alt="../_images/submodel_full_run_example.png" src="../_images/submodel_full_run_example.png" />
+</figure>
+<section id="dataset-variables">
+<h2>Dataset variables<a class="headerlink" href="#dataset-variables" title="Link to this heading">#</a></h2>
+<p>The dataset that gets returned from a run (or from <a class="reference internal" href="../api/reno.model.Model.html#reno.model.Model.dataset" title="reno.model.Model.dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">model.dataset()</span></code></a>)
+with submodels will prefix each submodel variable with the name of that model
+(which is the name of the attribute it is assigned to on the parent model.)</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">inventory2</span></code> stock for instance would be named <code class="docutils literal notranslate"><span class="pre">chain1_inventory2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">chain2_inventory2</span></code>. <strong>This prefix still applies when getting the dataset of
+the submodel directly</strong>, e.g. the variables in <code class="docutils literal notranslate"><span class="pre">parent_model.chain2.dataset()</span></code>
+would still each be prefixed with <code class="docutils literal notranslate"><span class="pre">chain2_</span></code>.</p>
+</section>
 </section>
 
 
@@ -478,6 +581,18 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-variables">Dataset variables</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

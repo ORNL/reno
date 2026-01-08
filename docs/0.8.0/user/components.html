@@ -438,16 +438,17 @@
 
   <section id="components">
 <h1>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h1>
-<p>Reno models are based primarily on <a class="reference external" href="https://en.wikipedia.org/wiki/Stock_and_flow">stocks and flows</a>.
-A model is created by defining all of the components and the corresponding
-equations that make them up.</p>
-<p>TODO: equations (sep page?) - include tips on what can do with equations e.g.
-piecewise</p>
+<p>Reno models are based primarily on <a class="reference external" href="https://en.wikipedia.org/wiki/Stock_and_flow">stocks and flows</a>. A model is created by
+defining all of these components and the corresponding equations that make them
+up.</p>
+<p>The equations themselves and how to construct them are discussed in more depth
+on the <a class="reference internal" href="math.html#math-in-reno"><span class="std std-ref">Math in Reno</span></a> page, while this page primarily focuses on the higher
+level Flow/Stock/Variable components.</p>
 <section id="flows">
 <h2>Flows<a class="headerlink" href="#flows" title="Link to this heading">#</a></h2>
-<p>Flows are equations that define rates of change, representing how much material or
-information move over time.</p>
-<p>Flows are created with the <a class="reference internal" href="../api/reno.components.Flow.html#reno-components-flow"><span class="std std-ref">reno.Flow</span></a> class, and the equation can either be
+<p>Flows are equations that define rates of change, or represent how much
+material/information moves over time.</p>
+<p>Flows are created with the <a class="reference internal" href="../api/reno.components.Flow.html#reno.components.Flow" title="reno.components.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.Flow</span></code></a> class, and the equation can either be
 directly provided in the constructor or by setting the <code class="docutils literal notranslate"><span class="pre">.eq</span></code> attribute later
 on:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">TimeRef</span>
@@ -522,7 +523,7 @@ is always the right-most component, e.g. <code class="docutils literal notransla
 <section id="implicit-stock-in-flows">
 <h3>Implicit stock in-flows<a class="headerlink" href="#implicit-stock-in-flows" title="Link to this heading">#</a></h3>
 <p>When an in-flow to a stock is set (either through <code class="docutils literal notranslate"><span class="pre">+=</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>)
-with an equation rather than just a flow, an implicit flow defined by that
+with an equation rather than just a flow, an <strong>implicit</strong> flow defined by that
 equation is created and applied.</p>
 <p>(e.g. if there’s some loss involved between the outflow of one stock and the
 inflow for another, you could of course explicitly model this with two separate
@@ -553,7 +554,6 @@ a full chain-like definition when an inflow needs to be a slightly modified vers
 between circular references involving stocks and those between flows)</p>
 <p>Referencing a stock always refers to the stock’s value in the <em>previous</em>
 timestep. This allows a form of circular reference between stocks</p>
-<p>(Is this actually a circular reference?)</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
 
 
@@ -567,22 +567,119 @@ timestep. This allows a form of circular reference between stocks</p>
 <p>In this example, <code class="docutils literal notranslate"><span class="pre">my_stock</span></code> is incremented by the value of <code class="docutils literal notranslate"><span class="pre">my_flow</span></code>
 in the current timestep <cite>t</cite>, while the value of <code class="docutils literal notranslate"><span class="pre">my_flow</span></code> for timestep <code class="docutils literal notranslate"><span class="pre">t</span></code>
 is 10 minus the value of <code class="docutils literal notranslate"><span class="pre">my_stock</span></code> in timestep <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p>
+<p>In other words, the equations for these would translate to:</p>
+<ul class="simple">
+<li><p>my_stock(t) = my_stock(t-1) + my_flow(t)</p></li>
+<li><p>my_flow(t) = 10 - my_stock(t-1)</p></li>
+</ul>
 </section>
 </section>
 <section id="variables">
 <h2>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h2>
-<p>A variable is any other equation or value that can be referenced in flow
-equations (and other variable equations) and helps define the user-settable
-model parameters.</p>
-<p>TODO</p>
+<p>A variable is any other equation or value that can be referenced in flow (and
+other variable) equations and helps define the user-settable model parameters.
+Variables should be used to specify what can be modified about a
+simulation/what values you want to experiment with.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coffee_process</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">coffee_process</span><span class="p">:</span>
+    <span class="n">drip_speed</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span>
+
+    <span class="n">water</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">coffee</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">coffee_machine</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="n">drip_speed</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">water</span><span class="p">)</span>
+
+    <span class="n">water</span> <span class="o">&gt;&gt;</span> <span class="n">coffee_machine</span> <span class="o">&gt;&gt;</span> <span class="n">coffee</span>
+</pre></div>
+</div>
+<p>In the above model, <code class="docutils literal notranslate"><span class="pre">drip_speed</span></code> is a variable that directly impacts the
+<code class="docutils literal notranslate"><span class="pre">coffee_machine</span></code> flow/the rate at which <code class="docutils literal notranslate"><span class="pre">coffee</span></code> increases. Since it is a
+free variable/not defined in terms of any other variables, it can be specified
+during a model run to configure the simulation. We can run a couple simulations
+and compare the final coffee stock values (at timestep 10):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coffee_process</span><span class="p">(</span><span class="n">drip_speed</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span><span class="o">.</span><span class="n">coffee</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">36.0</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coffee_process</span><span class="p">(</span><span class="n">drip_speed</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">coffee</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">9.0</span>
+</pre></div>
+</div>
 </section>
 <section id="metrics">
 <h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading">#</a></h2>
-<p>TODO</p>
+<p>Metrics are a special type of component whose equations run once, after all the
+timesteps of the simulation have been calculated. These equations are normally
+used to retrieve a specific value or run a basic analysis/measurement on
+something. Metrics are useful from a convenience standpoint (making it
+semantically simpler to get e.g. the last value of the <code class="docutils literal notranslate"><span class="pre">coffee</span></code> stock like in
+the previous example), since they are then available to include in Reno’s
+<span class="xref std std-ref">Visuzliations</span>, but they can also be used as targets for observed/measured
+values (“data”) for <a class="reference internal" href="bayes.html#bayesian-inference"><span class="std std-ref">Bayesian Inference</span></a>.</p>
+<p>We can add a metric to the previous system to capture the final value in the
+stock with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coffee_process</span><span class="o">.</span><span class="n">final_coffee_level</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Metric</span><span class="p">(</span><span class="n">coffee</span><span class="o">.</span><span class="n">timeseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This would, for example, allow plotting this final value distribution if an
+input distribution were specified for <code class="docutils literal notranslate"><span class="pre">drip_speed</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="o">=</span> <span class="n">coffee_process</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">drip_speed</span><span class="o">=</span><span class="n">reno</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">plot_trace_refs</span><span class="p">(</span>
+<span class="go">        coffee_process,</span>
+<span class="go">        [run],</span>
+<span class="go">        [</span>
+<span class="go">            coffee_process.drip_speed,</span>
+<span class="go">            coffee_process.coffee,</span>
+<span class="go">            coffee_process.final_coffee_level</span>
+<span class="go">        ],</span>
+<span class="go">        rows=1,</span>
+<span class="go">        cols=3,</span>
+<span class="go">        figsize=(10, 3)</span>
+<span class="go">    )</span>
+</pre></div>
+</div>
+<figure class="align-center">
+<img alt="../_images/coffee_metrics.png" src="../_images/coffee_metrics.png" />
+</figure>
 </section>
 <section id="other-arguments-for-components">
 <h2>Other arguments for components<a class="headerlink" href="#other-arguments-for-components" title="Link to this heading">#</a></h2>
 <p>(doc, min/max, init, dim, type)</p>
+<p>All stock/flow/variable components take several additional optional arguments.
+Equation minimum/maximum limits can be defined with equations/values via <code class="docutils literal notranslate"><span class="pre">min</span></code>
+and <code class="docutils literal notranslate"><span class="pre">max</span></code>. This can be useful to specify on outflows to avoid sending a stock into
+negative values (e.g. if it represents a physical quantity.) In the coffee
+example above, the <code class="docutils literal notranslate"><span class="pre">coffee_machine</span></code> flow is initialized with a <code class="docutils literal notranslate"><span class="pre">max=water</span></code>,
+meaning that despite the result of the equation itself, the value won’t be
+higher than the water stock in each timestep.</p>
+<p>It is important to note that setting a min/max on a stock <strong>does not modify
+inflow values</strong> to that stock. To highlight this, the system below defines two
+stocks with a flow in between:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">s1</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">&gt;&gt;</span> <span class="n">f1</span> <span class="o">&gt;&gt;</span> <span class="n">s2</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">s2</span></code> isn’t allowed to contain more than 10, but the inflow is pulling in 20 at
+each timestep. Running this model for a few steps, we observe that <code class="docutils literal notranslate"><span class="pre">s2</span></code> never goes
+above 10, but <code class="docutils literal notranslate"><span class="pre">s1</span></code> still decreases by 20 each time, resulting in “dropped” material.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">s1</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([100, 80, 60])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([20, 20, 20])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">s2</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([0, 10, 10])</span>
+</pre></div>
+</div>
+<p>To appropriately bottleneck a stock like this entails also applying limits to
+the flow, possibly using something like the <a class="reference internal" href="math.html#space"><span class="std std-ref">space</span></a> operation discussed on
+the <a class="reference internal" href="math.html#math-in-reno"><span class="std std-ref">Math in Reno</span></a> page.</p>
 </section>
 </section>
 
