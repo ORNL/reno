@@ -339,3 +339,5 @@ space
 
 Shape and type info
 ===================
+
+(cover multidim here)

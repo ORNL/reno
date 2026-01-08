@@ -547,7 +547,7 @@ class Model:
 
     def plot_stocks(self, cols: int = None, rows: int = None, **figargs):
         """Shortcut function to quickly get a set of graphs for each stock."""
-        reno.viz.plot_refs(self.stocks, cols=cols, rows=rows, **figargs)
+        return reno.viz.plot_refs(self.stocks, cols=cols, rows=rows, **figargs)
 
     def copy(self, name: str = None) -> "Model":
         """Make a separate copy of this model with the desired name.

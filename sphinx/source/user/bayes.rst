@@ -82,7 +82,7 @@ Bayesian inference comes in when we know some additional piece of data or have
 an observed value for a metric somewhere, and want to determine how the
 probability distributions change to produce that observed value. These are
 provided to the ``.pymc`` call through the ``observations`` argument, which
-takes a list of :py:class:`reno.ops.Observation` instance. These effectively
+takes a list of :py:class:`reno.ops.Observation` instances. These effectively
 define a normal likelihood function around a metric, with specified observed
 mean and standard deviation.
 

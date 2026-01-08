@@ -566,6 +566,8 @@ def plot_refs(
 
     if rows == 1 and cols == 1:
         axs = [[axs]]
+    elif rows == 1:
+        axs = [axs]
 
     row_i = 0
     col_i = 0
