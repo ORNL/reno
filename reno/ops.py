@@ -178,7 +178,6 @@ class sum(reno.components.Operation):
         return f"pt.sum({self.sub_equation_parts[0].pt_str(**refs)}, axis={self.axis})"
 
 
-# TODO: figure out how to make this work with history instead?
 class index(reno.components.Operation):
     """Get a previous value in the time series at specified index, only works for tracked references
     inside of equations for metrics."""
@@ -199,7 +198,8 @@ class index(reno.components.Operation):
         #     return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
         # else:
         #     return value[self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
-        return value[..., self.sub_equation_parts[1].value]
+        # return value[..., self.sub_equation_parts[1].value]
+        return value[..., self.sub_equation_parts[1].eval(**kwargs)]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs)[
