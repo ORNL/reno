@@ -12,7 +12,14 @@ import xarray as xr
 from graphviz import Digraph
 
 import reno
-from reno.components import Flow, Stock, TimeRef, TrackedReference, Variable
+from reno.components import (
+    Flow,
+    HistoricalValue,
+    Stock,
+    TimeRef,
+    TrackedReference,
+    Variable,
+)
 
 # Theming constants, set for lightmode by default.
 DARK_MODE = False
@@ -435,7 +442,7 @@ def should_render(
 
     if universe is not None and ref not in universe:
         return False
-    if isinstance(ref, TimeRef):
+    if isinstance(ref, (TimeRef, HistoricalValue)):
         return False
     # show_groups takes precedence over hide_groups
     if isinstance(ref.cgroup, list):
