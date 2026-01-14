@@ -14,7 +14,6 @@ from graphviz import Digraph
 import reno
 from reno.components import (
     Flow,
-    HistoricalValue,
     Stock,
     TimeRef,
     TrackedReference,
@@ -442,7 +441,8 @@ def should_render(
 
     if universe is not None and ref not in universe:
         return False
-    if isinstance(ref, (TimeRef, HistoricalValue)):
+    # if isinstance(ref, (TimeRef, HistoricalValue)):
+    if not isinstance(ref, (Stock, Flow, Variable)):
         return False
     # show_groups takes precedence over hide_groups
     if isinstance(ref.cgroup, list):

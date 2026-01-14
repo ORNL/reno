@@ -122,6 +122,20 @@ def test_index_directly_on_scalar():
     assert s[1].eval() == 2
 
 
+def test_eq_index_of_timeseries():
+    """An index equation needs to be evaluated on a timeseries in order to correctly
+    return only one value."""
+
+    m = model.Model()
+    with m:
+        t = TimeRef()
+        f1 = Flow(t + 1)
+        f2 = Flow(f1.timeseries[t - 1])
+
+    ds = m()
+    assert ds.f2.values.shape == (1, 10)
+
+
 def test_slice_directly_on_scalar():
     """Getting indices on a 1d scalar should still work."""
     s = Scalar([1, 2, 3])
