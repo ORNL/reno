@@ -256,7 +256,8 @@ input distribution were specified for ``drip_speed``:
 Other arguments for components
 ==============================
 
-(doc, min/max, init, dim, type)
+min/max
+-------
 
 All stock/flow/variable components take several additional optional arguments.
 Equation minimum/maximum limits can be defined with equations/values via ``min``
@@ -299,3 +300,72 @@ above 10, but ``s1`` still decreases by 20 each time, resulting in "dropped" mat
 To appropriately bottleneck a stock like this entails also applying limits to
 the flow, possibly using something like the :ref:`space` operation discussed on
 the :ref:`math in reno` page.
+
+dim/dtype
+---------
+
+Specifying the `dtype` (where you pass a regular python type such as ``float``,
+``int``, ``bool``, etc.) of a component ensures the type of the underlying value and
+will automatically convert as needed. This type assignment occurs on initial
+value population - this either occurs automatically at the beginning of a
+simulation, or you have to call :py:func:`populate()
+<reno.components.TrackedReference.populate>` yourself:
+
+
+.. code-block:: python
+
+    >>> a = r.Variable(5, dtype=float)
+    >>> a.eval()
+    5
+
+    >>> a.populate(1, 1)
+    >>> a.eval()
+    5.0
+
+Type information is automatically determined/broadcast when not explicitly specified,
+and converted appropriately when it is:
+
+.. code-block:: python
+
+   >>> m = r.Model()
+   >>> m.a = r.Variable(5)
+   >>> m.b = r.Variable(m.a)
+   >>> m.a.dtype, m.b.dtype
+   (int, int)
+
+   >>> m = r.Model()
+   >>> m.a = r.Variable(5, dtype=float)
+   >>> m.b = r.Variable(m.a)
+   >>> m.a.dtype, m.b.dtype
+   (float, float)
+
+   >>> m = r.Model()
+   >>> m.a = r.Variable(5, dtype=float)
+   >>> m.b = r.Variable(m.a, dtype=int)
+   >>> m.a.dtype, m.b.dtype
+   (float, int)
+
+``dim`` refers to an optional extra "data dimension" which allows you to work
+with vector data. Operations automatically broadcast according to numpy rules
+(TODO: link broadcasting):
+
+.. code-block:: python
+
+    >>> a = r.Variable(5, dim=4)
+    >>> a.eval()
+    array([5, 5, 5, 5])
+
+Note that manually specifying ``dim`` only applies if the value is not already
+vectorized:
+
+.. code-block:: python
+
+    >>> a = r.Variable([5, 2], dim=4)
+    >>> a.eval()
+    array([5, 2])
+
+cgroup/group
+------------
+
+``cgroup`` and ``group`` parameters are used for controlling diagram rendering,
+see TODO: link to visualization cgroups page

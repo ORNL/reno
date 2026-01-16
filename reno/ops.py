@@ -14,7 +14,9 @@ __all__ = [
     # -- series math operations --
     "series_max",
     "series_min",
+    "mean",
     "sum",
+    "nonzero",
     "index",
     "slice",
     "orient_timeseries",
@@ -136,6 +138,58 @@ class series_min(reno.components.Operation):
         return f"pt.min({self.sub_equation_parts[0].pt_str(**refs)})"
 
 
+class mean(reno.components.Operation):
+    """Average across the values of a vector (either timeseries or data dim.)
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> a = r.Variable([0, 1, 2, 3])
+            >>> a.mean().eval()
+            np.float64(1.5)
+
+            >>> m = r.Model()
+            >>> t = r.TimeRef()
+            >>> m.v0 = r.Variable(t + 1)
+            >>> m.v1 = r.Variable(m.v0.timeseries[t-2:t].mean())
+            >>> m()
+            >>> m.v0.value
+            array([[ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10]])
+
+            >>> m.v1.value
+            array([[nan, 1. , 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]])
+    """
+
+    def __init__(self, a, axis=0):
+        self.axis = axis
+        super().__init__(a)
+
+    def latex(self, **kwargs):
+        return f"\\text{{mean}}({self.sub_equation_parts[0].latex(**kwargs)})"
+
+    def get_shape(self) -> int:
+        return 1
+
+    def get_type(self) -> type:
+        return float
+
+    def op_eval(self, **kwargs):
+        # value = self.sub_equation_parts[0].value
+        # if value is None:
+        value = self.sub_equation_parts[0].eval(**kwargs)
+        axis = self.axis
+        if len(value.shape) != 1:
+            axis = self.axis + 1  # to account for "batch"/n dimension
+        return np.mean(value, axis=axis)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return pt.mean(self.sub_equation_parts[0].pt(**refs), axis=self.axis)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"pt.mean({self.sub_equation_parts[0].pt_str(**refs)}, axis={self.axis})"
+
+
 class sum(reno.components.Operation):
     """Series-wise sum (e.g. row-wise if a matrix)."""
 
@@ -176,6 +230,76 @@ class sum(reno.components.Operation):
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return f"pt.sum({self.sub_equation_parts[0].pt_str(**refs)}, axis={self.axis})"
+
+
+class nonzero(reno.components.Operation):
+    """Similar to the numpy nonzero or the numpy ``where`` specified with only a condition."""
+
+    def __init__(self, a):
+        super().__init__(a)
+
+    def get_type(self) -> type:
+        return int
+
+    def op_eval(self, **kwargs):
+
+        value = self.sub_equation_parts[0].eval(**kwargs)
+        indices = np.nonzero(value)
+
+        # say we start with
+        # np.array([
+        #   [0, 0, 1, 0, 0, 0, 1],
+        #   [1, 0, 0, 1, 0, 0, 1]
+        # ])
+
+        # the np.nonzero returns:
+        # (array([0, 0, 1, 1, 1]), array([2, 6, 0, 3, 6]))
+
+        # the goal is to have a "jagged" matrix with the indices (2, 6, 0, 3, 6)
+        # as the left-most columns and of course in the appropriate rows
+
+        # create full matrix of nan's as padding
+        result = np.empty(value.shape)
+        result[:] = np.nan
+
+        if len(value.shape) == 2:
+            # create incrementing sequences for the columns for each row index
+            conditions = [indices[0] == val for val in np.unique(indices[0])]
+            # e.g.
+            # [array([ True,  True, False, False, False]),
+            #  array([False, False,  True,  True,  True])]
+            # make the sequences
+            ranges = [np.arange(0, condition.sum()) for condition in conditions]
+            # e.g. [array([0, 1]), array([0, 1, 2])]
+            # np.select requires a set of matching size arrays, so we make a bunch
+            # of zeros with the sequences embedded where the conditions dictate
+            condition_ranges = [np.zeros(condition.shape) for condition in conditions]
+            for i in range(len(condition_ranges)):
+                condition_ranges[i][conditions[i]] = ranges[i]
+            # e.g. [array([0., 1., 0., 0., 0.]), array([0., 0., 0., 1., 2.])]
+            index_indexers = np.select(conditions, condition_ranges).astype(int)
+            # e.g. array([0., 1., 0., 1., 2.])
+            # this fills the first part of every row with the column indices from
+            # the initial nonzero call
+            result[indices[0], index_indexers] = indices[1]
+        elif len(value.shape) == 1:
+            print(indices[0])
+            result[: len(indices[0])] = indices[0]
+        else:
+            raise RuntimeError("Cannot yet run nonzero op on an extra data dimension")
+
+        # so going from:
+        # np.array([
+        #   [0, 0, 1, 0, 0, 0, 1],
+        #   [1, 0, 0, 1, 0, 0, 1]
+        # ])
+        # to:
+        # array([
+        #   [ 2.,  6., nan, nan, nan, nan, nan],
+        #   [ 0.,  3.,  6., nan, nan, nan, nan]
+        # ]
+
+        return result
 
 
 class index(reno.components.Operation):
@@ -282,6 +406,7 @@ class slice(reno.components.Operation):
             pt.as_tensor(0)
             if self.start is None
             else pt.maximum(pt.as_tensor(0), self.start.pt(**refs))
+            # else self.start.pt(**refs)
         )
         if self.stop is None:
             return self.sub_equation_parts[0].pt(**refs)[..., t_0:]
@@ -471,7 +596,23 @@ def adjust_shapes_for_n(*parts, **kwargs):
 
 
 class add(reno.components.Operation):
-    """a + b"""
+    """a + b
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(3) + 2
+            (+ Scalar(3) Scalar(2))
+
+            >>> (r.Scalar(3) + 2).eval()
+            5
+
+            >>> a = r.Variable([0, 1, 2])
+            >>> b = r.Variable([3, 4, 5])
+            >>> (a + b).eval()
+            array([3, 5, 7])
+    """
 
     OP_REPR = "+"
 
@@ -495,7 +636,23 @@ class add(reno.components.Operation):
 
 
 class sub(reno.components.Operation):
-    """a - b"""
+    """a - b
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(3) - 2
+            (- Scalar(3) Scalar(2))
+
+            >>> (r.Scalar(3) - 2).eval()
+            1
+
+            >>> a = r.Variable([0, 1, 2])
+            >>> b = r.Variable([3, 4, 5])
+            >>> (b - a).eval()
+            array([3, 3, 3])
+    """
 
     OP_REPR = "-"
 
@@ -1154,7 +1311,23 @@ class pulse(reno.components.Operation):
 class repeated_pulse(reno.components.Operation):
     """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``,
     with ``interval`` number of timesteps between each subsequent leading edge. Returns 0
-    at all other timesteps."""
+    at all other timesteps.
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> m = r.Model()
+            >>> m.v0 = r.Variable(r.repeated_pulse(4, 4, 2))
+            >>> m()
+            >>> m.v0.value
+            array([[0, 0, 0, 0, 1, 1, 0, 0, 1, 1]])
+
+            >>> m.v0.eq = r.repeated_pulse(0, 3, 1)
+            >>> m()
+            >>> m.v0.value
+            array([[1, 0, 0, 1, 0, 0, 1, 0, 0, 1]])
+    """
 
     def __init__(self, start, interval, width=1):
         t = reno.components.TimeRef()

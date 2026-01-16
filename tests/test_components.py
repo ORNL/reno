@@ -348,9 +348,15 @@ def test_dtype_transfer():
     assert v6.dtype == float
 
     v1.populate(1, 1)
+    v2.populate(1, 1)
+    v6.populate(1, 1)
     v7.populate(1, 1)
     assert v7.dtype == int
     assert v7.value == 2
+    assert type(v7.value) is int
+    assert v6.dtype == float
+    assert v6.value == 1.0
+    assert type(v6.value) is float
 
 
 def test_dtype_otf_config_diff_type():

@@ -24,6 +24,12 @@ def test_sum_on_vector():
     assert (ops.sum(ops.orient_timeseries(v)).eval(3) == np.array([[8, 12]])).all()
 
 
+def test_mean_on_vector():
+    """Running ops.mean on a vector should give row-wise mean"""
+    v = Variable([0, 1, 2, 3])
+    assert v.mean().eval() == 1.5
+
+
 def test_sum_on_matrix_start_stop():
     """Running ops.sum on a matrix should give you a row-wise sum, correctly
     accounting for specified range."""

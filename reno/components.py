@@ -159,6 +159,9 @@ class EquationPart:
     def sum(self, axis=0):
         return reno.ops.sum(self, axis=axis)
 
+    def mean(self, axis=0):
+        return reno.ops.mean(self, axis=axis)
+
     @property
     def timeseries(self) -> "Operation":
         """Get a timeseries view of the data (includes all historical data across all timesteps.)"""
@@ -1946,6 +1949,12 @@ class Flow(TrackedReference):
                     resolved_init_value = np.repeat(
                         [resolved_init_value], repeats=self.dim
                     )
+                # ensure correct type (only needed in this case, other cases
+                # don't re-assign container value)
+                if isinstance(resolved_init_value, np.ndarray):
+                    resolved_init_value = np.astype(resolved_init_value, self.dtype)
+                else:
+                    resolved_init_value = self.dtype(resolved_init_value)
                 self.value = resolved_init_value
                 self.computed_mask = True
             elif self._static and self._sample_dim:
@@ -2106,6 +2115,12 @@ class Variable(TrackedReference):
                     resolved_init_value = np.repeat(
                         [resolved_init_value], repeats=self.dim
                     )
+                # ensure correct type (only needed in this case, other cases
+                # don't re-assign container value)
+                if isinstance(resolved_init_value, np.ndarray):
+                    resolved_init_value = np.astype(resolved_init_value, self.dtype)
+                else:
+                    resolved_init_value = self.dtype(resolved_init_value)
                 self.value = resolved_init_value
                 self.computed_mask = True
             elif self._static and self._sample_dim:
@@ -2609,5 +2624,12 @@ class Flag(Metric):
         """Get the timestep for the first time the value is 1."""
         indices = self.indices()
         firsts = [sample_indices[0] for sample_indices in indices]
+
+        return np.asarray(firsts)
+
+    def last_event(self):
+        """Get the timestep for the first time the value is 1."""
+        indices = self.indices()
+        firsts = [sample_indices[-1] for sample_indices in indices]
 
         return np.asarray(firsts)
