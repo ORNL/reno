@@ -281,6 +281,7 @@ class nonzero(reno.components.Operation):
             # e.g. array([0., 1., 0., 1., 2.])
             # this fills the first part of every row with the column indices from
             # the initial nonzero call
+            # so equivalent to result[[0, 0, 1, 1, 1], [0, 1, 0, 1, 2]] = [2, 6, 0, 3, 6]
             result[indices[0], index_indexers] = indices[1]
         elif len(value.shape) == 1:
             print(indices[0])

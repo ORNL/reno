@@ -30,6 +30,30 @@ def test_mean_on_vector():
     assert v.mean().eval() == 1.5
 
 
+def test_nonzero_on_vector():
+    v = Variable([0, 0, 1, 0, 0, 0, 1])
+    assert np.array_equal(
+        ops.nonzero(v).eval(),
+        np.array([2.0, 6.0, np.nan, np.nan, np.nan, np.nan, np.nan]),
+        equal_nan=True,
+    )
+
+
+def test_nonzero_on_matrix():
+    v = Variable([[0, 0, 1, 0, 0, 0, 1], [1, 0, 0, 1, 0, 0, 1]])
+    print(ops.nonzero(v).eval())
+    assert np.array_equal(
+        ops.nonzero(v).eval(),
+        np.array(
+            [
+                [2.0, 6.0, np.nan, np.nan, np.nan, np.nan, np.nan],
+                [0.0, 3.0, 6.0, np.nan, np.nan, np.nan, np.nan],
+            ]
+        ),
+        equal_nan=True,
+    )
+
+
 def test_sum_on_matrix_start_stop():
     """Running ops.sum on a matrix should give you a row-wise sum, correctly
     accounting for specified range."""
