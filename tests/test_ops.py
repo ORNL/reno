@@ -41,7 +41,6 @@ def test_nonzero_on_vector():
 
 def test_nonzero_on_matrix():
     v = Variable([[0, 0, 1, 0, 0, 0, 1], [1, 0, 0, 1, 0, 0, 1]])
-    print(ops.nonzero(v).eval())
     assert np.array_equal(
         ops.nonzero(v).eval(),
         np.array(
@@ -52,6 +51,35 @@ def test_nonzero_on_matrix():
         ),
         equal_nan=True,
     )
+
+
+def test_sum_on_nonzero_of_matrix():
+    """Running a sum on a nonzero result (which will have nan's) should correctly evaluate."""
+    v = Variable([[0, 0, 1, 0, 0, 0, 1], [1, 0, 0, 1, 0, 0, 1]])
+    assert np.array_equal(
+        ops.nonzero(v).sum().eval(),
+        np.array([8.0, 9.0]),
+    )
+
+
+def test_nonzero_in_pymc():
+    """The nonzero op should run the same in pymc as in normal reno."""
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v = Variable(
+            Piecewise(
+                [0, 1], [t.not_equal(2) & t.not_equal(6), t.equal(2) | t.equal(6)]
+            )
+        )
+        met = Metric(ops.nonzero(v.timeseries).sum())
+
+    ds1 = m(n=2)
+    ds2 = m.pymc(n=2, compute_prior_only=True)
+
+    print(ds2.prior.met.values)
+    assert (ds1.met.values == np.array([8.0, 8.0])).all()
+    assert (ds1.met.values == ds2.prior.met.values[0]).all()
 
 
 def test_sum_on_matrix_start_stop():

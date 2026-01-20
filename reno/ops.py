@@ -97,7 +97,7 @@ class series_max(reno.components.Operation):
         axis = 0
         if len(value.shape) != 1:
             axis += 1
-        return np.max(value, axis=axis)
+        return np.nanmax(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.max(self.sub_equation_parts[0].pt(**refs))
@@ -129,7 +129,7 @@ class series_min(reno.components.Operation):
         axis = 0
         if len(value.shape) != 1:
             axis += 1
-        return np.min(value, axis=axis)
+        return np.nanmin(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.min(self.sub_equation_parts[0].pt(**refs))
@@ -181,7 +181,7 @@ class mean(reno.components.Operation):
         axis = self.axis
         if len(value.shape) != 1:
             axis = self.axis + 1  # to account for "batch"/n dimension
-        return np.mean(value, axis=axis)
+        return np.nanmean(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.mean(self.sub_equation_parts[0].pt(**refs), axis=self.axis)
@@ -223,7 +223,7 @@ class sum(reno.components.Operation):
         axis = self.axis
         if len(value.shape) != 1:
             axis = self.axis + 1  # to account for "batch"/n dimension
-        return np.sum(value, axis=axis)
+        return np.nansum(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.sum(self.sub_equation_parts[0].pt(**refs), axis=self.axis)
@@ -301,6 +301,13 @@ class nonzero(reno.components.Operation):
         # ]
 
         return result
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        # TODO: I don't think this handles extra data dim?
+        return pt.nonzero(self.sub_equation_parts[0].pt(**refs))[0]
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"pt.nonzero({self.sub_equation_parts[0].pt_str(**refs)})[0]"
 
 
 class index(reno.components.Operation):
