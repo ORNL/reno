@@ -1,6 +1,7 @@
 """Tests for the math operations."""
 
 import numpy as np
+import pytest
 
 import reno
 from reno import model, ops
@@ -194,6 +195,20 @@ def test_eq_index_of_timeseries():
     assert ds.f2.values.shape == (1, 10)
 
 
+def test_staggered_index_access():
+    """Accessing different columns in each row with index should correctly return one value per row."""
+    m = model.Model()
+    with m:
+        t = TimeRef()
+        indexer = Variable(ops.List([1, 2]))
+        f1 = Flow(t + indexer)
+
+        met = Metric(f1.timeseries[indexer])
+
+    ds = m(n=2)
+    assert (ds.met.values == [2, 4]).all()
+
+
 def test_slice_directly_on_scalar():
     """Getting indices on a 1d scalar should still work."""
     s = Scalar([1, 2, 3])
@@ -258,6 +273,23 @@ def test_slice_staticness_of_timeseries_in_model():
     assert m.v0.is_static()
     assert not m.v1.is_static()
     assert not m.v2.is_static()
+
+
+# TODO: this doesn't work because of ragged results, the only way we could
+# support this would be to allow a "serial execution mode" that runs each
+# sample independently
+@pytest.mark.skip
+def test_slice_staggered_lengths():
+    """A slice with multiple samples where each sample needs a different length should work?"""
+    m = model.Model()
+    with m:
+        t = TimeRef()
+        v1 = Variable(ops.List([2, 4]))
+        v2 = Variable(t + 1)
+        met = Metric(v2.timeseries[0:v1])
+
+    ds = m(n=2)
+    assert (ds.met.values == np.array[[1, 2, np.nan, np.nan], [1, 2, 3, 4]]).all()
 
 
 def test_sum_of_dist():

@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+
+* `nonzero` op (mimics numpy's `nonzero` or `where` with only a condition)
+* `diff` op (mimics numpy's `diff`)
+
+### Changed
+
+* Several numpy operations to use their `nan` equivalent (to support "ragged"
+  [in our case `NaN` padded] arrays output from `nonzero`)
+
+
 ### Fixed
 
 * `dtype` not applying correctly on static non-dim values
+* `index` op not correctly working when each sample is indexed differently
 
 
 

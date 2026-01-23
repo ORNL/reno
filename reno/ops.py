@@ -17,6 +17,8 @@ __all__ = [
     "mean",
     "sum",
     "nonzero",
+    "diff",
+    "nanindex",
     "index",
     "slice",
     "orient_timeseries",
@@ -310,6 +312,57 @@ class nonzero(reno.components.Operation):
         return f"pt.nonzero({self.sub_equation_parts[0].pt_str(**refs)})[0]"
 
 
+class diff(reno.components.Operation):
+    """Returns the difference between every value in the list and the value before it. Note that the size of the output list is one less than the input, so likely need to process in some other way instead of directly including in e.g. a metric."""
+
+    def __init__(self, a):
+        super().__init__(a)
+
+    def op_eval(self, **kwargs):
+        value = self.sub_equation_parts[0].eval(**kwargs)
+        return np.diff(value)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return pt.diff(self.sub_equation_parts[0].pt(**refs))
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"pt.diff({self.sub_equation_parts[0].pt_str(**refs)})"
+
+
+class nanindex(reno.components.Operation):
+    """Special index op for jagged arrays that come from the nonzero op. These convert any negative values to
+    ignore any nans at the end of each row. Is equivalent to normal index for pymc math.
+    """
+
+    def __init__(self, a, ind):
+        super().__init__(a, ind)
+
+    def latex(self, **kwargs) -> str:
+        return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
+
+    def get_shape(self) -> int:
+        return 1
+
+    def op_eval(self, **kwargs):
+        # TODO: support for static?
+        value = self.sub_equation_parts[0].eval(**kwargs)
+        indices = self.sub_equation_parts[1].eval(**kwargs)
+        # should axis that's 1 actually be -1?
+        indices = np.where(
+            indices < 0, (~np.isnan(value)).sum(axis=-1) + indices, indices
+        )
+        # return value[..., indices]
+        return np.choose(indices, value.T)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[0].pt(**refs)[
+            self.sub_equation_parts[1].pt(**refs)
+        ]
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"{self.sub_equation_parts[0].pt_str(**refs)}[{self.sub_equation_parts[1].pt_str(**refs)}]"
+
+
 class index(reno.components.Operation):
     """Get a previous value in the time series at specified index, only works for tracked references
     inside of equations for metrics."""
@@ -330,8 +383,14 @@ class index(reno.components.Operation):
         #     return value[:, self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
         # else:
         #     return value[self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
+
         # return value[..., self.sub_equation_parts[1].value]
-        return value[..., self.sub_equation_parts[1].eval(**kwargs)]
+        # TODO: does this need to use np.choose instead?
+        indices = self.sub_equation_parts[1].eval(**kwargs)
+        if isinstance(indices, np.ndarray) and len(indices) > 1:
+            return np.choose(indices, value.T)
+        else:
+            return value[..., indices]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs)[
