@@ -1139,6 +1139,16 @@ class Model:
                 linker="cvm_nogc", optimizer="o3"
             )
 
+        # add any implicit metrics if needed
+        implicit_metric_refs = []
+        if observations is not None:
+            for index, obs in enumerate(observations):
+                if not isinstance(obs.ref, reno.components.Reference):
+                    metric_obj = reno.components.Metric(obs.ref)
+                    setattr(self, f"observation_{index}", metric_obj)
+                    obs.ref = metric_obj
+                    implicit_metric_refs.append(metric_obj)
+
         with self.pymc_model(steps=steps) as m:
             # add any observation likelihood variables
             if observations is not None:
@@ -1172,7 +1182,6 @@ class Model:
                 # 5.12.0?) An older version of pymc is sometimes necessary if
                 # there's weird stalling issues:
                 # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
-                print("???", compile_kwargs)
                 if len(compile_kwargs) > 0:
                     sampling_kwargs["compile_kwargs"] = compile_kwargs
                 trace = sample_func(
@@ -1193,6 +1202,8 @@ class Model:
 
         if not keep_config:
             self.config(**previous)
+            for metric in implicit_metric_refs:
+                self.metrics.remove(metric)
 
         return trace
 

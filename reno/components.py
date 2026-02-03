@@ -2558,9 +2558,9 @@ class Flag(Metric):
         # computing is handled?
 
         # TODO: need to update first function to support pt as well
-        self.first = Reference(f"{self.label}.first")
-        self.first.eval = lambda t, save, force: self.first.eq.eval(t, save, force)
-        self.first.eq = Function(self.first_event)
+        # self.first = Reference(f"{self.label}.first")
+        # self.first.eval = lambda t, save, force: self.first.eq.eval(t, save, force)
+        # self.first.eq = Function(self.first_event)
 
     def populate(self, n: int, steps: int):
         # TODO: TODO: this needs to act the same way as TrackedReference, using
@@ -2603,33 +2603,36 @@ class Flag(Metric):
         self._computing.remove(t)
         return val
 
-    # TODO: need pt/pt_str
-
-    # TODO: the below probably need to be actual operations so that they can
-    # work in pytensor as well
+    # TODO: think through whether the rising edge is what actually makes most
+    # sense for a property by this name.
+    @property
     def indices(self):
-        """Get the timesteps where the value changes from 0 to 1."""
-        sample_indices, t_indices = np.where(np.diff(self.value) == 1)
-        t_indices = t_indices + 1
+        """Get the timesteps where the value changes from 0 to 1. Note that this returns a "jagged" array, padded with NaN. If indexing into this array, you will likely need to use the nanindex op"""
 
-        indices = []
-        for i in range(self.value.shape[0]):
-            i_indices = t_indices[np.where(sample_indices == i)[0]]
-            if i_indices.shape[0] == 0:
-                i_indices = np.asarray([np.nan])
-            indices.append(i_indices)
-        return indices
+        return reno.nonzero(reno.diff(self.value))
 
-    def first_event(self):
-        """Get the timestep for the first time the value is 1."""
-        indices = self.indices()
-        firsts = [sample_indices[0] for sample_indices in indices]
+        # sample_indices, t_indices = np.where(np.diff(self.value) == 1)
+        # t_indices = t_indices + 1
+        #
+        # indices = []
+        # for i in range(self.value.shape[0]):
+        #     i_indices = t_indices[np.where(sample_indices == i)[0]]
+        #     if i_indices.shape[0] == 0:
+        #         i_indices = np.asarray([np.nan])
+        #     indices.append(i_indices)
+        # return indices
 
-        return np.asarray(firsts)
-
-    def last_event(self):
-        """Get the timestep for the first time the value is 1."""
-        indices = self.indices()
-        firsts = [sample_indices[-1] for sample_indices in indices]
-
-        return np.asarray(firsts)
+    #
+    # def first_event(self):
+    #     """Get the timestep for the first time the value is 1."""
+    #     indices = self.indices()
+    #     firsts = [sample_indices[0] for sample_indices in indices]
+    #
+    #     return np.asarray(firsts)
+    #
+    # def last_event(self):
+    #     """Get the timestep for the first time the value is 1."""
+    #     indices = self.indices()
+    #     firsts = [sample_indices[-1] for sample_indices in indices]
+    #
+    #     return np.asarray(firsts)

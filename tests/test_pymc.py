@@ -354,3 +354,17 @@ def test_pymc_historical_of_multidim_w_taps():
 
     run = m.pymc(compute_prior_only=True)
     assert (run.prior.s.values[0][0][-1] == [42, 63]).all()
+
+
+def test_implicit_metrics():
+    """Specifying an observation with an equation rather than a metric should create an implicit metric."""
+    t = TimeRef()
+    m = Model()
+    with m:
+        v0 = Variable(ops.Normal(5, 2))
+        v1 = Variable(t + v0)
+
+    ds = m.pymc(1000, observations=[ops.Observation(m.v1.timeseries[3], 1, [5.0])])
+
+    assert "observation_0" in ds.prior
+    assert "observation_0" not in [metric.name for metric in m.metrics]

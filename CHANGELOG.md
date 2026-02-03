@@ -11,12 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * `nonzero` op (mimics numpy's `nonzero` or `where` with only a condition)
 * `diff` op (mimics numpy's `diff`)
+* `nanindex` op to support negative indices in ragged/NaN padded arrays
+* Implicit metrics when raw equations are added as observations
 
 ### Changed
 
 * Several numpy operations to use their `nan` equivalent (to support "ragged"
   [in our case `NaN` padded] arrays output from `nonzero`)
-
 
 ### Fixed
 

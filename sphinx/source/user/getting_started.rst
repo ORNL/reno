@@ -279,11 +279,8 @@ of each free variable in that run's configuration are included in the
 Running with distributions
 --------------------------
 
-TODO: this possibly belongs on the math page instead (wanted to introduce early so
-the viz made more sense)
-
 Running a model thus far with an ``n``/samples more than 1 hasn't made much sense since
-these are deterministic - each sample should run the exact same way. Samples come
+these models are deterministic - each sample should run the exact same way. Samples come
 into play when distributions are used in variables, which are randomly drawn from
 for each sample (and optionally each timestep.) The simplest "distribution"
 (which isn't techncially a distribution) is :py:class:`reno.ops.List`, which
@@ -307,6 +304,14 @@ Actually random distributions are currently available through:
 * :py:class:`reno.ops.DiscreteUniform`
 * :py:class:`reno.ops.Bernoulli`
 * :py:class:`reno.ops.Categorical`
+
+As an example, we can run the tub model with a Normal distribution with mean 10
+and a standard deviation of 5 with:
+
+.. code-block::
+
+    >>> random_results = tub(n=1000, faucet_off_time=reno.Normal(10, 5))
+    >>>
 
 TODO: example with normal
 

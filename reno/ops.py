@@ -79,7 +79,28 @@ __all__ = [
 # NOTE: can't use 'proper' name of max because TrackedReferences already have a
 # max (equation max) which I don't want to rename.
 class series_max(reno.components.Operation):
-    """Maximum value throughout time series. Effectively a row-wise np.max."""
+    """Maximum value in an array. Effectively a row-wise np.max. This can either be applied
+    to a timeseries or a value with a data dimension.
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> a = r.Variable([6, 5, 4, 8])
+            >>> a.series_max().eval()
+            np.int64(8)
+
+            >>> m = r.Model()
+            >>> t = r.TimeRef()
+            >>> m.v0 = r.Variable(t + 5)
+            >>> m.max_value = r.Metric(m.v0.timeseries.series_max())
+            >>> m()
+            >>> m.v0.value
+            array([[ 5,  6,  7,  8,  9, 10, 11, 12, 13, 14]])
+
+            >>> m.max_value.value
+            array([14])
+    """
 
     OP_REPR = "max"
 
@@ -111,7 +132,28 @@ class series_max(reno.components.Operation):
 # NOTE: can't use 'proper' name of min because TrackedReferences already have a
 # min (equation min) which I don't want to rename.
 class series_min(reno.components.Operation):
-    """Minimum value throughout time series. Effectively a row-wise np.min."""
+    """Minimum value in an array. Effectively a row-wise np.min. This can either be applied
+    to a timeseries or a value with a data dimension.
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> a = r.Variable([6, 5, 4, 8])
+            >>> a.series_min().eval()
+            np.int64(4)
+
+            >>> m = r.Model()
+            >>> t = r.TimeRef()
+            >>> m.v0 = r.Variable(t + 5)
+            >>> m.min_value = r.Metric(m.v0.timeseries.series_min())
+            >>> m()
+            >>> m.v0.value
+            array([[ 5,  6,  7,  8,  9, 10, 11, 12, 13, 14]])
+
+            >>> m.min_value.value
+            array([5])
+    """
 
     OP_REPR = "min"
 
@@ -235,7 +277,19 @@ class sum(reno.components.Operation):
 
 
 class nonzero(reno.components.Operation):
-    """Similar to the numpy nonzero or the numpy ``where`` specified with only a condition."""
+    """Similar to the numpy nonzero or the numpy ``where`` specified with only a condition.
+
+    Note that in numpy evaluation this returns a "jagged" array, padded at the end by np.NaN values.
+    Also note that since np.NaN is a float value, the resulting array is converted to floats.
+
+    Example:
+        .. code-block::
+
+            >>> import reno as r
+            >>> v = r.Variable([0, 0, 1, 0, 0, 0, 1])
+            >>> r.nonzero(v).eval()
+            array([2., 6., nan, nan, nan, nan, nan])
+    """
 
     def __init__(self, a):
         super().__init__(a)
@@ -330,7 +384,7 @@ class diff(reno.components.Operation):
 
 
 class nanindex(reno.components.Operation):
-    """Special index op for jagged arrays that come from the nonzero op. These convert any negative values to
+    """Special index op for jagged arrays that come from the nonzero op. These convert any negative indices to
     ignore any nans at the end of each row. Is equivalent to normal index for pymc math.
     """
 
@@ -743,7 +797,23 @@ class sub(reno.components.Operation):
 
 
 class mul(reno.components.Operation):
-    """a * b"""
+    """a * b
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(3) * 2
+            (* Scalar(3) Scalar(2))
+
+            >>> (r.Scalar(3) * 2).eval()
+            6
+
+            >>> a = r.Variable([0, 1, 2])
+            >>> b = r.Variable([3, 4, 5])
+            >>> (a * b).eval()
+            array([0, 4, 10])
+    """
 
     OP_REPR = "*"
 
@@ -767,7 +837,23 @@ class mul(reno.components.Operation):
 
 
 class div(reno.components.Operation):
-    """a / b"""
+    """a / b
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(4) / 2
+            (/ Scalar(4) Scalar(2))
+
+            >>> (r.Scalar(4) / 2).eval()
+            2.0
+
+            >>> a = r.Variable([0, 1, 2])
+            >>> b = r.Variable([3, 4, 5])
+            >>> (a / b).eval()
+            array([0, 0.25, 0.4])
+    """
 
     OP_REPR = "/"
 
@@ -1408,7 +1494,7 @@ class repeated_pulse(reno.components.Operation):
         super().__init__(start, interval, width, self.sub_eq)
 
     def latex(self, **kwargs):
-        return f"\\text{{repeated_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
+        return f"\\text{{repeated\\_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
         return self.sub_equation_parts[3].eval(**kwargs)
@@ -1963,7 +2049,10 @@ class Observation(reno.components.Distribution):
     """
 
     def __init__(
-        self, ref: reno.components.Reference, sigma: float = 1.0, data: list = None
+        self,
+        ref: reno.components.Reference | reno.components.EquationPart,
+        sigma: float = 1.0,
+        data: list = None,
     ):
         super().__init__()
         self.ref = ref
