@@ -1,0 +1,53 @@
+reno.components.HistoricalValue
+===============================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: HistoricalValue
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~HistoricalValue.__init__
+      ~HistoricalValue.astype
+      ~HistoricalValue.clip
+      ~HistoricalValue.equal
+      ~HistoricalValue.eval
+      ~HistoricalValue.find_refs_of_type
+      ~HistoricalValue.get_shape
+      ~HistoricalValue.get_type
+      ~HistoricalValue.is_static
+      ~HistoricalValue.latex
+      ~HistoricalValue.mean
+      ~HistoricalValue.not_equal
+      ~HistoricalValue.parse
+      ~HistoricalValue.pt
+      ~HistoricalValue.pt_str
+      ~HistoricalValue.qual_name
+      ~HistoricalValue.seek_refs
+      ~HistoricalValue.series_max
+      ~HistoricalValue.series_min
+      ~HistoricalValue.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~HistoricalValue.dtype
+      ~HistoricalValue.model
+      ~HistoricalValue.shape
+      ~HistoricalValue.timeseries
+      ~HistoricalValue.label
+      ~HistoricalValue.doc

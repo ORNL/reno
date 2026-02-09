@@ -1,0 +1,50 @@
+reno.ops.Bernoulli
+==================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: Bernoulli
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Bernoulli.__init__
+      ~Bernoulli.astype
+      ~Bernoulli.clean_part_repr
+      ~Bernoulli.clip
+      ~Bernoulli.equal
+      ~Bernoulli.eval
+      ~Bernoulli.find_refs_of_type
+      ~Bernoulli.get_shape
+      ~Bernoulli.get_type
+      ~Bernoulli.is_static
+      ~Bernoulli.latex
+      ~Bernoulli.mean
+      ~Bernoulli.not_equal
+      ~Bernoulli.populate
+      ~Bernoulli.pt
+      ~Bernoulli.pt_str
+      ~Bernoulli.seek_refs
+      ~Bernoulli.series_max
+      ~Bernoulli.series_min
+      ~Bernoulli.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Bernoulli.dtype
+      ~Bernoulli.shape
+      ~Bernoulli.timeseries

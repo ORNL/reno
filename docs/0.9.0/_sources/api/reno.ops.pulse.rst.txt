@@ -1,0 +1,52 @@
+reno.ops.pulse
+==============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: pulse
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~pulse.__init__
+      ~pulse.astype
+      ~pulse.clip
+      ~pulse.equal
+      ~pulse.eval
+      ~pulse.find_refs_of_type
+      ~pulse.get_shape
+      ~pulse.get_type
+      ~pulse.is_static
+      ~pulse.latex
+      ~pulse.mean
+      ~pulse.not_equal
+      ~pulse.op_eval
+      ~pulse.op_repr
+      ~pulse.op_types
+      ~pulse.pt
+      ~pulse.pt_str
+      ~pulse.seek_refs
+      ~pulse.series_max
+      ~pulse.series_min
+      ~pulse.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~pulse.OP_REPR
+      ~pulse.dtype
+      ~pulse.shape
+      ~pulse.timeseries

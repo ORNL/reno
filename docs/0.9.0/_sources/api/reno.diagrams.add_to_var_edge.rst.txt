@@ -1,0 +1,6 @@
+reno.diagrams.add\_to\_var\_edge
+================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_to_var_edge

@@ -1,0 +1,52 @@
+reno.ops.sin
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: sin
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~sin.__init__
+      ~sin.astype
+      ~sin.clip
+      ~sin.equal
+      ~sin.eval
+      ~sin.find_refs_of_type
+      ~sin.get_shape
+      ~sin.get_type
+      ~sin.is_static
+      ~sin.latex
+      ~sin.mean
+      ~sin.not_equal
+      ~sin.op_eval
+      ~sin.op_repr
+      ~sin.op_types
+      ~sin.pt
+      ~sin.pt_str
+      ~sin.seek_refs
+      ~sin.series_max
+      ~sin.series_min
+      ~sin.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~sin.OP_REPR
+      ~sin.dtype
+      ~sin.shape
+      ~sin.timeseries

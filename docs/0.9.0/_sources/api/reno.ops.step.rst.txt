@@ -1,0 +1,52 @@
+reno.ops.step
+=============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: step
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~step.__init__
+      ~step.astype
+      ~step.clip
+      ~step.equal
+      ~step.eval
+      ~step.find_refs_of_type
+      ~step.get_shape
+      ~step.get_type
+      ~step.is_static
+      ~step.latex
+      ~step.mean
+      ~step.not_equal
+      ~step.op_eval
+      ~step.op_repr
+      ~step.op_types
+      ~step.pt
+      ~step.pt_str
+      ~step.seek_refs
+      ~step.series_max
+      ~step.series_min
+      ~step.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~step.OP_REPR
+      ~step.dtype
+      ~step.shape
+      ~step.timeseries

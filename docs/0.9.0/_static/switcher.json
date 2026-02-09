@@ -1,0 +1,50 @@
+[
+    {
+        "name": "0.8.0 (stable)",
+        "version": "0.8.0",
+        "url": "https://ornl.github.io/reno/stable/",
+        "preferred": true
+    },
+    {
+        "name": "0.7.0",
+        "version": "0.7.0",
+        "url": "https://ornl.github.io/reno/0.7.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.6.0",
+        "version": "0.6.0",
+        "url": "https://ornl.github.io/reno/0.6.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.5.0",
+        "version": "0.5.0",
+        "url": "https://ornl.github.io/reno/0.5.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.4.0",
+        "version": "0.4.0",
+        "url": "https://ornl.github.io/reno/0.4.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.3.0",
+        "version": "0.3.0",
+        "url": "https://ornl.github.io/reno/0.3.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.2.0",
+        "version": "0.2.0",
+        "url": "https://ornl.github.io/reno/0.2.0/",
+        "preferred": false
+    },
+    {
+        "name": "0.1.1",
+        "version": "0.1.1",
+        "url": "https://ornl.github.io/reno/0.1.1/",
+        "preferred": false
+    }
+]

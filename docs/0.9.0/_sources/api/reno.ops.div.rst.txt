@@ -1,0 +1,52 @@
+reno.ops.div
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: div
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~div.__init__
+      ~div.astype
+      ~div.clip
+      ~div.equal
+      ~div.eval
+      ~div.find_refs_of_type
+      ~div.get_shape
+      ~div.get_type
+      ~div.is_static
+      ~div.latex
+      ~div.mean
+      ~div.not_equal
+      ~div.op_eval
+      ~div.op_repr
+      ~div.op_types
+      ~div.pt
+      ~div.pt_str
+      ~div.seek_refs
+      ~div.series_max
+      ~div.series_min
+      ~div.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~div.OP_REPR
+      ~div.dtype
+      ~div.shape
+      ~div.timeseries

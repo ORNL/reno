@@ -1,0 +1,877 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Components &#8212; Reno 0.9.0 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user/components';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ornl.github.io/reno/stable/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.9.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Math in Reno" href="math.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <dialog id="pst-search-dialog">
+
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+
+
+
+
+
+    <p class="title logo__title">Reno 0.9.0 documentation</p>
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+
+
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+
+
+
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+
+
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.html">Math in Reno</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayes.html">Bayesian Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="viz.html">Visualizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explorer.html">Model Explorer UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submodels.html">Submodels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending Reno</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../user_guide.html" class="nav-link">User Guide</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Components</span></li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="components">
+<h1>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h1>
+<p>Reno models are based primarily on <a class="reference external" href="https://en.wikipedia.org/wiki/Stock_and_flow">stocks and flows</a>. A model is created by
+defining all of these components and the corresponding equations that make them
+up.</p>
+<p>The equations themselves and how to construct them are discussed in more depth
+on the <a class="reference internal" href="math.html#math-in-reno"><span class="std std-ref">Math in Reno</span></a> page, while this page primarily focuses on the higher
+level Flow/Stock/Variable components.</p>
+<section id="flows">
+<h2>Flows<a class="headerlink" href="#flows" title="Link to this heading">#</a></h2>
+<p>Flows are equations that define rates of change, or represent how much
+material/information moves over time.</p>
+<p>Flows are created with the <a class="reference internal" href="../api/reno.components.Flow.html#reno.components.Flow" title="reno.components.Flow"><code class="xref py py-class docutils literal notranslate"><span class="pre">reno.Flow</span></code></a> class, and the equation can either be
+directly provided in the constructor or by setting the <code class="docutils literal notranslate"><span class="pre">.eq</span></code> attribute later
+on:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">TimeRef</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">reno</span>
+
+<span class="c1"># create a flow with an equation of &quot;5&quot;</span>
+<span class="n">faucet</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># 5 units per timestep</span>
+
+<span class="c1"># change the equation to vary sinusoidally with time</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">TimeRef</span><span class="p">()</span>  <span class="c1"># a TimeRef instance is a special type of variable that</span>
+               <span class="c1"># always refers to the current timestep in the simulation</span>
+<span class="n">faucet</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</section>
+<section id="stocks">
+<h2>Stocks<a class="headerlink" href="#stocks" title="Link to this heading">#</a></h2>
+<p>A stock represents an accumulation of material or information, or some quantity
+thereof over time.</p>
+<p>Stock equations are defined exclusively in terms of flows, in-flows (rates of
+material moving <em>into</em> the stock) and out-flows (rates of material moving <em>out
+of</em> the stock.)</p>
+<p>Creating stocks in Reno are done via the <code class="docutils literal notranslate"><span class="pre">Stock</span></code> class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span>
+
+<span class="n">tub_water_level</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="defining-stock-equations">
+<h3>Defining stock equations<a class="headerlink" href="#defining-stock-equations" title="Link to this heading">#</a></h3>
+<p>Stock equations are defined by setting up in-flows and out-flows. The basic
+syntax for doing this uses the <code class="docutils literal notranslate"><span class="pre">+=</span></code> operator for in-flows and <code class="docutils literal notranslate"><span class="pre">-=</span></code> operator for
+outflows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">my_inflow</span><span class="p">,</span> <span class="n">my_outflow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">()</span>
+<span class="n">my_stock</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">()</span>
+
+<span class="n">my_stock</span> <span class="o">+=</span> <span class="n">my_inflow</span>
+<span class="n">my_stock</span> <span class="o">-=</span> <span class="n">my_outflow</span>
+</pre></div>
+</div>
+<p>A slightly more readable syntax that allows constructing whole “chains” of
+in-flow/out-flows can be done with the <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> operators, where the
+arrows indicate the direction of a flow in relation to the stock on the other
+side:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">inflow</span><span class="p">,</span> <span class="n">midflow</span><span class="p">,</span> <span class="n">outflow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">()</span>
+<span class="n">stock1</span><span class="p">,</span> <span class="n">stock2</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">(),</span> <span class="n">Stock</span><span class="p">()</span>
+
+<span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock1</span> <span class="o">&gt;&gt;</span> <span class="n">midflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock2</span> <span class="o">&gt;&gt;</span> <span class="n">outflow</span>
+</pre></div>
+</div>
+<p>Specifically a <code class="docutils literal notranslate"><span class="pre">stock</span> <span class="pre">&gt;&gt;</span> <span class="pre">flow</span></code> or <code class="docutils literal notranslate"><span class="pre">flow</span> <span class="pre">&lt;&lt;</span> <span class="pre">stock</span></code> makes <code class="docutils literal notranslate"><span class="pre">flow</span></code> an
+<strong>out</strong>-flow of <code class="docutils literal notranslate"><span class="pre">stock</span></code>, and <code class="docutils literal notranslate"><span class="pre">stock</span> <span class="pre">&lt;&lt;</span> <span class="pre">flow</span></code> or <code class="docutils literal notranslate"><span class="pre">flow</span> <span class="pre">&gt;&gt;</span> <span class="pre">stock</span></code> makes
+<code class="docutils literal notranslate"><span class="pre">flow</span></code> an <strong>in</strong>-flow to <code class="docutils literal notranslate"><span class="pre">stock</span></code>.</p>
+<p>Chains of these <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> operations work because they are
+interpreted left to right, and the “return” value of an individual operation
+is always the right-most component, e.g. <code class="docutils literal notranslate"><span class="pre">component2</span></code> in <code class="docutils literal notranslate"><span class="pre">component1</span> <span class="pre">&gt;&gt;</span>
+<span class="pre">component2</span></code>.</p>
+<p>As a result,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock1</span> <span class="o">&gt;&gt;</span> <span class="n">midflow</span>
+</pre></div>
+</div>
+<p>is equivalent to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock1</span>
+<span class="n">stock1</span> <span class="o">&gt;&gt;</span> <span class="n">midflow</span>
+</pre></div>
+</div>
+</section>
+<section id="implicit-stock-in-flows">
+<h3>Implicit stock in-flows<a class="headerlink" href="#implicit-stock-in-flows" title="Link to this heading">#</a></h3>
+<p>When an in-flow to a stock is set (either through <code class="docutils literal notranslate"><span class="pre">+=</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>)
+with an equation rather than just a flow, an <strong>implicit</strong> flow defined by that
+equation is created and applied.</p>
+<p>(e.g. if there’s some loss involved between the outflow of one stock and the
+inflow for another, you could of course explicitly model this with two separate
+flows as well)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">inflow</span><span class="p">,</span> <span class="n">midflow</span><span class="p">,</span> <span class="n">outflow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">()</span>
+<span class="n">stock1</span><span class="p">,</span> <span class="n">stock2</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">(),</span> <span class="n">Stock</span><span class="p">()</span>
+
+<span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock1</span> <span class="o">&gt;&gt;</span> <span class="n">midflow</span>
+<span class="p">(</span><span class="n">midflow</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">stock2</span> <span class="o">&gt;&gt;</span> <span class="n">outflow</span>
+</pre></div>
+</div>
+<p>by combining operations together on the same line with commas, you can still do
+a full chain-like definition when an inflow needs to be a slightly modified version:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">inflow</span><span class="p">,</span> <span class="n">midflow</span><span class="p">,</span> <span class="n">outflow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">(),</span> <span class="n">Flow</span><span class="p">()</span>
+<span class="n">stock1</span><span class="p">,</span> <span class="n">stock2</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">(),</span> <span class="n">Stock</span><span class="p">()</span>
+
+<span class="n">inflow</span> <span class="o">&gt;&gt;</span> <span class="n">stock1</span> <span class="o">&gt;&gt;</span> <span class="n">midflow</span><span class="p">,</span> <span class="p">(</span><span class="n">midflow</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">stock2</span> <span class="o">&gt;&gt;</span> <span class="n">outflow</span>
+</pre></div>
+</div>
+</section>
+<section id="using-stocks-in-other-equations">
+<h3>Using stocks in other equations<a class="headerlink" href="#using-stocks-in-other-equations" title="Link to this heading">#</a></h3>
+<p>(This might need to have its own section at the end to discuss the difference
+between circular references involving stocks and those between flows)</p>
+<p>Referencing a stock always refers to the stock’s value in the <em>previous</em>
+timestep. This allows a form of circular reference between stocks</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">reno</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stock</span><span class="p">,</span> <span class="n">Flow</span>
+
+
+<span class="n">my_flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">()</span>
+<span class="n">my_stock</span> <span class="o">=</span> <span class="n">Stock</span><span class="p">()</span>
+
+<span class="n">my_stock</span> <span class="o">+=</span> <span class="n">my_flow</span>
+<span class="n">my_flow</span><span class="o">.</span><span class="n">eq</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">-</span> <span class="n">my_stock</span>
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">my_stock</span></code> is incremented by the value of <code class="docutils literal notranslate"><span class="pre">my_flow</span></code>
+in the current timestep <cite>t</cite>, while the value of <code class="docutils literal notranslate"><span class="pre">my_flow</span></code> for timestep <code class="docutils literal notranslate"><span class="pre">t</span></code>
+is 10 minus the value of <code class="docutils literal notranslate"><span class="pre">my_stock</span></code> in timestep <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p>
+<p>In other words, the equations for these would translate to:</p>
+<ul class="simple">
+<li><p>my_stock(t) = my_stock(t-1) + my_flow(t)</p></li>
+<li><p>my_flow(t) = 10 - my_stock(t-1)</p></li>
+</ul>
+</section>
+</section>
+<section id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h2>
+<p>A variable is any other equation or value that can be referenced in flow (and
+other variable) equations and helps define the user-settable model parameters.
+Variables should be used to specify what can be modified about a
+simulation/what values you want to experiment with.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coffee_process</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">coffee_process</span><span class="p">:</span>
+    <span class="n">drip_speed</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span>
+
+    <span class="n">water</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">coffee</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">()</span>
+    <span class="n">coffee_machine</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="n">drip_speed</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">water</span><span class="p">)</span>
+
+    <span class="n">water</span> <span class="o">&gt;&gt;</span> <span class="n">coffee_machine</span> <span class="o">&gt;&gt;</span> <span class="n">coffee</span>
+</pre></div>
+</div>
+<p>In the above model, <code class="docutils literal notranslate"><span class="pre">drip_speed</span></code> is a variable that directly impacts the
+<code class="docutils literal notranslate"><span class="pre">coffee_machine</span></code> flow/the rate at which <code class="docutils literal notranslate"><span class="pre">coffee</span></code> increases. Since it is a
+free variable/not defined in terms of any other variables, it can be specified
+during a model run to configure the simulation. We can run a couple simulations
+and compare the final coffee stock values (at timestep 10):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coffee_process</span><span class="p">(</span><span class="n">drip_speed</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span><span class="o">.</span><span class="n">coffee</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">36.0</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coffee_process</span><span class="p">(</span><span class="n">drip_speed</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">coffee</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">9.0</span>
+</pre></div>
+</div>
+</section>
+<section id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading">#</a></h2>
+<p>Metrics are a special type of component whose equations run once, after all the
+timesteps of the simulation have been calculated. These equations are normally
+used to retrieve a specific value or run a basic analysis/measurement on
+something. Metrics are useful from a convenience standpoint (making it
+semantically simpler to get e.g. the last value of the <code class="docutils literal notranslate"><span class="pre">coffee</span></code> stock like in
+the previous example), since they are then available to include in Reno’s
+<span class="xref std std-ref">Visuzliations</span>, but they can also be used as targets for observed/measured
+values (“data”) for <a class="reference internal" href="bayes.html#bayesian-inference"><span class="std std-ref">Bayesian Inference</span></a>.</p>
+<p>We can add a metric to the previous system to capture the final value in the
+stock with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coffee_process</span><span class="o">.</span><span class="n">final_coffee_level</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Metric</span><span class="p">(</span><span class="n">coffee</span><span class="o">.</span><span class="n">timeseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This would, for example, allow plotting this final value distribution if an
+input distribution were specified for <code class="docutils literal notranslate"><span class="pre">drip_speed</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="o">=</span> <span class="n">coffee_process</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">drip_speed</span><span class="o">=</span><span class="n">reno</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reno</span><span class="o">.</span><span class="n">plot_trace_refs</span><span class="p">(</span>
+<span class="go">        coffee_process,</span>
+<span class="go">        [run],</span>
+<span class="go">        [</span>
+<span class="go">            coffee_process.drip_speed,</span>
+<span class="go">            coffee_process.coffee,</span>
+<span class="go">            coffee_process.final_coffee_level</span>
+<span class="go">        ],</span>
+<span class="go">        rows=1,</span>
+<span class="go">        cols=3,</span>
+<span class="go">        figsize=(10, 3)</span>
+<span class="go">    )</span>
+</pre></div>
+</div>
+<figure class="align-center">
+<img alt="../_images/coffee_metrics.png" src="../_images/coffee_metrics.png" />
+</figure>
+</section>
+<section id="other-arguments-for-components">
+<h2>Other arguments for components<a class="headerlink" href="#other-arguments-for-components" title="Link to this heading">#</a></h2>
+<section id="min-max">
+<h3>min/max<a class="headerlink" href="#min-max" title="Link to this heading">#</a></h3>
+<p>All stock/flow/variable components take several additional optional arguments.
+Equation minimum/maximum limits can be defined with equations/values via <code class="docutils literal notranslate"><span class="pre">min</span></code>
+and <code class="docutils literal notranslate"><span class="pre">max</span></code>. This can be useful to specify on outflows to avoid sending a stock into
+negative values (e.g. if it represents a physical quantity.) In the coffee
+example above, the <code class="docutils literal notranslate"><span class="pre">coffee_machine</span></code> flow is initialized with a <code class="docutils literal notranslate"><span class="pre">max=water</span></code>,
+meaning that despite the result of the equation itself, the value won’t be
+higher than the water stock in each timestep.</p>
+<p>It is important to note that setting a min/max on a stock <strong>does not modify
+inflow values</strong> to that stock. To highlight this, the system below defines two
+stocks with a flow in between:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">m</span><span class="p">:</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Stock</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">reno</span><span class="o">.</span><span class="n">Flow</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">s1</span><span class="p">)</span>
+
+    <span class="n">s1</span> <span class="o">&gt;&gt;</span> <span class="n">f1</span> <span class="o">&gt;&gt;</span> <span class="n">s2</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">s2</span></code> isn’t allowed to contain more than 10, but the inflow is pulling in 20 at
+each timestep. Running this model for a few steps, we observe that <code class="docutils literal notranslate"><span class="pre">s2</span></code> never goes
+above 10, but <code class="docutils literal notranslate"><span class="pre">s1</span></code> still decreases by 20 each time, resulting in “dropped” material.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">s1</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([100, 80, 60])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([20, 20, 20])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run</span><span class="o">.</span><span class="n">s2</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">array([0, 10, 10])</span>
+</pre></div>
+</div>
+<p>To appropriately bottleneck a stock like this entails also applying limits to
+the flow, possibly using something like the <a class="reference internal" href="math.html#space"><span class="std std-ref">space</span></a> operation discussed on
+the <a class="reference internal" href="math.html#math-in-reno"><span class="std std-ref">Math in Reno</span></a> page.</p>
+</section>
+<section id="dim-dtype">
+<h3>dim/dtype<a class="headerlink" href="#dim-dtype" title="Link to this heading">#</a></h3>
+<p>Specifying the <cite>dtype</cite> (where you pass a regular python type such as <code class="docutils literal notranslate"><span class="pre">float</span></code>,
+<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, etc.) of a component ensures the type of the underlying value and
+will automatically convert as needed. This type assignment occurs on initial
+value population - this either occurs automatically at the beginning of a
+simulation, or you have to call <a class="reference internal" href="../api/reno.components.TrackedReference.html#reno.components.TrackedReference.populate" title="reno.components.TrackedReference.populate"><code class="xref py py-func docutils literal notranslate"><span class="pre">populate()</span></code></a> yourself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">5</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">populate</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">5.0</span>
+</pre></div>
+</div>
+<p>Type information is automatically determined/broadcast when not explicitly specified,
+and converted appropriately when it is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go">(int, int)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go">(float, float)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go">(float, int)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dim</span></code> refers to an optional extra “data dimension” which allows you to work
+with vector data. Operations automatically broadcast according to numpy rules
+(TODO: link broadcasting):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">array([5, 5, 5, 5])</span>
+</pre></div>
+</div>
+<p>Note that manually specifying <code class="docutils literal notranslate"><span class="pre">dim</span></code> only applies if the value is not already
+vectorized:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="go">array([5, 2])</span>
+</pre></div>
+</div>
+</section>
+<section id="cgroup-group">
+<h3>cgroup/group<a class="headerlink" href="#cgroup-group" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">cgroup</span></code> and <code class="docutils literal notranslate"><span class="pre">group</span></code> parameters are used for controlling diagram rendering,
+see TODO: link to visualization cgroups page</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="getting_started.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Getting Started</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="math.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Math in Reno</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flows">Flows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stocks">Stocks</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-stock-equations">Defining stock equations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implicit-stock-in-flows">Implicit stock in-flows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-stocks-in-other-equations">Using stocks in other equations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metrics">Metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-arguments-for-components">Other arguments for components</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#min-max">min/max</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim-dtype">dim/dtype</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cgroup-group">cgroup/group</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user/components.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2025, UT Battelle, LLC.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

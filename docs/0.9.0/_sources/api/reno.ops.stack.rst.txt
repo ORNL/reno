@@ -1,0 +1,52 @@
+reno.ops.stack
+==============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: stack
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~stack.__init__
+      ~stack.astype
+      ~stack.clip
+      ~stack.equal
+      ~stack.eval
+      ~stack.find_refs_of_type
+      ~stack.get_shape
+      ~stack.get_type
+      ~stack.is_static
+      ~stack.latex
+      ~stack.mean
+      ~stack.not_equal
+      ~stack.op_eval
+      ~stack.op_repr
+      ~stack.op_types
+      ~stack.pt
+      ~stack.pt_str
+      ~stack.seek_refs
+      ~stack.series_max
+      ~stack.series_min
+      ~stack.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~stack.OP_REPR
+      ~stack.dtype
+      ~stack.shape
+      ~stack.timeseries

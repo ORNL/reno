@@ -1,0 +1,52 @@
+reno.ops.orient\_timeseries
+===========================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: orient_timeseries
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~orient_timeseries.__init__
+      ~orient_timeseries.astype
+      ~orient_timeseries.clip
+      ~orient_timeseries.equal
+      ~orient_timeseries.eval
+      ~orient_timeseries.find_refs_of_type
+      ~orient_timeseries.get_shape
+      ~orient_timeseries.get_type
+      ~orient_timeseries.is_static
+      ~orient_timeseries.latex
+      ~orient_timeseries.mean
+      ~orient_timeseries.not_equal
+      ~orient_timeseries.op_eval
+      ~orient_timeseries.op_repr
+      ~orient_timeseries.op_types
+      ~orient_timeseries.pt
+      ~orient_timeseries.pt_str
+      ~orient_timeseries.seek_refs
+      ~orient_timeseries.series_max
+      ~orient_timeseries.series_min
+      ~orient_timeseries.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~orient_timeseries.OP_REPR
+      ~orient_timeseries.dtype
+      ~orient_timeseries.shape
+      ~orient_timeseries.timeseries

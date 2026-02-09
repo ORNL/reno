@@ -1,0 +1,50 @@
+reno.ops.Categorical
+====================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: Categorical
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Categorical.__init__
+      ~Categorical.astype
+      ~Categorical.clean_part_repr
+      ~Categorical.clip
+      ~Categorical.equal
+      ~Categorical.eval
+      ~Categorical.find_refs_of_type
+      ~Categorical.get_shape
+      ~Categorical.get_type
+      ~Categorical.is_static
+      ~Categorical.latex
+      ~Categorical.mean
+      ~Categorical.not_equal
+      ~Categorical.populate
+      ~Categorical.pt
+      ~Categorical.pt_str
+      ~Categorical.seek_refs
+      ~Categorical.series_max
+      ~Categorical.series_min
+      ~Categorical.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Categorical.dtype
+      ~Categorical.shape
+      ~Categorical.timeseries

@@ -1,0 +1,52 @@
+reno.ops.bool\_or
+=================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: bool_or
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~bool_or.__init__
+      ~bool_or.astype
+      ~bool_or.clip
+      ~bool_or.equal
+      ~bool_or.eval
+      ~bool_or.find_refs_of_type
+      ~bool_or.get_shape
+      ~bool_or.get_type
+      ~bool_or.is_static
+      ~bool_or.latex
+      ~bool_or.mean
+      ~bool_or.not_equal
+      ~bool_or.op_eval
+      ~bool_or.op_repr
+      ~bool_or.op_types
+      ~bool_or.pt
+      ~bool_or.pt_str
+      ~bool_or.seek_refs
+      ~bool_or.series_max
+      ~bool_or.series_min
+      ~bool_or.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~bool_or.OP_REPR
+      ~bool_or.dtype
+      ~bool_or.shape
+      ~bool_or.timeseries

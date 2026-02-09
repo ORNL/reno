@@ -1,0 +1,52 @@
+reno.ops.series\_max
+====================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: series_max
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~series_max.__init__
+      ~series_max.astype
+      ~series_max.clip
+      ~series_max.equal
+      ~series_max.eval
+      ~series_max.find_refs_of_type
+      ~series_max.get_shape
+      ~series_max.get_type
+      ~series_max.is_static
+      ~series_max.latex
+      ~series_max.mean
+      ~series_max.not_equal
+      ~series_max.op_eval
+      ~series_max.op_repr
+      ~series_max.op_types
+      ~series_max.pt
+      ~series_max.pt_str
+      ~series_max.seek_refs
+      ~series_max.series_max
+      ~series_max.series_min
+      ~series_max.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~series_max.OP_REPR
+      ~series_max.dtype
+      ~series_max.shape
+      ~series_max.timeseries

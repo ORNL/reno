@@ -1,0 +1,25 @@
+reno.viz.ModelViewer
+====================
+
+.. currentmodule:: reno.viz
+
+.. autoclass:: ModelViewer
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ModelViewer.__init__
+      ~ModelViewer.assign_controls
+      ~ModelViewer.create_variable_controls
+      ~ModelViewer.rerender_equations
+      ~ModelViewer.rerender_graph
+      ~ModelViewer.rerun
+      ~ModelViewer.simulate_button_press

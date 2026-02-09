@@ -1,0 +1,52 @@
+reno.ops.clip
+=============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: clip
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~clip.__init__
+      ~clip.astype
+      ~clip.clip
+      ~clip.equal
+      ~clip.eval
+      ~clip.find_refs_of_type
+      ~clip.get_shape
+      ~clip.get_type
+      ~clip.is_static
+      ~clip.latex
+      ~clip.mean
+      ~clip.not_equal
+      ~clip.op_eval
+      ~clip.op_repr
+      ~clip.op_types
+      ~clip.pt
+      ~clip.pt_str
+      ~clip.seek_refs
+      ~clip.series_max
+      ~clip.series_min
+      ~clip.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~clip.OP_REPR
+      ~clip.dtype
+      ~clip.shape
+      ~clip.timeseries
