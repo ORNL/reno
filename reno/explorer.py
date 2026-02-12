@@ -180,6 +180,7 @@ class FreeVarsEditor(pn.viewable.Viewer):
     def create_variable_controls(self):
         """Set up a bunch of ReferenceEditors for the free variables."""
         for ref_name in self.model.free_refs(recursive=True):
+            print("Getting reference ", ref_name)
             editor = ReferenceEditor(
                 self.model, ref_name, self.model._is_init_ref(ref_name)
             )
@@ -187,7 +188,12 @@ class FreeVarsEditor(pn.viewable.Viewer):
             editor.control = control
 
             ref = getattr(self.model, ref_name)
-            if ref is not None and ref.doc is not None:
+            print(ref)
+            if (
+                not self.model._is_init_ref(ref_name)
+                and ref is not None
+                and ref.doc is not None
+            ):
                 control.description = ref.doc
 
             self.controls.append(control)
