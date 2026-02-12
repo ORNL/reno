@@ -41,7 +41,14 @@ test: ## run unit tests
 
 .PHONY: run
 run: ## run the standalone web explorer
-	$(MAMBA) run -n $(ENV_NAME) python -m reno.explorer
+	$(MAMBA) run -n $(ENV_NAME) python -m reno.explorer --websocket-origin localhost:5006
+
+.PHONY: example_models
+example_models: ## save the example models so the explorer can find them
+	$(MAMBA) run -n $(ENV_NAME) python -c "from reno.examples.tub import tub; tub.save('work_sessions/models/tub.json')"
+	$(MAMBA) run -n $(ENV_NAME) python -c "from reno.examples.lotka_volterra import predator_prey; predator_prey.save('work_sessions/models/predator_prey.json')"
+	$(MAMBA) run -n $(ENV_NAME) python -c "from reno.examples.one_compartment import one_compartment_model; one_compartment_model.save('work_sessions/models/one_compartment.json')"
+	$(MAMBA) run -n $(ENV_NAME) python -c "from reno.examples.urban_growth import urban_growth; urban_growth.save('work_sessions/models/urban_growth.json')"
 
 .PHONY: publish
 publish: ## build and upload latest version to pypi

@@ -6,8 +6,10 @@ import datetime
 import io
 import json
 import os
+import traceback
 from collections.abc import Callable
 from functools import partial
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import panel as pn
@@ -73,22 +75,30 @@ class Explorer(pn.custom.PyComponent):
     def run_prior(self):
         """Run pymc on the model for priors only."""
         self.set_running(True)
-        self.vars_editor.assign_from_controls()
-        trace = self.model.pymc(compute_prior_only=True, keep_config=True)
-        config = self.model.config()
-        self.runs_list.add_run(config=config, trace=trace.prior, observations=None)
+        try:
+            self.vars_editor.assign_from_controls()
+            trace = self.model.pymc(compute_prior_only=True, keep_config=True)
+            config = self.model.config()
+            self.runs_list.add_run(config=config, trace=trace.prior, observations=None)
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to run model: {e}", 0)
+            print(traceback.format_exc())
         self.set_running(False)
 
     def run_posterior(self):
         """Run pymc on the model to get posteriors."""
         self.set_running(True)
-        self.vars_editor.assign_from_controls()
-        observations = self.observables.get_observations()
-        trace = self.model.pymc(keep_config=True, observations=observations)
-        config = self.model.config()
-        self.runs_list.add_run(
-            config=config, trace=trace.posterior, observations=observations
-        )
+        try:
+            self.vars_editor.assign_from_controls()
+            observations = self.observables.get_observations()
+            trace = self.model.pymc(keep_config=True, observations=observations)
+            config = self.model.config()
+            self.runs_list.add_run(
+                config=config, trace=trace.posterior, observations=observations
+            )
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to run model: {e}", 0)
+            print(traceback.format_exc())
         self.set_running(False)
 
     def _handle_selected_rows_changed(self, runs):
@@ -1066,7 +1076,7 @@ class EditableTextPane(
         # make text color work regardless of dark/light theme
         text_color_css = """
             div {
-                color: var(--background-text-color);
+                color: var(--panel-on-surface-color);
             }
             a {
                 color: #F4A460;
@@ -1584,7 +1594,7 @@ class BetterAccordion(pn.custom.JSComponent):
     """
 
 
-def create_explorer():
+def create_explorer():  # noqa: C901
     """Set up and return full servable interactive explorer app UI inside a pretty template."""
     # NOTE: this is effectively a class with all the local functions etc,
     # leaving as a function because of how pn.serve works - it expects a
@@ -1592,9 +1602,12 @@ def create_explorer():
     # This ended up being a much more flexible approach than the typical `panel
     # serve` CLI. (namely the ability to pass in custom args to this file's CLI,
     # such as the session folder `--session-path` arg)
-    pn.extension("gridstack", "texteditor", "terminal")
+    pn.extension("gridstack", "texteditor", "terminal", notifications=True)
 
     active_explorer = None
+    active_session_name = ""
+    if "active_sessions" not in pn.state.cache:
+        pn.state.cache["active_sessions"] = {}
 
     # find and load any models from pre-defined model list
     # (the /models folder wherever sessions are being stored)
@@ -1621,30 +1634,87 @@ def create_explorer():
         """Load all session data for a particular exploration from the specified path."""
         # (path is after *args because this is the target of an event handler
         # and is populated via a partial)
-        nonlocal active_explorer, session_name, main_ui_container
+        nonlocal active_explorer, session_name, main_ui_container, active_session_name
 
         main_ui_container.loading = True
-        with open(path) as infile:
-            data = json.load(infile)
-        ex = Explorer.from_dict(data)
-        main_ui_container.objects = [ex._layout]
+        try:
+            with open(path) as infile:
+                data = json.load(infile)
+            ex = Explorer.from_dict(data)
+            main_ui_container.objects = [ex._layout]
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to load session: {e}", 0)
+            print(traceback.format_exc())
+
         main_ui_container.loading = False
 
         path_session_name = path[: path.rfind(".")]
+        path_session_name = str(Path(path_session_name).relative_to(SESSION_FOLDER))
         session_name.value = path_session_name
         active_explorer = ex
+        pn.state.cache["active_sessions"][path_session_name] = ex
+        active_session_name = path_session_name
+        refresh_active_sessions()
 
     def new_model_session(*args, model_path: str):
         """Start a blank exploration session using a model loaded from the specified path."""
-        nonlocal active_explorer, session_name, main_ui_container
+        nonlocal active_explorer, session_name, main_ui_container, active_session_name
 
-        model_path_name = model_path[model_path.rfind("/") + 1 : model_path.rfind(".")]
-        model = reno.model.Model.load(model_path)
-        ex = Explorer(model)
-        main_ui_container.objects = [ex._layout]
-        session_date = datetime.datetime.now().date().isoformat()
-        session_name.value = f"{model_path_name}/Session-{session_date}"
-        active_explorer = ex
+        try:
+            model_path_name = model_path[
+                model_path.rfind("/") + 1 : model_path.rfind(".")
+            ]
+            model = reno.model.Model.load(model_path)
+            ex = Explorer(model)
+            main_ui_container.objects = [ex._layout]
+            session_date = datetime.datetime.now().date().isoformat()
+            name = f"{model_path_name}/Session-{session_date}"
+
+            # make sure we don't conflict with an existing active session
+            name_check = name
+            i = 1
+            while name_check in pn.state.cache["active_sessions"]:
+                name_check = f"{name}_{i}"
+                i += 1
+            name = name_check
+
+            session_name.value = name
+            active_explorer = ex
+            active_session_name = name
+
+            pn.state.cache["active_sessions"][session_name.value] = ex
+            refresh_active_sessions()
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to create new model session: {e}", 0)
+            print(traceback.format_exc())
+
+    def switch_active_session(*args, name: str):
+        """Change to a different explorer UI (different active session)"""
+        nonlocal active_explorer, session_name, main_ui_container, active_session_name
+        try:
+            ex = pn.state.cache["active_sessions"][name]
+            main_ui_container.objects = [ex._layout]
+            session_name.value = name
+            active_explorer = ex
+            active_session_name = name
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to load active session: {e}", 0)
+            print(traceback.format_exc())
+
+    def close_session(*args, name: str):
+        """Remove explorer from cache."""
+        nonlocal active_explorer, active_session_name
+
+        if name in pn.state.cache["active_sessions"]:
+            del pn.state.cache["active_sessions"][name]
+
+        if name == active_session_name:
+            main_ui_container.objects = []
+            session_name.value = ""
+            active_explorer = None
+            active_session_name = None
+
+        refresh_active_sessions()
 
     def get_recursive_sessions(starting_path: str):
         """Find all previously saved exploration sessions by recursing through the folders
@@ -1693,17 +1763,52 @@ def create_explorer():
             *get_recursive_sessions(SESSION_FOLDER),
         ]
 
+    def get_active_session_switchers():
+        controls = []
+        for name in pn.state.cache["active_sessions"]:
+            button = pn.widgets.Button(
+                name=name, button_type="primary", sizing_mode="stretch_width"
+            )
+            button.on_click(partial(switch_active_session, name=name))
+
+            del_btn = pn.widgets.Button(name="x", button_type="danger")
+            del_btn.on_click(partial(close_session, name=name))
+            controls.append(pn.Row(button, del_btn))
+        return controls
+
+    def refresh_active_sessions():
+        """Create an option for each explorer that's been opened."""
+        nonlocal active_session_controls
+
+        active_session_controls.objects = [
+            pn.pane.HTML("<b>Switch active session:</b>"),
+            *get_active_session_switchers(),
+        ]
+
     def save_session(self, *args):
         """Save the current system exploration session to whatever path is set in the
         session_name widget."""
-        data = active_explorer.to_dict()
-        filename = session_name.value
+        nonlocal active_session_name
 
-        output_path = f"{SESSION_FOLDER}/{filename}.json"
-        output_folder = output_path[: output_path.rfind("/")]
-        os.makedirs(output_folder, exist_ok=True)
-        with open(output_path, "w") as outfile:
-            json.dump(data, outfile)
+        try:
+            data = active_explorer.to_dict()
+            filename = session_name.value
+
+            # handle changing session name
+            if filename != active_session_name:
+                pn.state.cache["active_sessions"][filename] = active_explorer
+                del pn.state.cache["active_sessions"][active_session_name]
+                active_session_name = filename
+                refresh_active_sessions()
+
+            output_path = f"{SESSION_FOLDER}/{filename}.json"
+            output_folder = output_path[: output_path.rfind("/")]
+            os.makedirs(output_folder, exist_ok=True)
+            with open(output_path, "w") as outfile:
+                json.dump(data, outfile)
+        except Exception as e:
+            pn.state.notifications.error(f"Failed to save session: {e}", 0)
+            print(traceback.format_exc())
 
         refresh_loadable_sessions()
 
@@ -1738,7 +1843,7 @@ def create_explorer():
         padding-bottom: 1px;
         border-radius: 0;
         text-align: left;
-        color: var(--background-text-color) !important;
+        color: var(--panel-on-surface-color) !important;
     }
     .bk-btn-group > button.bk-btn.bk-btn-primary:hover {
         background-color: var(--accent-fill-rest) !important;
@@ -1792,6 +1897,9 @@ def create_explorer():
     # previously saved session "file explorer", left sidebar bottom
     load_session_controls = pn.Column()
 
+    # currently open explorer UIs (active sessions)
+    active_session_controls = pn.Column()
+
     # --- HEADER CONTROLS ---
     # -- save session button (goes in the header next to session name textbox) --
     # SVG for a floppy disk, kids these days don't understand having to fight
@@ -1843,6 +1951,10 @@ def create_explorer():
     refresh_loadable_sessions()
     # --- /LOAD SESSION CONTROLS ---
 
+    # --- ACTIVE SESSION CONTROLS ---
+    refresh_active_sessions()
+    # --- /ACTIVE SESSION CONTROLS ---
+
     # hook up the theme switcher
     pn.state.onload(server_ready)
 
@@ -1854,7 +1966,7 @@ def create_explorer():
         main_layout=None,
         # accent="#2F5F6F",
         accent="#A0522D",
-        sidebar=[new_session_controls, load_session_controls],
+        sidebar=[new_session_controls, load_session_controls, active_session_controls],
         main=[main_ui_container],
         raw_css=[fix_layout_css],
     ).servable()

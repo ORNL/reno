@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Several numpy operations to use their `nan` equivalent (to support "ragged"
-  [in our case `NaN` padded] arrays output from `nonzero`)
+  (in our case `NaN` padded) arrays output from `nonzero`)
 
 ### Fixed
 
