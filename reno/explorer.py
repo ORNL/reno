@@ -540,6 +540,17 @@ class PanesSet(pn.viewable.Viewer):
         self._on_new_controls_needed_callbacks: list[Callable] = []
         self._on_name_changed_callbacks: list[Callable] = []
 
+    def remove_pane(self, *args, pane_to_remove):
+        self.panes.remove(pane_to_remove)
+        new_objs = {}
+        for loc, obj in self.gstack.objects.items():
+            if obj == pane_to_remove:
+                continue
+            new_objs[loc] = obj
+        self.gstack.objects = new_objs
+        self.fire_on_new_controls_needed(None, None)
+        self.invalidate_downloads()
+
     def add_pane(self, pane_to_add):
         """Add the passed model explorer widget and modify the gstack size. This allows
         a constantly growing interface, though this is currently a bit simplistic and
@@ -556,34 +567,43 @@ class PanesSet(pn.viewable.Viewer):
         pane_to_add.on_cache_invalidated(self.invalidate_downloads)
         self.invalidate_downloads()
 
+    def get_pane_delete_button(self, pane):
+        btn = pn.widgets.Button(
+            name=f"Remove {pane.__class__.__name__}", button_type="danger"
+        )
+        btn.on_click(partial(self.remove_pane, pane_to_remove=pane))
+        return btn
+
     def add_text_pane(self):
         """Create a new editable text widget and add it to the tab interface."""
         text_pane = EditableTextPane()
         text_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, text_pane.controls)
+            partial(self.fire_on_new_controls_needed, text_pane.controls, text_pane)
         )
         self.add_pane(text_pane)
-        self.fire_on_new_controls_needed(text_pane.controls)
+        self.fire_on_new_controls_needed(text_pane.controls, text_pane)
 
     def add_plots_pane(self):
         """Create a new plots widget and add it to the tab interface."""
         plots_pane = PlotsPane(self.model)
         plots_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, plots_pane.controls)
+            partial(self.fire_on_new_controls_needed, plots_pane.controls, plots_pane)
         )
         self.add_pane(plots_pane)
         plots_pane.render(self.active_traces)
-        self.fire_on_new_controls_needed(plots_pane.controls)
+        self.fire_on_new_controls_needed(plots_pane.controls, plots_pane)
 
     def add_diagram_pane(self):
         """Create a new stock and flow diagram widget and add it to the tab
         interface."""
         diagram_pane = DiagramPane(self.model)
         diagram_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, diagram_pane.controls)
+            partial(
+                self.fire_on_new_controls_needed, diagram_pane.controls, diagram_pane
+            )
         )
         self.add_pane(diagram_pane)
-        self.fire_on_new_controls_needed(diagram_pane.controls)
+        self.fire_on_new_controls_needed(diagram_pane.controls, diagram_pane)
         diagram_pane.render(self.active_traces)
 
     def on_new_controls_needed(self, callback: Callable):
@@ -594,10 +614,17 @@ class PanesSet(pn.viewable.Viewer):
         """
         self._on_new_controls_needed_callbacks.append(callback)
 
-    def fire_on_new_controls_needed(self, controls_layout):
+    def fire_on_new_controls_needed(self, controls_layout, pane):
         """Trigger the callbacks for the new_controls_needed event."""
         for callback in self._on_new_controls_needed_callbacks:
-            callback([self.controls, controls_layout])
+            if pane is not None:
+                callback(
+                    [self.controls, controls_layout, self.get_pane_delete_button(pane)]
+                )
+            elif controls_layout is not None:
+                callback([self.controls, controls_layout])
+            else:
+                callback([self.controls, "Click on a pane to modify attributes"])
 
     def on_name_changed(self, callback: Callable):
         """Register a function to execute when the tab title is changed.

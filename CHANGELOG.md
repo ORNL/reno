@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Example models directly within the package, see `reno.examples` module
 * Active session switching within the explorer
 * Sample smc progress bar to explorer
+* Ability to remove pane in explorer
 
 ### Fixed
 
