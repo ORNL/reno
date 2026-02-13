@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Active session switching within the explorer
 * Sample smc progress bar to explorer
 * Ability to remove pane in explorer
+* A configuration dataframe pane for explorer
 
 ### Fixed
 

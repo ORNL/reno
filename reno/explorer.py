@@ -12,6 +12,7 @@ from functools import partial
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import panel as pn
 import param
 import PIL
@@ -39,6 +40,9 @@ class Explorer(pn.custom.PyComponent):
         self.view = MainView(self.model)
         self.controls = ViewControls()
         self.runs_list = RunsList()
+
+        self.run_index = 0
+        """Running count of runs for default run name"""
 
         # NOTE: can't get terminal to live update with progress output from pymc
         # runs, haven't sufficiently explored why.
@@ -101,7 +105,13 @@ class Explorer(pn.custom.PyComponent):
             self.vars_editor.assign_from_controls()
             trace = self.model.pymc(compute_prior_only=True, keep_config=True)
             config = self.model.config()
-            self.runs_list.add_run(config=config, trace=trace.prior, observations=None)
+            self.runs_list.add_run(
+                config=config,
+                trace=trace.prior,
+                observations=None,
+                name=f"Prior run ({self.run_index})",
+            )
+            self.run_index += 1
         except Exception as e:
             pn.state.notifications.error(f"Failed to run model: {e}", 0)
             print(traceback.format_exc())
@@ -121,8 +131,12 @@ class Explorer(pn.custom.PyComponent):
             trace = self.model.pymc(keep_config=True, observations=observations)
             config = self.model.config()
             self.runs_list.add_run(
-                config=config, trace=trace.posterior, observations=observations
+                config=config,
+                trace=trace.posterior,
+                observations=observations,
+                name=f"Posterior run ({self.run_index})",
             )
+            self.run_index += 1
             self.runs_list.progress.visible = False
         except Exception as e:
             pn.state.notifications.error(f"Failed to run model: {e}", 0)
@@ -131,7 +145,7 @@ class Explorer(pn.custom.PyComponent):
         self.set_running(False)
 
     def _handle_selected_rows_changed(self, runs):
-        traces = {run[0]: run[2] for run in runs}
+        traces = {run[0]: (run[1], run[2]) for run in runs}
         self.view.update_traces(traces)
 
     def _handle_requested_controls(self, controls_layout):
@@ -509,6 +523,7 @@ class PanesSet(pn.viewable.Viewer):
 
         self.panes = []
         self.active_traces = {}
+        self.active_configs = {}
 
         self.btn_export = pn.widgets.Button(name="Export tab")
         self.btn_export.on_click(self._handle_pnl_export_clicked)
@@ -605,6 +620,17 @@ class PanesSet(pn.viewable.Viewer):
         self.add_pane(diagram_pane)
         self.fire_on_new_controls_needed(diagram_pane.controls, diagram_pane)
         diagram_pane.render(self.active_traces)
+
+    def add_config_pane(self):
+        """Create a config comparison widget and add it to the tab
+        interface."""
+        config_pane = ConfigurationPane(self.model)
+        config_pane.clicker.on_click(
+            partial(self.fire_on_new_controls_needed, config_pane.controls, config_pane)
+        )
+        self.add_pane(config_pane)
+        self.fire_on_new_controls_needed(config_pane.controls, config_pane)
+        config_pane.render(self.active_configs)
 
     def on_new_controls_needed(self, callback: Callable):
         """Register a function to execute whenever a widget within the tab requests
@@ -945,6 +971,55 @@ class PlotsPane(
         return self._layout
 
 
+class ConfigurationPane(
+    pn.widgets.base.WidgetBase, pn.custom.PyComponent, pn.reactive.Reactive
+):
+    """A widget to show differences in configuration between runs."""
+
+    def __init__(self, model, **params):
+        super().__init__(**params)
+
+        self.controls = pn.Param(
+            self,
+            name="Config comparison controls",
+            parameters=[],
+        )
+
+        self.rendered_configs = {}
+
+        self.df = pd.DataFrame()
+        self.df_view = pn.pane.DataFrame()
+
+        self.clicker = ClickablePane(sizing_mode="stretch_both")
+        self.clicker.child = pn.Column(self.df_view)
+
+        self._layout = self.clicker
+        self._on_cache_invalidated_callbacks: list[Callable] = []
+
+    def on_cache_invalidated(self, callback: Callable):
+        """Register a callback for any time a previous exported file will no longer
+        match/cached file is no longer valid or current."""
+        self._on_cache_invalidated_callbacks.append(callback)
+
+    def fire_on_cache_invalidated(self):
+        """Trigger all callback functions registered for the cache_invalidated event."""
+        if not hasattr(self, "_on_cache_invalidated_callbacks"):
+            # can happen from initial param settings before end of init?
+            return
+        for callback in self._on_cache_invalidated_callbacks:
+            callback()
+
+    def render(self, configs=None):
+        if configs is not None:
+            self.rendered_configs = configs
+
+        self.df = pd.DataFrame(self.rendered_configs)
+        self.df_view.object = self.df
+
+    def __panel__(self):
+        return self._layout
+
+
 # see comment above PlotsPane
 # https://github.com/holoviz/panel/issues/7689
 # class DiagramPane(pn.custom.PyComponent):
@@ -1216,15 +1291,18 @@ class MainView(pn.viewable.Viewer):
         self.btn_add_text = pn.widgets.Button(name="Add text")
         self.btn_add_diagram = pn.widgets.Button(name="Add diagram")
         self.btn_add_plots = pn.widgets.Button(name="Add plots")
+        self.btn_add_config = pn.widgets.Button(name="Add config")
 
         self.btn_add_text.on_click(self._handle_pnl_add_text_clicked)
         self.btn_add_diagram.on_click(self._handle_pnl_add_diagram_clicked)
         self.btn_add_plots.on_click(self._handle_pnl_add_plots_clicked)
+        self.btn_add_config.on_click(self._handle_pnl_add_config_clicked)
 
         self.controls = pn.Row(
             self.btn_add_diagram,
             self.btn_add_text,
             self.btn_add_plots,
+            self.btn_add_config,
             pn.Spacer(sizing_mode="stretch_width"),
             self.editing_layout,
             sizing_mode="stretch_width",
@@ -1316,12 +1394,19 @@ class MainView(pn.viewable.Viewer):
     def _handle_pnl_add_plots_clicked(self, *args):
         self.active_tab.add_plots_pane()
 
+    def _handle_pnl_add_config_clicked(self, *args):
+        self.active_tab.add_config_pane()
+
     def update_traces(self, traces):
         """Change the traces being used in the current tab with those passed in."""
-        self.active_tab.active_traces = traces
+        self.active_tab.active_traces = {key: val[1] for key, val in traces.items()}
+        self.active_tab.active_configs = {key: val[0] for key, val in traces.items()}
+
         for pane in self.active_tab.panes:
             if isinstance(pane, (DiagramPane, PlotsPane)):
-                pane.render(traces)
+                pane.render(self.active_tab.active_traces)
+            elif isinstance(pane, ConfigurationPane):
+                pane.render(self.active_tab.active_configs)
 
     @pn.depends("editing_layout.value", watch=True)
     def _handle_edit_layout_changed(self, *args):
@@ -1384,9 +1469,10 @@ class RunRow(pn.viewable.Viewer):
     run_name = param.String("")
 
     def __init__(self, trace, config, observations, **params):
-        # self.config = config
+        self.config = {key: str(val) for key, val in config.items()}
+        print(self.config)
         # TODO: figure out what was making this crash before
-        self.config = None
+        # self.config = None
         self.trace = trace
         self.observations = observations
         super().__init__(**params)
@@ -1394,9 +1480,12 @@ class RunRow(pn.viewable.Viewer):
         self.select_btn = pn.widgets.Button(name="s", button_type="success")
         self.remove_btn = pn.widgets.Button(name="x", button_type="danger")
         self.edit_btn = pn.widgets.Button(name="e")
+        self.done_btn = pn.widgets.Button(name="done")
 
         self.select_btn.on_click(self._handle_pnl_select_btn_clicked)
         self.remove_btn.on_click(self._handle_pnl_remove_btn_clicked)
+        self.edit_btn.on_click(self._handle_pnl_edit_btn_clicked)
+        self.done_btn.on_click(self._handle_pnl_done_btn_clicked)
 
         self.label = pn.pane.HTML(f"<p>{self.run_name}</p>")
 
@@ -1409,6 +1498,20 @@ class RunRow(pn.viewable.Viewer):
 
         self._selected_callbacks: list[Callable] = []
         self._removed_callbacks: list[Callable] = []
+
+    def reset_view(self):
+        self._layout.objects = [
+            self.select_btn,
+            self.edit_btn,
+            self.label,
+            self.remove_btn,
+        ]
+
+    def edit_view(self):
+        self._layout.objects = [
+            pn.Param(self, parameters=["run_name"], show_labels=False, show_name=False),
+            self.done_btn,
+        ]
 
     def on_selected(self, callback: callable):
         """Register a function for when a run is selected or deselected.
@@ -1441,9 +1544,18 @@ class RunRow(pn.viewable.Viewer):
     @param.depends("run_name", watch=True)
     def _handle_run_name_changed(self, *args):
         self.label.object = f"<p>{self.run_name}</p>"
+        # technically should make separate event handler for name changed, but
+        # it's fine.
+        self.fire_on_selected(self.visible)
 
     def _handle_pnl_remove_btn_clicked(self, *args):
         self.fire_on_removed()
+
+    def _handle_pnl_edit_btn_clicked(self, *args):
+        self.edit_view()
+
+    def _handle_pnl_done_btn_clicked(self, *args):
+        self.reset_view()
 
     @param.depends("visible", watch=True)
     def _update_selected_btn(self):
@@ -1533,10 +1645,10 @@ class RunsList(pn.viewable.Viewer):
                 selected_runs.append((run.run_name, run.config, run.trace))
         return selected_runs
 
-    def add_run(self, config, trace: xr.Dataset, observations):
+    def add_run(self, config, trace: xr.Dataset, observations, name=""):
         """Create a new RunRow with the passed configuration and data."""
         run = RunRow(
-            run_name=f"Run {len(self.runs)}",
+            run_name=name,
             observations=observations,
             trace=trace,
             config=config,
