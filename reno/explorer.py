@@ -581,6 +581,7 @@ class PanesSet(pn.viewable.Viewer):
         self.panes.append(pane_to_add)
         pane_to_add.on_cache_invalidated(self.invalidate_downloads)
         self.invalidate_downloads()
+        print(self.gstack.objects)
 
     def get_pane_delete_button(self, pane):
         btn = pn.widgets.Button(
@@ -716,6 +717,7 @@ class PanesSet(pn.viewable.Viewer):
         print(self.active_traces)
         traces = {key: trace.to_dict() for key, trace in self.active_traces.items()}
         panes = []
+        print("???", self.gstack.objects)
         for loc, obj in self.gstack.objects.items():
             panes.append(
                 {
@@ -724,6 +726,8 @@ class PanesSet(pn.viewable.Viewer):
                     "data": obj.to_dict(),
                 }
             )
+        print("SAVING PANES SET WITH LOCS")
+        print([value["loc"] for value in panes])
 
         data = {
             "tab_name": self.tab_name,
@@ -731,6 +735,7 @@ class PanesSet(pn.viewable.Viewer):
             "height": self.gstack.height,
             "nrows": self.gstack.nrows,
             "cells_height": self.cells_height,
+            "configs": self.active_configs,
         }
         if include_traces:
             data["traces"] = traces
@@ -755,6 +760,8 @@ class PanesSet(pn.viewable.Viewer):
         self.gstack.height = data["height"]
         self.cells_height = data["cells_height"]
 
+        self.active_configs = data["configs"]
+
         for pane_data_and_pos in data["panes"]:
             loc = pane_data_and_pos["loc"]
             loc = (loc[0], loc[1], loc[2], loc[3])
@@ -768,6 +775,9 @@ class PanesSet(pn.viewable.Viewer):
                 pane.render(self.active_traces)
             elif pane_type == "EditableTextPane":
                 pane = EditableTextPane()
+            elif pane_type == "ConfigurationPane":
+                pane = ConfigurationPane(self.model)
+                pane.render(self.active_configs)
             pane.from_dict(pane_data)
             pane.clicker.on_click(
                 partial(self.fire_on_new_controls_needed, pane.controls)
@@ -779,10 +789,11 @@ class PanesSet(pn.viewable.Viewer):
             # reports still works, so we don't bother doing any sort of
             # wonky translation.
             obj_dict[loc] = pane
+            print("ADDING AT", loc)
 
         self.gstack.objects = obj_dict
         self.panes = list(obj_dict.values())
-        print("at end of paneset from_dict", traces)
+        print(self.gstack.objects)
 
     def __panel__(self):
         return self._layout
@@ -1015,6 +1026,20 @@ class ConfigurationPane(
 
         self.df = pd.DataFrame(self.rendered_configs)
         self.df_view.object = self.df
+
+    def to_html(self) -> str:
+        """Get an HTML-compatible string for the contents of this pane. This is
+        used for generating exported standalone reports, see tab_exporter."""
+        return self.df.to_html()
+
+    def to_dict(self) -> dict:
+        """Serialize this pane to a dictionary that can be saved to file."""
+        return {}
+
+    def from_dict(self, data: dict):
+        """Deserialize data into current instance from dictionary previously stored
+        from ``to_dict()``."""
+        return
 
     def __panel__(self):
         return self._layout
@@ -1469,10 +1494,10 @@ class RunRow(pn.viewable.Viewer):
     run_name = param.String("")
 
     def __init__(self, trace, config, observations, **params):
-        self.config = {key: str(val) for key, val in config.items()}
-        print(self.config)
-        # TODO: figure out what was making this crash before
-        # self.config = None
+        if config is not None:
+            self.config = {key: str(val) for key, val in config.items()}
+        else:
+            self.config = None
         self.trace = trace
         self.observations = observations
         super().__init__(**params)
