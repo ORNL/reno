@@ -1491,19 +1491,23 @@ class repeated_pulse(reno.components.Operation):
                 (t >= start) & ((t - start) % interval < width),
             ],
         )
-        super().__init__(start, interval, width, self.sub_eq)
+        # super().__init__(start, interval, width, self.sub_eq)
+        super().__init__(start, interval, width)
 
     def latex(self, **kwargs):
         return f"\\text{{repeated\\_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[3].eval(**kwargs)
+        # return self.sub_equation_parts[3].eval(**kwargs)
+        return self.sub_eq.eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        return self.sub_equation_parts[3].pt(**refs)
+        # return self.sub_equation_parts[3].pt(**refs)
+        return self.sub_eq.pt(**refs)
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        return self.sub_equation_parts[3].pt_str(**refs)
+        # return self.sub_equation_parts[3].pt_str(**refs)
+        return self.sub_eq.pt_str(**refs)
 
 
 class step(reno.components.Operation):

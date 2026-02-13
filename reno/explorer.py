@@ -20,28 +20,7 @@ import xarray as xr
 import reno
 from reno.viz import ReferenceEditor, plot_trace_refs
 
-# https://discourse.pymc.io/t/real-time-mcmc-progress-bar-rendering-in-non-tty-slurm-environments/17532
-# import pymc as pm
-# from pymc.progress_bar import ProgressBarManager
-# old_update = ProgressBarManager.update
-# def new_update(self, chain_idx, is_last, draw, tuning, stats):
-#     print("WHAT?!")
-#     # old_update(self, chain_idx, is_last, draw, tuning, stats)
-# ProgressBarManager.update = new_update
-
 SESSION_FOLDER = ""
-
-
-def monkey_patch_smc_progress():
-    # from rich.progress import Progress
-    from pymc.smc.sampling import CustomProgress
-
-    class CustomSMCProgress(CustomProgress):
-        def update(self, status, task_id, **kwargs):
-            print(task_id, status)
-            super().update(status=status, task_id=task_id, **kwargs)
-
-    reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
 
 
 class Explorer(pn.custom.PyComponent):
@@ -1743,6 +1722,7 @@ def create_explorer():  # noqa: C901
             session_name.value = name
             active_explorer = ex
             active_session_name = name
+            ex.view.active_tab.add_diagram_pane()
 
             pn.state.cache["active_sessions"][session_name.value] = ex
             refresh_active_sessions()

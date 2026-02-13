@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Example models directly within the package, see `reno.examples` module
 * Active session switching within the explorer
+* Sample smc progress bar to explorer
 
 ### Fixed
 
 * Any error within the explorer crashing entire server process
 * Init refs in saved models breaking explorer
+* Error when parsing `repeated_pulse`, incorrectly added additional sub equation
+  part.
 
 
 
