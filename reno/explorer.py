@@ -20,7 +20,28 @@ import xarray as xr
 import reno
 from reno.viz import ReferenceEditor, plot_trace_refs
 
+# https://discourse.pymc.io/t/real-time-mcmc-progress-bar-rendering-in-non-tty-slurm-environments/17532
+# import pymc as pm
+# from pymc.progress_bar import ProgressBarManager
+# old_update = ProgressBarManager.update
+# def new_update(self, chain_idx, is_last, draw, tuning, stats):
+#     print("WHAT?!")
+#     # old_update(self, chain_idx, is_last, draw, tuning, stats)
+# ProgressBarManager.update = new_update
+
 SESSION_FOLDER = ""
+
+
+def monkey_patch_smc_progress():
+    # from rich.progress import Progress
+    from pymc.smc.sampling import CustomProgress
+
+    class CustomSMCProgress(CustomProgress):
+        def update(self, status, task_id, **kwargs):
+            print(task_id, status)
+            super().update(status=status, task_id=task_id, **kwargs)
+
+    reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
 
 
 class Explorer(pn.custom.PyComponent):
@@ -62,6 +83,28 @@ class Explorer(pn.custom.PyComponent):
 
         self._handle_requested_controls(self.view.active_tab.controls)
 
+    def _monkey_patch_smc_progress(outer_self):
+        # from rich.progress import Progress
+        from pymc.smc.sampling import CustomProgress
+
+        class CustomSMCProgress(CustomProgress):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.total = len(self.tasks)
+                self.per_progress = {key: 0.0 for key in self.task_ids}
+                self.explorer_ref = outer_self
+
+            def update(self, status, task_id, **kwargs):
+                # print(task_id, status)
+                self.per_progress[task_id] = float(status[status.rfind(" ") + 1 :])
+                sumtotal = sum([progress for progress in self.per_progress.values()])
+                sumtotal = sumtotal * 100 / len(self.tasks)
+                sumtotal = int(sumtotal)
+                self.explorer_ref.runs_list.progress.value = sumtotal
+                super().update(status=status, task_id=task_id, **kwargs)
+
+        reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
+
     def set_running(self, running: bool):
         """Set the status of the spinney things in various subcomponents
         when things are happening."""
@@ -90,15 +133,22 @@ class Explorer(pn.custom.PyComponent):
         self.set_running(True)
         try:
             self.vars_editor.assign_from_controls()
+            # reno.model.pm.smc.sampling.CustomProgress = None
+            self.runs_list.progress.bar_color = "success"
+            self.runs_list.progress.visible = True
+            self.runs_list.progress.value = -1
+            self._monkey_patch_smc_progress()
             observations = self.observables.get_observations()
             trace = self.model.pymc(keep_config=True, observations=observations)
             config = self.model.config()
             self.runs_list.add_run(
                 config=config, trace=trace.posterior, observations=observations
             )
+            self.runs_list.progress.visible = False
         except Exception as e:
             pn.state.notifications.error(f"Failed to run model: {e}", 0)
             print(traceback.format_exc())
+            self.runs_list.progress.bar_color = "danger"
         self.set_running(False)
 
     def _handle_selected_rows_changed(self, runs):
@@ -1424,7 +1474,9 @@ class RunRow(pn.viewable.Viewer):
 
 class RunsList(pn.viewable.Viewer):
     """Collection of RunRows, tracks and allows choosing which previous runs to include in
-    main view for current tab."""
+    main view for current tab.
+
+    Includes optional run progress bar for showing status of in-progress run."""
 
     # TODO: the goal is to make selection apply per tab, but this isn't actually
     # implemented yet.
@@ -1433,6 +1485,9 @@ class RunsList(pn.viewable.Viewer):
         super().__init__(**params)
         self.runs = []
         self._layout = pn.Column()
+
+        # self.progress = pn.indicators.Progress(sizing_mode="stretch_width", visible=False, max=100)
+        self.progress = pn.indicators.Progress(visible=False, max=100)
 
         self._selected_runs_changed_callbacks: list[Callable] = []
 
@@ -1488,7 +1543,8 @@ class RunsList(pn.viewable.Viewer):
 
     def refresh_rows(self):
         """Update the layout to show all runrows."""
-        self._layout.objects = [pn.pane.HTML("<b>Model runs</b>"), *self.runs]
+        obj_list = [pn.pane.HTML("<b>Model runs</b>"), *self.runs, self.progress]
+        self._layout.objects = obj_list
 
     def to_dict(self) -> dict:
         """Serialize all runs into a dictionary that can be saved to a file."""
@@ -1608,7 +1664,7 @@ def create_explorer():  # noqa: C901
     # This ended up being a much more flexible approach than the typical `panel
     # serve` CLI. (namely the ability to pass in custom args to this file's CLI,
     # such as the session folder `--session-path` arg)
-    pn.extension("gridstack", "texteditor", "terminal", notifications=True)
+    pn.extension("gridstack", "texteditor", "terminal", notifications=True, nthreads=4)
 
     active_explorer = None
     active_session_name = ""
@@ -1905,6 +1961,15 @@ def create_explorer():  # noqa: C901
 
     # currently open explorer UIs (active sessions)
     active_session_controls = pn.Column()
+
+    # terminal = pn.widgets.Terminal(write_to_console=True)
+    # terminal = pn.widgets.Terminal()
+    # floating_terminal = pn.layout.FloatPanel(terminal, contained=False, position='left-center')
+    # # floating_terminal = pn.layout.FloatPanel("hello?", contained=False, position='center')
+    # # floating_terminal = "hello?"
+    # sys.stdout = terminal
+    # sys.stderr = terminal
+    # main_ui_container.objects = [floating_terminal]
 
     # --- HEADER CONTROLS ---
     # -- save session button (goes in the header next to session name textbox) --
