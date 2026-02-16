@@ -23,6 +23,55 @@ from reno.viz import ReferenceEditor, plot_trace_refs
 
 SESSION_FOLDER = ""
 
+logo = """
+<svg
+   width="26px"
+   height="14px"
+   viewBox="0 0 26 14"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   fill="white"
+>
+  <g
+     id="layer1"
+     transform="translate(161.35697,-121.18184)">
+    <path
+       d="m -148.24299,135.27996 c -0.18456,-0.0585 -0.36659,-0.32016 -0.59667,-0.85755 -0.0398,-0.0931 -0.14513,-0.35263 -0.23368,-0.57641 -0.23418,-0.59148 -0.31232,-0.7799 -0.44567,-1.07478 -0.39566,-0.87497 -0.82327,-1.55334 -1.35705,-2.15297 -0.18534,-0.20819 -0.49386,-0.50185 -0.7265,-0.69146 -0.51099,-0.41652 -1.12719,-0.77433 -1.76645,-1.02574 -0.0708,-0.0279 -0.13005,-0.052 -0.13166,-0.0533 -10e-4,-0.001 1.06796,-0.002 2.37672,-0.002 h 2.37956 l -0.76284,0.76285 -0.76283,0.76287 h 2.12581 2.12582 l -0.76284,-0.76287 -0.76283,-0.76285 2.38689,2e-4 2.38691,1.9e-4 -0.13449,0.0538 c -1.51273,0.60501 -2.63953,1.6065 -3.46769,3.0821 -0.27634,0.49237 -0.47073,0.91858 -0.84282,1.84789 -0.23064,0.57608 -0.31684,0.77438 -0.42668,0.98171 -0.14119,0.26667 -0.27496,0.42035 -0.40578,0.46652 -0.058,0.0205 -0.13555,0.0215 -0.1952,0.002 z m 1.80077,-1.77489 c 0,-0.0157 0.18384,-0.43271 0.28448,-0.6457 0.67031,-1.41863 1.53386,-2.39113 2.70257,-3.04364 0.19545,-0.10924 0.68214,-0.3417 0.69276,-0.33108 10e-4,0.001 -0.0549,0.0483 -0.12491,0.1045 -0.42542,0.34169 -0.81822,0.74581 -1.26398,1.30041 -0.17031,0.2119 -0.25375,0.32077 -0.64436,0.84084 -0.18489,0.24614 -0.37869,0.50157 -0.43067,0.56761 -0.43111,0.54764 -0.79576,0.91796 -1.15152,1.16939 -0.0605,0.0428 -0.0645,0.0451 -0.0645,0.0376 z m -3.4956,-0.0609 c -0.19528,-0.139 -0.35336,-0.27557 -0.56648,-0.48922 -0.27939,-0.2801 -0.50588,-0.54692 -0.91866,-1.08226 -0.54168,-0.70251 -0.66558,-0.86017 -0.83679,-1.06461 -0.4806,-0.57391 -0.9106,-0.99401 -1.36355,-1.33218 -0.10659,-0.0796 -0.10571,-0.0787 -0.061,-0.0611 0.56346,0.22053 0.99137,0.44832 1.4274,0.75982 0.39712,0.28368 0.77847,0.64042 1.105,1.0337 0.35866,0.43198 0.70985,0.99663 0.99726,1.60345 0.11384,0.24046 0.30681,0.68246 0.30048,0.68839 -0.001,0.001 -0.0388,-0.0241 -0.0835,-0.0559 z m -10.14778,-1.887 c -0.27321,-0.022 -0.53688,-0.1264 -0.7527,-0.29831 -0.0653,-0.0521 -0.18519,-0.17304 -0.23152,-0.23377 -0.14387,-0.18853 -0.23685,-0.40977 -0.27505,-0.65438 -0.011,-0.0737 -0.0121,-0.18898 -0.0121,-2.12585 0,-2.27688 -0.002,-2.09153 0.0446,-2.28521 0.11735,-0.47167 0.50418,-0.86253 0.97635,-0.98643 0.1833,-0.0482 -0.0219,-0.0443 2.38318,-0.0443 2.04658,0 2.16679,5.9e-4 2.23065,0.0121 0.16037,0.0288 0.28013,0.068 0.41127,0.1345 0.39937,0.20277 0.66579,0.57238 0.74249,1.03004 0.011,0.064 0.0121,0.14371 0.0141,0.79823 l 0.002,0.72716 -1.99234,0.001 -1.99233,10e-4 -0.0645,0.014 c -0.23328,0.0526 -0.38962,0.16336 -0.47438,0.33583 -0.0387,0.0787 -0.0545,0.14701 -0.0545,0.23548 0,0.0873 0.008,0.13588 0.0349,0.20502 0.0661,0.17171 0.22111,0.30709 0.42112,0.36772 0.14371,0.0436 -0.03,0.0401 2.14659,0.0427 l 1.97537,0.001 -0.002,0.73389 c -0.002,0.80563 -0.001,0.78219 -0.0455,0.95124 -0.10317,0.39888 -0.36949,0.72287 -0.74074,0.90114 -0.12923,0.0621 -0.23881,0.0963 -0.39534,0.12356 -0.0633,0.011 -0.20385,0.0121 -2.17671,0.0121 -1.15989,5.8e-4 -2.13787,-0.001 -2.1733,-0.004 z m 19.55644,0.002 c -0.17839,-0.011 -0.35789,-0.059 -0.52553,-0.14088 -0.14419,-0.0705 -0.23598,-0.13524 -0.35492,-0.25087 -0.21967,-0.21348 -0.35358,-0.47455 -0.40537,-0.79031 -0.011,-0.0636 -0.0121,-0.15093 -0.0141,-0.80525 l -0.002,-0.73404 h 1.10911 1.10912 l 0.001,0.76546 0.001,0.76543 1.26127,-0.85385 c 0.69368,-0.4696 1.3238,-0.89613 1.40027,-0.94779 0.40478,-0.27357 0.47658,-0.32344 0.47452,-0.32951 -10e-4,-0.002 -0.70735,-0.48281 -1.56916,-1.0648 l -1.5669,-1.05814 -0.001,0.75809 -0.001,0.75809 h -1.10911 -1.1091 l 0.002,-0.72388 c 0.002,-0.79567 0.001,-0.76777 0.0462,-0.94764 0.11709,-0.47134 0.50428,-0.86257 0.97634,-0.98643 0.18329,-0.0482 -0.0217,-0.0443 2.38316,-0.0443 2.04657,0 2.16677,5.8e-4 2.23065,0.0121 0.16037,0.0288 0.28013,0.0679 0.41127,0.13449 0.40188,0.20404 0.67047,0.57897 0.7431,1.03733 0.011,0.0732 0.0121,0.18337 0.0121,2.12858 0,1.94128 -6.7e-4,2.05543 -0.0121,2.12923 -0.0642,0.41155 -0.28135,0.75014 -0.62316,0.97243 -0.0692,0.045 -0.21771,0.11761 -0.29062,0.14214 -0.069,0.0233 -0.17157,0.0488 -0.25392,0.0631 -0.0633,0.011 -0.20314,0.0121 -2.17669,0.0121 -1.1599,4e-4 -2.12567,-1.9e-4 -2.14619,-10e-4 z m -12.86018,-3.97497 c 1.21696,-0.48825 2.14427,-1.19279 2.90168,-2.20467 0.28059,-0.37487 0.51117,-0.75165 0.75319,-1.23076 0.22181,-0.43913 0.32946,-0.68787 0.68369,-1.57997 0.18011,-0.45365 0.24943,-0.61644 0.34356,-0.80695 0.1738,-0.35173 0.32258,-0.52878 0.47846,-0.56937 0.23531,-0.0614 0.44136,0.13979 0.69147,0.67501 0.079,0.16923 0.13789,0.30957 0.31625,0.75465 0.26788,0.66842 0.39101,0.95684 0.55167,1.2921 0.54865,1.14499 1.19084,1.98823 2.02413,2.65786 0.36922,0.29671 0.73318,0.52919 1.17311,0.74929 0.21631,0.10835 0.3345,0.16155 0.55266,0.24932 l 0.14921,0.0601 h -2.38014 -2.38013 l 0.75438,-0.75441 c 0.4149,-0.41492 0.75439,-0.75668 0.75439,-0.75947 0,-0.002 -0.95511,-0.004 -2.12247,-0.004 -1.16734,0 -2.12246,10e-4 -2.12246,0.004 0,0.002 0.33948,0.34455 0.75438,0.75947 l 0.75438,0.75441 -2.37335,-2e-4 -2.37333,-1.9e-4 z m -0.3116,-0.52198 c 0.002,-0.002 0.0385,-0.0299 0.0777,-0.059 0.2621,-0.196 0.47176,-0.37938 0.73963,-0.64692 0.40032,-0.39984 0.63977,-0.68369 1.30148,-1.54296 0.40675,-0.52818 0.52578,-0.67776 0.70959,-0.8918 0.28588,-0.33285 0.53901,-0.58262 0.79158,-0.78098 0.0995,-0.0782 0.22036,-0.16468 0.22421,-0.16055 0.002,0.002 -0.14935,0.35839 -0.22327,0.52121 -0.0651,0.14354 -0.24761,0.50986 -0.31925,0.6408 -0.76262,1.394 -1.78813,2.32203 -3.18168,2.87919 -0.11667,0.0467 -0.13206,0.052 -0.11991,0.0411 z m 10.8425,-0.1088 c -0.14559,-0.0627 -0.18991,-0.0833 -0.3582,-0.16768 -1.09951,-0.55145 -1.9482,-1.37589 -2.60668,-2.53227 -0.2015,-0.35386 -0.42045,-0.80875 -0.60775,-1.26258 l -0.011,-0.0255 0.032,0.0216 c 0.19593,0.13328 0.4638,0.36701 0.65252,0.56909 0.3057,0.32734 0.47101,0.53223 1.01717,1.26063 0.40914,0.5457 0.51871,0.68664 0.74596,0.95952 0.38819,0.46613 0.79858,0.87288 1.17291,1.16252 0.0699,0.054 0.0789,0.0615 0.0743,0.0614 -0.001,0 -0.052,-0.0211 -0.11155,-0.0467 z"
+       id="path388" />
+  </g>
+</svg>
+"""
+
+
+# ==================================================
+# ICONS
+# ==================================================
+
+icon_unfilled_check = """
+<svg style="stroke: var(--secondary-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>
+"""
+
+icon_filled_check = """
+<svg style="fill: var(--success-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path stroke="white" stroke-width="2.5" stroke-linecap="round" d="M9 12l2 2l4 -4" /><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
+"""
+
+icon_pencil = """
+<svg style="stroke: var(--neutral-foreground-rest);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /><path d="M13.5 6.5l4 4" /></svg>
+"""
+
+icon_close = """
+<svg style="fill: var(--danger-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-xbox-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10m3.6 5.2a1 1 0 0 0 -1.4 .2l-2.2 2.933l-2.2 -2.933a1 1 0 1 0 -1.6 1.2l2.55 3.4l-2.55 3.4a1 1 0 1 0 1.6 1.2l2.2 -2.933l2.2 2.933a1 1 0 0 0 1.6 -1.2l-2.55 -3.4l2.55 -3.4a1 1 0 0 0 -.2 -1.4" /></svg>
+"""
+
+icon_save = """
+<svg xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
+"""
+# ==================================================
+# /ICONS
+# ==================================================
+
 
 class Explorer(pn.custom.PyComponent):
     """The overall wrapper for the interactive model explorer.
@@ -780,7 +829,7 @@ class PanesSet(pn.viewable.Viewer):
                 pane.render(self.active_configs)
             pane.from_dict(pane_data)
             pane.clicker.on_click(
-                partial(self.fire_on_new_controls_needed, pane.controls)
+                partial(self.fire_on_new_controls_needed, pane.controls, pane)
             )
 
             # note that the way gridstack reports locations is a little
@@ -1493,22 +1542,6 @@ class RunRow(pn.viewable.Viewer):
     visible = param.Boolean(True)
     run_name = param.String("")
 
-    unfilled_check_icon = """
-    <svg style="stroke: var(--secondary-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>
-    """
-    filled_check_icon = """
-    <svg style="fill: var(--success-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path stroke="white" stroke-width="2.5" stroke-linecap="round" d="M9 12l2 2l4 -4" /><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-    """
-    pencil_icon = """
-    <svg style="stroke: var(--neutral-foreground-rest);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /><path d="M13.5 6.5l4 4" /></svg>
-    """
-    # x_icon = """
-    # <svg style="width: 30px; height: 30px; fill: var(--danger-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-xbox-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10m3.6 5.2a1 1 0 0 0 -1.4 .2l-2.2 2.933l-2.2 -2.933a1 1 0 1 0 -1.6 1.2l2.55 3.4l-2.55 3.4a1 1 0 1 0 1.6 1.2l2.2 -2.933l2.2 2.933a1 1 0 0 0 1.6 -1.2l-2.55 -3.4l2.55 -3.4a1 1 0 0 0 -.2 -1.4" /></svg>
-    # """
-    x_icon = """
-    <svg style="fill: var(--danger-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-xbox-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10m3.6 5.2a1 1 0 0 0 -1.4 .2l-2.2 2.933l-2.2 -2.933a1 1 0 1 0 -1.6 1.2l2.55 3.4l-2.55 3.4a1 1 0 1 0 1.6 1.2l2.2 -2.933l2.2 2.933a1 1 0 0 0 1.6 -1.2l-2.55 -3.4l2.55 -3.4a1 1 0 0 0 -.2 -1.4" /></svg>
-    """
-
     def __init__(self, trace, config, observations, **params):
         if config is not None:
             self.config = {key: str(val) for key, val in config.items()}
@@ -1521,20 +1554,24 @@ class RunRow(pn.viewable.Viewer):
         self.select_btn = pn.widgets.ButtonIcon(
             width=30,
             height=30,
-            icon=self.filled_check_icon,
-            active_icon=self.filled_check_icon,
+            icon=icon_filled_check,
+            active_icon=icon_filled_check,
             styles={"margin": "0px", "margin-left": "5px"},
         )
         self.remove_btn = pn.widgets.ButtonIcon(
-            icon=self.x_icon,
-            active_icon=self.x_icon,
+            icon=icon_close,
+            active_icon=icon_close,
             width=22,
             height=22,
-            styles={"margin": "4px", "margin-left": "5px"},
+            styles={
+                "margin": "4px",
+                "margin-left": "5px",
+                "fill": "var(--danger-bg-color)",
+            },
         )
         self.edit_btn = pn.widgets.ButtonIcon(
-            icon=self.pencil_icon,
-            active_icon=self.pencil_icon,
+            icon=icon_pencil,
+            active_icon=icon_pencil,
             styles={"margin": "2px"},
             width=26,
             height=26,
@@ -1622,9 +1659,9 @@ class RunRow(pn.viewable.Viewer):
     @param.depends("visible", watch=True)
     def _update_selected_btn(self):
         if self.visible:
-            self.select_btn.icon = self.filled_check_icon
+            self.select_btn.icon = icon_filled_check
         else:
-            self.select_btn.icon = self.unfilled_check_icon
+            self.select_btn.icon = icon_unfilled_check
 
     def to_dict(self) -> dict:
         """Serialize run row to a dictionary that can be saved to file. Note that
@@ -1943,6 +1980,7 @@ def create_explorer():  # noqa: C901
         except Exception as e:
             pn.state.notifications.error(f"Failed to load active session: {e}", 0)
             print(traceback.format_exc())
+        refresh_active_sessions()
 
     def close_session(*args, name: str):
         """Remove explorer from cache."""
@@ -2002,19 +2040,41 @@ def create_explorer():  # noqa: C901
         nonlocal load_session_controls
 
         load_session_controls.objects = [
-            pn.pane.HTML("<b>Load session:</b>"),
+            pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Load session:</b></p>"),
             *get_recursive_sessions(SESSION_FOLDER),
         ]
 
     def get_active_session_switchers():
         controls = []
-        for name in pn.state.cache["active_sessions"]:
-            button = pn.widgets.Button(
-                name=name, button_type="primary", sizing_mode="stretch_width"
+        if len(pn.state.cache["active_sessions"]) == 0:
+            controls.append(
+                "Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below."
             )
+        for name in pn.state.cache["active_sessions"]:
+            if name == active_session_name:
+                button = pn.widgets.Button(
+                    name=name,
+                    button_type="primary",
+                    sizing_mode="stretch_width",
+                    stylesheets=[session_btn_css, highlighted_session_btn_css],
+                )
+            else:
+                button = pn.widgets.Button(
+                    name=name,
+                    button_type="primary",
+                    sizing_mode="stretch_width",
+                    stylesheets=[session_btn_css],
+                )
+                # button.css_classes.append("highlighted")
             button.on_click(partial(switch_active_session, name=name))
 
-            del_btn = pn.widgets.Button(name="x", button_type="danger")
+            del_btn = pn.widgets.ButtonIcon(
+                icon=icon_close,
+                active_icon=icon_close,
+                width=22,
+                height=22,
+                styles={"margin": "4px"},
+            )
             del_btn.on_click(partial(close_session, name=name))
             controls.append(pn.Row(button, del_btn))
         return controls
@@ -2024,7 +2084,9 @@ def create_explorer():  # noqa: C901
         nonlocal active_session_controls
 
         active_session_controls.objects = [
-            pn.pane.HTML("<b>Switch active session:</b>"),
+            pn.pane.HTML(
+                "<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"
+            ),
             *get_active_session_switchers(),
         ]
 
@@ -2084,12 +2146,19 @@ def create_explorer():  # noqa: C901
         border: unset !important;
         padding-top: 1px;
         padding-bottom: 1px;
-        border-radius: 0;
+        border-radius: 4px;
         text-align: left;
         color: var(--panel-on-surface-color) !important;
     }
     .bk-btn-group > button.bk-btn.bk-btn-primary:hover {
         background-color: var(--accent-fill-rest) !important;
+    }
+    """
+
+    # styling to highlight a session btn
+    highlighted_session_btn_css = """
+    .bk-btn-group > button.bk-btn.bk-btn-primary {
+        border: 2px solid var(--accent-fill-rest) !important;
     }
     """
 
@@ -2117,6 +2186,22 @@ def create_explorer():  # noqa: C901
     #main > .card-margin.stretch_width, #main > .card-margin {
         margin-top: 5px;
         margin-bottom: 5px;
+    }
+    """
+
+    # the upload file css isn't wonderful
+    fix_upload_css = """
+    input[type="file"].bk-input {
+        height: unset !important;
+        text-align: unset !important;
+        border: unset !important;
+    }
+
+
+    input[type="file"]::file-selector-button {
+        background-color: var(--accent-fill-rest);
+        color: var(--foreground-on-accent-rest);
+        border: 0px;
     }
     """
 
@@ -2157,12 +2242,9 @@ def create_explorer():  # noqa: C901
     # SVG for a floppy disk, kids these days don't understand having to fight
     # intrusive thoughts involving magnets and the old word documents you wrote
     # for school.
-    save_icon = """
-    <svg xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
-    """
     save_btn = pn.widgets.Button(
         name=" ",
-        icon=save_icon,
+        icon=icon_save,
         styles={"margin-top": "8px"},
         icon_size="2em",
         description="Save session state",
@@ -2189,10 +2271,14 @@ def create_explorer():  # noqa: C901
 
     # file upload option to allow someone to upload their own model serialized
     # in a json file
-    upload_model = pn.widgets.FileInput(accept=".json")
+    upload_model = pn.widgets.FileInput(
+        accept=".json", stylesheets=[fix_upload_css], width=310
+    )
 
     new_session_controls.objects = [
-        pn.pane.HTML("<b>New session with model:</b>"),
+        pn.pane.HTML(
+            "<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"
+        ),
         *model_buttons,
         upload_model,
     ]
@@ -2210,15 +2296,24 @@ def create_explorer():  # noqa: C901
     # hook up the theme switcher
     pn.state.onload(server_ready)
 
+    logo_css = """
+
+    """
+
     template = pn.template.FastListTemplate(
-        title="Reno Interactive Explorer",
+        title="",
         theme="dark",
         theme_toggle=True,
-        header=[pn.Spacer(sizing_mode="stretch_width"), header_controls],
+        header=[
+            pn.pane.SVG(logo, height=44),
+            "Reno Interactive Explorer",
+            pn.Spacer(sizing_mode="stretch_width"),
+            header_controls,
+        ],
         main_layout=None,
         # accent="#2F5F6F",
         accent="#A0522D",
-        sidebar=[new_session_controls, load_session_controls, active_session_controls],
+        sidebar=[new_session_controls, active_session_controls, load_session_controls],
         main=[main_ui_container],
         raw_css=[fix_layout_css],
     ).servable()
