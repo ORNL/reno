@@ -1493,6 +1493,22 @@ class RunRow(pn.viewable.Viewer):
     visible = param.Boolean(True)
     run_name = param.String("")
 
+    unfilled_check_icon = """
+    <svg style="stroke: var(--secondary-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>
+    """
+    filled_check_icon = """
+    <svg style="fill: var(--success-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path stroke="white" stroke-width="2.5" stroke-linecap="round" d="M9 12l2 2l4 -4" /><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
+    """
+    pencil_icon = """
+    <svg style="stroke: var(--neutral-foreground-rest);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /><path d="M13.5 6.5l4 4" /></svg>
+    """
+    # x_icon = """
+    # <svg style="width: 30px; height: 30px; fill: var(--danger-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-xbox-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10m3.6 5.2a1 1 0 0 0 -1.4 .2l-2.2 2.933l-2.2 -2.933a1 1 0 1 0 -1.6 1.2l2.55 3.4l-2.55 3.4a1 1 0 1 0 1.6 1.2l2.2 -2.933l2.2 2.933a1 1 0 0 0 1.6 -1.2l-2.55 -3.4l2.55 -3.4a1 1 0 0 0 -.2 -1.4" /></svg>
+    # """
+    x_icon = """
+    <svg style="fill: var(--danger-bg-color);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-xbox-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10m3.6 5.2a1 1 0 0 0 -1.4 .2l-2.2 2.933l-2.2 -2.933a1 1 0 1 0 -1.6 1.2l2.55 3.4l-2.55 3.4a1 1 0 1 0 1.6 1.2l2.2 -2.933l2.2 2.933a1 1 0 0 0 1.6 -1.2l-2.55 -3.4l2.55 -3.4a1 1 0 0 0 -.2 -1.4" /></svg>
+    """
+
     def __init__(self, trace, config, observations, **params):
         if config is not None:
             self.config = {key: str(val) for key, val in config.items()}
@@ -1502,9 +1518,27 @@ class RunRow(pn.viewable.Viewer):
         self.observations = observations
         super().__init__(**params)
 
-        self.select_btn = pn.widgets.Button(name="s", button_type="success")
-        self.remove_btn = pn.widgets.Button(name="x", button_type="danger")
-        self.edit_btn = pn.widgets.Button(name="e")
+        self.select_btn = pn.widgets.ButtonIcon(
+            width=30,
+            height=30,
+            icon=self.filled_check_icon,
+            active_icon=self.filled_check_icon,
+            styles={"margin": "0px", "margin-left": "5px"},
+        )
+        self.remove_btn = pn.widgets.ButtonIcon(
+            icon=self.x_icon,
+            active_icon=self.x_icon,
+            width=22,
+            height=22,
+            styles={"margin": "4px", "margin-left": "5px"},
+        )
+        self.edit_btn = pn.widgets.ButtonIcon(
+            icon=self.pencil_icon,
+            active_icon=self.pencil_icon,
+            styles={"margin": "2px"},
+            width=26,
+            height=26,
+        )
         self.done_btn = pn.widgets.Button(name="done")
 
         self.select_btn.on_click(self._handle_pnl_select_btn_clicked)
@@ -1512,14 +1546,10 @@ class RunRow(pn.viewable.Viewer):
         self.edit_btn.on_click(self._handle_pnl_edit_btn_clicked)
         self.done_btn.on_click(self._handle_pnl_done_btn_clicked)
 
-        self.label = pn.pane.HTML(f"<p>{self.run_name}</p>")
+        self.label = pn.pane.HTML(f"{self.run_name}")
 
-        self._layout = pn.Row(
-            self.select_btn,
-            self.edit_btn,
-            self.label,
-            self.remove_btn,
-        )
+        self._layout = pn.Row(width=330)
+        self.reset_view()
 
         self._selected_callbacks: list[Callable] = []
         self._removed_callbacks: list[Callable] = []
@@ -1529,12 +1559,19 @@ class RunRow(pn.viewable.Viewer):
             self.select_btn,
             self.edit_btn,
             self.label,
+            pn.Spacer(sizing_mode="stretch_width"),
             self.remove_btn,
         ]
 
     def edit_view(self):
         self._layout.objects = [
-            pn.Param(self, parameters=["run_name"], show_labels=False, show_name=False),
+            pn.Param(
+                self,
+                parameters=["run_name"],
+                show_labels=False,
+                show_name=False,
+                widgets={"run_name": {"width": 150}},
+            ),
             self.done_btn,
         ]
 
@@ -1568,7 +1605,7 @@ class RunRow(pn.viewable.Viewer):
 
     @param.depends("run_name", watch=True)
     def _handle_run_name_changed(self, *args):
-        self.label.object = f"<p>{self.run_name}</p>"
+        self.label.object = f"{self.run_name}"
         # technically should make separate event handler for name changed, but
         # it's fine.
         self.fire_on_selected(self.visible)
@@ -1585,9 +1622,9 @@ class RunRow(pn.viewable.Viewer):
     @param.depends("visible", watch=True)
     def _update_selected_btn(self):
         if self.visible:
-            self.select_btn.button_type = "success"
+            self.select_btn.icon = self.filled_check_icon
         else:
-            self.select_btn.button_type = "default"
+            self.select_btn.icon = self.unfilled_check_icon
 
     def to_dict(self) -> dict:
         """Serialize run row to a dictionary that can be saved to file. Note that
@@ -1627,7 +1664,7 @@ class RunsList(pn.viewable.Viewer):
     def __init__(self, **params):
         super().__init__(**params)
         self.runs = []
-        self._layout = pn.Column()
+        self._layout = pn.Column(width=330)
 
         # self.progress = pn.indicators.Progress(sizing_mode="stretch_width", visible=False, max=100)
         self.progress = pn.indicators.Progress(visible=False, max=100)

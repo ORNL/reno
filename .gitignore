@@ -14,3 +14,5 @@ dist/*
 # sphinx generated documentation
 sphinx/build/*
 sphinx/source/api/*
+
+**/.doccache/*
