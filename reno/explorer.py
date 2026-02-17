@@ -25,9 +25,9 @@ SESSION_FOLDER = ""
 
 logo = """
 <svg
-   width="26px"
-   height="14px"
-   viewBox="0 0 26 14"
+   width="26.330738mm"
+   height="14.112358mm"
+   viewBox="0 0 26.330738 14.112358"
    version="1.1"
    id="svg1"
    xmlns="http://www.w3.org/2000/svg"
@@ -40,6 +40,29 @@ logo = """
     <path
        d="m -148.24299,135.27996 c -0.18456,-0.0585 -0.36659,-0.32016 -0.59667,-0.85755 -0.0398,-0.0931 -0.14513,-0.35263 -0.23368,-0.57641 -0.23418,-0.59148 -0.31232,-0.7799 -0.44567,-1.07478 -0.39566,-0.87497 -0.82327,-1.55334 -1.35705,-2.15297 -0.18534,-0.20819 -0.49386,-0.50185 -0.7265,-0.69146 -0.51099,-0.41652 -1.12719,-0.77433 -1.76645,-1.02574 -0.0708,-0.0279 -0.13005,-0.052 -0.13166,-0.0533 -10e-4,-0.001 1.06796,-0.002 2.37672,-0.002 h 2.37956 l -0.76284,0.76285 -0.76283,0.76287 h 2.12581 2.12582 l -0.76284,-0.76287 -0.76283,-0.76285 2.38689,2e-4 2.38691,1.9e-4 -0.13449,0.0538 c -1.51273,0.60501 -2.63953,1.6065 -3.46769,3.0821 -0.27634,0.49237 -0.47073,0.91858 -0.84282,1.84789 -0.23064,0.57608 -0.31684,0.77438 -0.42668,0.98171 -0.14119,0.26667 -0.27496,0.42035 -0.40578,0.46652 -0.058,0.0205 -0.13555,0.0215 -0.1952,0.002 z m 1.80077,-1.77489 c 0,-0.0157 0.18384,-0.43271 0.28448,-0.6457 0.67031,-1.41863 1.53386,-2.39113 2.70257,-3.04364 0.19545,-0.10924 0.68214,-0.3417 0.69276,-0.33108 10e-4,0.001 -0.0549,0.0483 -0.12491,0.1045 -0.42542,0.34169 -0.81822,0.74581 -1.26398,1.30041 -0.17031,0.2119 -0.25375,0.32077 -0.64436,0.84084 -0.18489,0.24614 -0.37869,0.50157 -0.43067,0.56761 -0.43111,0.54764 -0.79576,0.91796 -1.15152,1.16939 -0.0605,0.0428 -0.0645,0.0451 -0.0645,0.0376 z m -3.4956,-0.0609 c -0.19528,-0.139 -0.35336,-0.27557 -0.56648,-0.48922 -0.27939,-0.2801 -0.50588,-0.54692 -0.91866,-1.08226 -0.54168,-0.70251 -0.66558,-0.86017 -0.83679,-1.06461 -0.4806,-0.57391 -0.9106,-0.99401 -1.36355,-1.33218 -0.10659,-0.0796 -0.10571,-0.0787 -0.061,-0.0611 0.56346,0.22053 0.99137,0.44832 1.4274,0.75982 0.39712,0.28368 0.77847,0.64042 1.105,1.0337 0.35866,0.43198 0.70985,0.99663 0.99726,1.60345 0.11384,0.24046 0.30681,0.68246 0.30048,0.68839 -0.001,0.001 -0.0388,-0.0241 -0.0835,-0.0559 z m -10.14778,-1.887 c -0.27321,-0.022 -0.53688,-0.1264 -0.7527,-0.29831 -0.0653,-0.0521 -0.18519,-0.17304 -0.23152,-0.23377 -0.14387,-0.18853 -0.23685,-0.40977 -0.27505,-0.65438 -0.011,-0.0737 -0.0121,-0.18898 -0.0121,-2.12585 0,-2.27688 -0.002,-2.09153 0.0446,-2.28521 0.11735,-0.47167 0.50418,-0.86253 0.97635,-0.98643 0.1833,-0.0482 -0.0219,-0.0443 2.38318,-0.0443 2.04658,0 2.16679,5.9e-4 2.23065,0.0121 0.16037,0.0288 0.28013,0.068 0.41127,0.1345 0.39937,0.20277 0.66579,0.57238 0.74249,1.03004 0.011,0.064 0.0121,0.14371 0.0141,0.79823 l 0.002,0.72716 -1.99234,0.001 -1.99233,10e-4 -0.0645,0.014 c -0.23328,0.0526 -0.38962,0.16336 -0.47438,0.33583 -0.0387,0.0787 -0.0545,0.14701 -0.0545,0.23548 0,0.0873 0.008,0.13588 0.0349,0.20502 0.0661,0.17171 0.22111,0.30709 0.42112,0.36772 0.14371,0.0436 -0.03,0.0401 2.14659,0.0427 l 1.97537,0.001 -0.002,0.73389 c -0.002,0.80563 -0.001,0.78219 -0.0455,0.95124 -0.10317,0.39888 -0.36949,0.72287 -0.74074,0.90114 -0.12923,0.0621 -0.23881,0.0963 -0.39534,0.12356 -0.0633,0.011 -0.20385,0.0121 -2.17671,0.0121 -1.15989,5.8e-4 -2.13787,-0.001 -2.1733,-0.004 z m 19.55644,0.002 c -0.17839,-0.011 -0.35789,-0.059 -0.52553,-0.14088 -0.14419,-0.0705 -0.23598,-0.13524 -0.35492,-0.25087 -0.21967,-0.21348 -0.35358,-0.47455 -0.40537,-0.79031 -0.011,-0.0636 -0.0121,-0.15093 -0.0141,-0.80525 l -0.002,-0.73404 h 1.10911 1.10912 l 0.001,0.76546 0.001,0.76543 1.26127,-0.85385 c 0.69368,-0.4696 1.3238,-0.89613 1.40027,-0.94779 0.40478,-0.27357 0.47658,-0.32344 0.47452,-0.32951 -10e-4,-0.002 -0.70735,-0.48281 -1.56916,-1.0648 l -1.5669,-1.05814 -0.001,0.75809 -0.001,0.75809 h -1.10911 -1.1091 l 0.002,-0.72388 c 0.002,-0.79567 0.001,-0.76777 0.0462,-0.94764 0.11709,-0.47134 0.50428,-0.86257 0.97634,-0.98643 0.18329,-0.0482 -0.0217,-0.0443 2.38316,-0.0443 2.04657,0 2.16677,5.8e-4 2.23065,0.0121 0.16037,0.0288 0.28013,0.0679 0.41127,0.13449 0.40188,0.20404 0.67047,0.57897 0.7431,1.03733 0.011,0.0732 0.0121,0.18337 0.0121,2.12858 0,1.94128 -6.7e-4,2.05543 -0.0121,2.12923 -0.0642,0.41155 -0.28135,0.75014 -0.62316,0.97243 -0.0692,0.045 -0.21771,0.11761 -0.29062,0.14214 -0.069,0.0233 -0.17157,0.0488 -0.25392,0.0631 -0.0633,0.011 -0.20314,0.0121 -2.17669,0.0121 -1.1599,4e-4 -2.12567,-1.9e-4 -2.14619,-10e-4 z m -12.86018,-3.97497 c 1.21696,-0.48825 2.14427,-1.19279 2.90168,-2.20467 0.28059,-0.37487 0.51117,-0.75165 0.75319,-1.23076 0.22181,-0.43913 0.32946,-0.68787 0.68369,-1.57997 0.18011,-0.45365 0.24943,-0.61644 0.34356,-0.80695 0.1738,-0.35173 0.32258,-0.52878 0.47846,-0.56937 0.23531,-0.0614 0.44136,0.13979 0.69147,0.67501 0.079,0.16923 0.13789,0.30957 0.31625,0.75465 0.26788,0.66842 0.39101,0.95684 0.55167,1.2921 0.54865,1.14499 1.19084,1.98823 2.02413,2.65786 0.36922,0.29671 0.73318,0.52919 1.17311,0.74929 0.21631,0.10835 0.3345,0.16155 0.55266,0.24932 l 0.14921,0.0601 h -2.38014 -2.38013 l 0.75438,-0.75441 c 0.4149,-0.41492 0.75439,-0.75668 0.75439,-0.75947 0,-0.002 -0.95511,-0.004 -2.12247,-0.004 -1.16734,0 -2.12246,10e-4 -2.12246,0.004 0,0.002 0.33948,0.34455 0.75438,0.75947 l 0.75438,0.75441 -2.37335,-2e-4 -2.37333,-1.9e-4 z m -0.3116,-0.52198 c 0.002,-0.002 0.0385,-0.0299 0.0777,-0.059 0.2621,-0.196 0.47176,-0.37938 0.73963,-0.64692 0.40032,-0.39984 0.63977,-0.68369 1.30148,-1.54296 0.40675,-0.52818 0.52578,-0.67776 0.70959,-0.8918 0.28588,-0.33285 0.53901,-0.58262 0.79158,-0.78098 0.0995,-0.0782 0.22036,-0.16468 0.22421,-0.16055 0.002,0.002 -0.14935,0.35839 -0.22327,0.52121 -0.0651,0.14354 -0.24761,0.50986 -0.31925,0.6408 -0.76262,1.394 -1.78813,2.32203 -3.18168,2.87919 -0.11667,0.0467 -0.13206,0.052 -0.11991,0.0411 z m 10.8425,-0.1088 c -0.14559,-0.0627 -0.18991,-0.0833 -0.3582,-0.16768 -1.09951,-0.55145 -1.9482,-1.37589 -2.60668,-2.53227 -0.2015,-0.35386 -0.42045,-0.80875 -0.60775,-1.26258 l -0.011,-0.0255 0.032,0.0216 c 0.19593,0.13328 0.4638,0.36701 0.65252,0.56909 0.3057,0.32734 0.47101,0.53223 1.01717,1.26063 0.40914,0.5457 0.51871,0.68664 0.74596,0.95952 0.38819,0.46613 0.79858,0.87288 1.17291,1.16252 0.0699,0.054 0.0789,0.0615 0.0743,0.0614 -0.001,0 -0.052,-0.0211 -0.11155,-0.0467 z"
        id="path388" />
+  </g>
+</svg>
+"""
+
+logo_text = """
+<svg
+   width="131.36859mm"
+   height="40.945175mm"
+   viewBox="0 0 131.36859 40.945175"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1"
+     transform="translate(910.21013,-600.45764)">
+    <path
+       d="m -910.21017,641.40276 v -40.94515 h 10.55442 q 3.7427,0 6.13803,0.37427 2.39533,0.37427 3.89241,1.12281 3.44328,1.57194 5.38949,4.79066 2.02106,3.14387 2.02106,7.03628 0,4.94036 -3.14387,8.53336 -3.44329,3.96726 -8.68307,3.96726 l 11.52752,15.12051 h -5.76376 l -14.14741,-18.86321 q 7.26084,0 9.13219,-0.52398 3.06901,-0.82339 4.79066,-3.21872 1.72164,-2.39533 1.72164,-5.16493 0,-2.32047 -1.19766,-4.41639 -1.12281,-2.17076 -2.91931,-3.06901 -1.7965,-0.89825 -3.66785,-1.19767 -1.79649,-0.37427 -4.26668,-0.37427 h -6.81171 v 36.82818 z m 62.87733,-14.22226 h -27.24686 q 0,3.89241 3.51813,7.11113 3.51814,3.21872 7.78482,3.21872 3.81756,0 6.81172,-2.09591 2.61989,-1.7965 3.7427,-5.01522 h 4.56609 q -1.72164,5.01522 -5.76376,8.00938 -4.04211,2.99416 -9.35675,2.99416 -6.43744,0 -11.15325,-4.56609 -4.64095,-4.5661 -4.64095,-11.30296 0,-6.5123 4.64095,-11.2281 4.64095,-4.79066 11.15325,-4.79066 4.71581,0 8.53336,2.39533 3.14387,2.17076 5.09007,5.38949 1.19767,1.87135 1.7965,4.19182 0.59883,2.24562 0.59883,4.34154 z m -27.24686,-4.04212 h 22.75562 q -0.74854,-4.49124 -4.34154,-7.26084 -3.14386,-2.39533 -7.11113,-2.39533 -3.7427,0 -6.96142,2.39533 -3.59299,2.84445 -4.34153,7.26084 z m 32.11231,18.26438 v -30.46558 h 4.34154 v 3.36843 q 0.82339,-1.27252 2.76959,-2.39533 2.7696,-1.72164 6.28774,-1.72164 3.06902,0 5.23978,0.89824 2.24562,0.8234 4.34154,2.91931 1.9462,1.64679 2.9193,4.41639 0.9731,2.7696 0.9731,6.21288 v 16.7673 h -4.41638 v -16.7673 q 0,-2.84445 -0.74854,-4.7158 -0.67369,-1.87135 -1.94621,-3.14387 -1.27252,-1.34737 -3.14387,-1.94621 -1.79649,-0.67368 -3.21872,-0.67368 -1.57193,0 -3.21872,0.59883 -1.64679,0.59883 -3.14387,1.87135 -1.12281,1.27252 -1.9462,3.21872 -0.74854,1.94621 -0.74854,4.5661 v 16.99186 z m 31.8129,-15.64449 q 0,-7.11113 4.94037,-11.75208 4.64095,-4.49124 10.85383,-4.49124 6.66201,0 11.30296,4.79066 4.7158,4.79065 4.7158,11.07839 0,6.43745 -4.64095,11.2281 -4.56609,4.79066 -11.37781,4.79066 -6.43745,0 -11.15325,-4.7158 -4.64095,-4.7158 -4.64095,-10.92869 z m 4.34154,-0.0748 q 0,4.94036 3.44328,8.38365 3.51814,3.44328 8.15909,3.44328 4.49124,0 7.93452,-3.14387 3.593,-3.59299 3.593,-9.05733 0,-5.38949 -3.81756,-8.68307 -3.51814,-3.14387 -7.70996,-3.14387 -4.41639,0 -7.78482,3.06902 -3.81755,3.66784 -3.81755,9.13219 z"
+       id="text392"
+       style="font-size:72.6084px;font-family:NATS;-inkscape-font-specification:'NATS, Normal';fill:#ffffff;stroke-width:0.92141;stroke-linecap:square"
+       aria-label="Reno" />
   </g>
 </svg>
 """
@@ -71,6 +94,7 @@ icon_save = """
 # ==================================================
 # /ICONS
 # ==================================================
+
 
 
 class Explorer(pn.custom.PyComponent):
@@ -1551,31 +1575,9 @@ class RunRow(pn.viewable.Viewer):
         self.observations = observations
         super().__init__(**params)
 
-        self.select_btn = pn.widgets.ButtonIcon(
-            width=30,
-            height=30,
-            icon=icon_filled_check,
-            active_icon=icon_filled_check,
-            styles={"margin": "0px", "margin-left": "5px"},
-        )
-        self.remove_btn = pn.widgets.ButtonIcon(
-            icon=icon_close,
-            active_icon=icon_close,
-            width=22,
-            height=22,
-            styles={
-                "margin": "4px",
-                "margin-left": "5px",
-                "fill": "var(--danger-bg-color)",
-            },
-        )
-        self.edit_btn = pn.widgets.ButtonIcon(
-            icon=icon_pencil,
-            active_icon=icon_pencil,
-            styles={"margin": "2px"},
-            width=26,
-            height=26,
-        )
+        self.select_btn = pn.widgets.ButtonIcon(width=30, height=30, icon=icon_filled_check, active_icon=icon_filled_check, styles={"margin": "0px", "margin-left": "5px"})
+        self.remove_btn = pn.widgets.ButtonIcon(icon=icon_close, active_icon=icon_close, width=22, height=22, styles={"margin": "4px", "margin-left": "5px", "fill": "var(--danger-bg-color)"})
+        self.edit_btn = pn.widgets.ButtonIcon(icon=icon_pencil, active_icon=icon_pencil, styles={"margin": "2px"}, width=26, height=26)
         self.done_btn = pn.widgets.Button(name="done")
 
         self.select_btn.on_click(self._handle_pnl_select_btn_clicked)
@@ -1607,7 +1609,9 @@ class RunRow(pn.viewable.Viewer):
                 parameters=["run_name"],
                 show_labels=False,
                 show_name=False,
-                widgets={"run_name": {"width": 150}},
+                widgets={
+                    "run_name": {"width": 150}
+                },
             ),
             self.done_btn,
         ]
@@ -2047,34 +2051,20 @@ def create_explorer():  # noqa: C901
     def get_active_session_switchers():
         controls = []
         if len(pn.state.cache["active_sessions"]) == 0:
-            controls.append(
-                "Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below."
-            )
+            controls.append("Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below.")
         for name in pn.state.cache["active_sessions"]:
             if name == active_session_name:
                 button = pn.widgets.Button(
-                    name=name,
-                    button_type="primary",
-                    sizing_mode="stretch_width",
-                    stylesheets=[session_btn_css, highlighted_session_btn_css],
+                    name=name, button_type="primary", sizing_mode="stretch_width", stylesheets=[session_btn_css, highlighted_session_btn_css]
                 )
             else:
                 button = pn.widgets.Button(
-                    name=name,
-                    button_type="primary",
-                    sizing_mode="stretch_width",
-                    stylesheets=[session_btn_css],
+                    name=name, button_type="primary", sizing_mode="stretch_width", stylesheets=[session_btn_css]
                 )
                 # button.css_classes.append("highlighted")
             button.on_click(partial(switch_active_session, name=name))
 
-            del_btn = pn.widgets.ButtonIcon(
-                icon=icon_close,
-                active_icon=icon_close,
-                width=22,
-                height=22,
-                styles={"margin": "4px"},
-            )
+            del_btn = pn.widgets.ButtonIcon(icon=icon_close, active_icon=icon_close, width=22, height=22, styles={"margin": "4px"})
             del_btn.on_click(partial(close_session, name=name))
             controls.append(pn.Row(button, del_btn))
         return controls
@@ -2084,9 +2074,7 @@ def create_explorer():  # noqa: C901
         nonlocal active_session_controls
 
         active_session_controls.objects = [
-            pn.pane.HTML(
-                "<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"
-            ),
+            pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"),
             *get_active_session_switchers(),
         ]
 
@@ -2154,13 +2142,14 @@ def create_explorer():  # noqa: C901
         background-color: var(--accent-fill-rest) !important;
     }
     """
-
+    
     # styling to highlight a session btn
     highlighted_session_btn_css = """
     .bk-btn-group > button.bk-btn.bk-btn-primary {
         border: 2px solid var(--accent-fill-rest) !important;
     }
     """
+
 
     # make the outline box go away from the session name textbox when
     # highlighted/entering text, this is normally a difficult task,
@@ -2186,6 +2175,14 @@ def create_explorer():  # noqa: C901
     #main > .card-margin.stretch_width, #main > .card-margin {
         margin-top: 5px;
         margin-bottom: 5px;
+    }
+    """
+
+    # building header title stuff from scratch but still want page title to
+    # populate
+    remove_default_header_css = """
+    .app-header {
+        display: none !important;
     }
     """
 
@@ -2271,14 +2268,10 @@ def create_explorer():  # noqa: C901
 
     # file upload option to allow someone to upload their own model serialized
     # in a json file
-    upload_model = pn.widgets.FileInput(
-        accept=".json", stylesheets=[fix_upload_css], width=310
-    )
+    upload_model = pn.widgets.FileInput(accept=".json", stylesheets=[fix_upload_css], width=310)
 
     new_session_controls.objects = [
-        pn.pane.HTML(
-            "<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"
-        ),
+        pn.pane.HTML("<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"),
         *model_buttons,
         upload_model,
     ]
@@ -2297,25 +2290,47 @@ def create_explorer():  # noqa: C901
     pn.state.onload(server_ready)
 
     logo_css = """
+    :host {
+        /* height: 54px !important; */
+        height: 100% !important;
+        display: block;
+        margin: 0;
+        padding: 0;
+        margin-top: 5px;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
 
+    div {
+        height: 100% !important;
+    }
+
+    svg {
+        height: 64px !important;
+    }
+    """
+
+    logo_text_css = """
+    svg {
+        height: 44px !important;
+        width: 80px !important;
+        margin-left: 5px !important;
+        margin-top: 4px !important;
+    }
     """
 
     template = pn.template.FastListTemplate(
-        title="",
+        title="Reno Explorer",
         theme="dark",
         theme_toggle=True,
-        header=[
-            pn.pane.SVG(logo, height=44),
-            "Reno Interactive Explorer",
-            pn.Spacer(sizing_mode="stretch_width"),
-            header_controls,
-        ],
+        favicon="./favicon.png",
+        header=[pn.pane.HTML(logo, sizing_mode="stretch_height", stylesheets=[logo_css]), pn.pane.HTML(logo_text, stylesheets=[logo_text_css]), pn.Spacer(sizing_mode="stretch_width"), header_controls],
         main_layout=None,
         # accent="#2F5F6F",
         accent="#A0522D",
         sidebar=[new_session_controls, active_session_controls, load_session_controls],
         main=[main_ui_container],
-        raw_css=[fix_layout_css],
+        raw_css=[fix_layout_css, remove_default_header_css],
     ).servable()
     return template
 
