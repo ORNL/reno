@@ -1,0 +1,53 @@
+reno.ops.lte
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: lte
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~lte.__init__
+      ~lte.astype
+      ~lte.clip
+      ~lte.equal
+      ~lte.eval
+      ~lte.find_refs_of_type
+      ~lte.get_shape
+      ~lte.get_type
+      ~lte.is_static
+      ~lte.latex
+      ~lte.mean
+      ~lte.not_equal
+      ~lte.op_eval
+      ~lte.op_repr
+      ~lte.op_types
+      ~lte.pt
+      ~lte.pt_str
+      ~lte.seek_refs
+      ~lte.series_max
+      ~lte.series_min
+      ~lte.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~lte.OP_REPR
+      ~lte.dtype
+      ~lte.shape
+      ~lte.timeseries
+      ~lte.non_repr_part_indices

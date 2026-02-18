@@ -1,0 +1,53 @@
+reno.ops.series\_min
+====================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: series_min
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~series_min.__init__
+      ~series_min.astype
+      ~series_min.clip
+      ~series_min.equal
+      ~series_min.eval
+      ~series_min.find_refs_of_type
+      ~series_min.get_shape
+      ~series_min.get_type
+      ~series_min.is_static
+      ~series_min.latex
+      ~series_min.mean
+      ~series_min.not_equal
+      ~series_min.op_eval
+      ~series_min.op_repr
+      ~series_min.op_types
+      ~series_min.pt
+      ~series_min.pt_str
+      ~series_min.seek_refs
+      ~series_min.series_max
+      ~series_min.series_min
+      ~series_min.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~series_min.OP_REPR
+      ~series_min.dtype
+      ~series_min.shape
+      ~series_min.timeseries
+      ~series_min.non_repr_part_indices

@@ -1,0 +1,53 @@
+reno.ops.mul
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: mul
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~mul.__init__
+      ~mul.astype
+      ~mul.clip
+      ~mul.equal
+      ~mul.eval
+      ~mul.find_refs_of_type
+      ~mul.get_shape
+      ~mul.get_type
+      ~mul.is_static
+      ~mul.latex
+      ~mul.mean
+      ~mul.not_equal
+      ~mul.op_eval
+      ~mul.op_repr
+      ~mul.op_types
+      ~mul.pt
+      ~mul.pt_str
+      ~mul.seek_refs
+      ~mul.series_max
+      ~mul.series_min
+      ~mul.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~mul.OP_REPR
+      ~mul.dtype
+      ~mul.shape
+      ~mul.timeseries
+      ~mul.non_repr_part_indices

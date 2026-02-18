@@ -1,0 +1,6 @@
+reno.diagrams.add\_stock\_limit\_edge
+=====================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_stock_limit_edge

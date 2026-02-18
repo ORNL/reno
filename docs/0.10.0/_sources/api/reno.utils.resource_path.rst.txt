@@ -1,0 +1,6 @@
+reno.utils.resource\_path
+=========================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: resource_path

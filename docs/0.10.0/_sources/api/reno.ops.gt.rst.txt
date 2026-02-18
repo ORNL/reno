@@ -1,0 +1,53 @@
+reno.ops.gt
+===========
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: gt
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~gt.__init__
+      ~gt.astype
+      ~gt.clip
+      ~gt.equal
+      ~gt.eval
+      ~gt.find_refs_of_type
+      ~gt.get_shape
+      ~gt.get_type
+      ~gt.is_static
+      ~gt.latex
+      ~gt.mean
+      ~gt.not_equal
+      ~gt.op_eval
+      ~gt.op_repr
+      ~gt.op_types
+      ~gt.pt
+      ~gt.pt_str
+      ~gt.seek_refs
+      ~gt.series_max
+      ~gt.series_min
+      ~gt.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~gt.OP_REPR
+      ~gt.dtype
+      ~gt.shape
+      ~gt.timeseries
+      ~gt.non_repr_part_indices

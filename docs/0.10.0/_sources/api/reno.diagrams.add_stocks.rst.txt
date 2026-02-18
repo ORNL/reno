@@ -1,0 +1,6 @@
+reno.diagrams.add\_stocks
+=========================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_stocks

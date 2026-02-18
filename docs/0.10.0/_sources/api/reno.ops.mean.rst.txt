@@ -1,0 +1,53 @@
+reno.ops.mean
+=============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: mean
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~mean.__init__
+      ~mean.astype
+      ~mean.clip
+      ~mean.equal
+      ~mean.eval
+      ~mean.find_refs_of_type
+      ~mean.get_shape
+      ~mean.get_type
+      ~mean.is_static
+      ~mean.latex
+      ~mean.mean
+      ~mean.not_equal
+      ~mean.op_eval
+      ~mean.op_repr
+      ~mean.op_types
+      ~mean.pt
+      ~mean.pt_str
+      ~mean.seek_refs
+      ~mean.series_max
+      ~mean.series_min
+      ~mean.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~mean.OP_REPR
+      ~mean.dtype
+      ~mean.shape
+      ~mean.timeseries
+      ~mean.non_repr_part_indices

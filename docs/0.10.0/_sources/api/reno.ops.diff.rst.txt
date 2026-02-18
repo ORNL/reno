@@ -1,0 +1,53 @@
+reno.ops.diff
+=============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: diff
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~diff.__init__
+      ~diff.astype
+      ~diff.clip
+      ~diff.equal
+      ~diff.eval
+      ~diff.find_refs_of_type
+      ~diff.get_shape
+      ~diff.get_type
+      ~diff.is_static
+      ~diff.latex
+      ~diff.mean
+      ~diff.not_equal
+      ~diff.op_eval
+      ~diff.op_repr
+      ~diff.op_types
+      ~diff.pt
+      ~diff.pt_str
+      ~diff.seek_refs
+      ~diff.series_max
+      ~diff.series_min
+      ~diff.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~diff.OP_REPR
+      ~diff.dtype
+      ~diff.shape
+      ~diff.timeseries
+      ~diff.non_repr_part_indices

@@ -1,0 +1,53 @@
+reno.ops.nonzero
+================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: nonzero
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~nonzero.__init__
+      ~nonzero.astype
+      ~nonzero.clip
+      ~nonzero.equal
+      ~nonzero.eval
+      ~nonzero.find_refs_of_type
+      ~nonzero.get_shape
+      ~nonzero.get_type
+      ~nonzero.is_static
+      ~nonzero.latex
+      ~nonzero.mean
+      ~nonzero.not_equal
+      ~nonzero.op_eval
+      ~nonzero.op_repr
+      ~nonzero.op_types
+      ~nonzero.pt
+      ~nonzero.pt_str
+      ~nonzero.seek_refs
+      ~nonzero.series_max
+      ~nonzero.series_min
+      ~nonzero.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~nonzero.OP_REPR
+      ~nonzero.dtype
+      ~nonzero.shape
+      ~nonzero.timeseries
+      ~nonzero.non_repr_part_indices

@@ -1,0 +1,50 @@
+reno.components.Distribution
+============================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Distribution
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Distribution.__init__
+      ~Distribution.astype
+      ~Distribution.clean_part_repr
+      ~Distribution.clip
+      ~Distribution.equal
+      ~Distribution.eval
+      ~Distribution.find_refs_of_type
+      ~Distribution.get_shape
+      ~Distribution.get_type
+      ~Distribution.is_static
+      ~Distribution.latex
+      ~Distribution.mean
+      ~Distribution.not_equal
+      ~Distribution.populate
+      ~Distribution.pt
+      ~Distribution.pt_str
+      ~Distribution.seek_refs
+      ~Distribution.series_max
+      ~Distribution.series_min
+      ~Distribution.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Distribution.dtype
+      ~Distribution.shape
+      ~Distribution.timeseries

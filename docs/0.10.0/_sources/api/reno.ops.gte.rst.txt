@@ -1,0 +1,53 @@
+reno.ops.gte
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: gte
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~gte.__init__
+      ~gte.astype
+      ~gte.clip
+      ~gte.equal
+      ~gte.eval
+      ~gte.find_refs_of_type
+      ~gte.get_shape
+      ~gte.get_type
+      ~gte.is_static
+      ~gte.latex
+      ~gte.mean
+      ~gte.not_equal
+      ~gte.op_eval
+      ~gte.op_repr
+      ~gte.op_types
+      ~gte.pt
+      ~gte.pt_str
+      ~gte.seek_refs
+      ~gte.series_max
+      ~gte.series_min
+      ~gte.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~gte.OP_REPR
+      ~gte.dtype
+      ~gte.shape
+      ~gte.timeseries
+      ~gte.non_repr_part_indices

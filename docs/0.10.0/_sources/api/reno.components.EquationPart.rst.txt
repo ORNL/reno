@@ -1,0 +1,48 @@
+reno.components.EquationPart
+============================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: EquationPart
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~EquationPart.__init__
+      ~EquationPart.astype
+      ~EquationPart.clip
+      ~EquationPart.equal
+      ~EquationPart.eval
+      ~EquationPart.find_refs_of_type
+      ~EquationPart.get_shape
+      ~EquationPart.get_type
+      ~EquationPart.is_static
+      ~EquationPart.latex
+      ~EquationPart.mean
+      ~EquationPart.not_equal
+      ~EquationPart.pt
+      ~EquationPart.pt_str
+      ~EquationPart.seek_refs
+      ~EquationPart.series_max
+      ~EquationPart.series_min
+      ~EquationPart.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~EquationPart.dtype
+      ~EquationPart.shape
+      ~EquationPart.timeseries

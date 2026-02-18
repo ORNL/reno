@@ -57,10 +57,10 @@ html_theme_options = {
     "show_nav_level": 3,
     "navigation_depth": 6,
     "show_toc_level": 2,
-    # "logo": {
-    #     "image_light": "_static/icat_medium_full_light.svg",
-    #     "image_dark": "_static/icat_medium_full_dark.svg",
-    # },
+    "logo": {
+        "image_light": "_static/header_logo_light.svg",
+        "image_dark": "_static/header_logo_dark.svg",
+    },
     "icon_links": [
         {
             "name": "GitHub",
@@ -89,4 +89,4 @@ html_theme_options = {
 
 html_context = {"default_mode": "dark"}
 
-# favicons = {"rel": "icon", "href": "icat_favicon.svg", "type": "image/svg+xml"}
+favicons = {"rel": "icon", "href": "favicon.svg", "type": "image/svg+xml"}

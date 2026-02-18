@@ -1,0 +1,42 @@
+reno.explorer.RunRow
+====================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: RunRow
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~RunRow.__init__
+      ~RunRow.edit_view
+      ~RunRow.fire_on_removed
+      ~RunRow.fire_on_selected
+      ~RunRow.from_dict
+      ~RunRow.on_removed
+      ~RunRow.on_selected
+      ~RunRow.reset_view
+      ~RunRow.servable
+      ~RunRow.show
+      ~RunRow.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~RunRow.name
+      ~RunRow.param
+      ~RunRow.run_name
+      ~RunRow.visible
