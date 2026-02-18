@@ -1711,6 +1711,7 @@ class TrackedReference(Reference):
         self.group = data["group"]
         self.implicit = data["implicit"]
         if "eq" in data:
+            print(f"Trying to parse: {data['eq']}")
             self.eq = reno.parser.parse(data["eq"], refs)
 
     def __repr__(self):

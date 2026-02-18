@@ -20,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Any error within the explorer crashing entire server process
 * Init refs in saved models breaking explorer
 * Error when parsing `repeated_pulse`, incorrectly added additional sub equation
-  part.
+  part
+* Issue with json decode of invalid data not correctly throwing a syntax error
+  during parsing
 
 
 

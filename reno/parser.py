@@ -117,7 +117,10 @@ def parse_value(string: str) -> float | int | str:
     if val is None:
         if str(string).startswith("[") and str(string).endswith("]"):
             # safer parse of a list than a eval() would be
-            val = json.loads(string)
+            try:
+                val = json.loads(string)
+            except json.JSONDecodeError:
+                raise SyntaxError(f"Could not parse array value from {string}")
 
     # leave as string if it's none of the above types
     if val is None:

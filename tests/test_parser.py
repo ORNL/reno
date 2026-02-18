@@ -139,3 +139,26 @@ def test_prefix_mixed_classsyntax():
     should handle this appropriately."""
     op = parser.parse(str(ops.sum(ops.Bernoulli(0.5))))
     assert isinstance(op.sub_equation_parts[0], Distribution)
+
+
+def test_parse_multiple_arrays():
+    """An op with multiple array parameters shouldn't get mixed up."""
+    m = Model()
+    m.v = Variable()
+    op_str = str(
+        ops.interpolate(
+            m.v,
+            # Scalar([1.0, 2.0, 3.0]),
+            # Scalar([2.0, 3.0, 4.0]))
+            Scalar([0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]),
+            Scalar([0.05, 0.105, 0.225, 0.36, 0.54, 0.84, 1.24, 2.36, 3.34, 3.86, 4.0]),
+        )
+    )
+    print(op_str)
+    op = parser.parse(op_str, refs={"v": m.v})
+
+    assert isinstance(op, ops.interpolate)
+    assert (
+        op.sub_equation_parts[1].value
+        == [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+    ).all()
