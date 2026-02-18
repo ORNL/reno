@@ -64,6 +64,11 @@ def test_full_op_parse():
     assert out.sub_equation_parts[1].value == 13.2
 
 
+def test_full_assignment_op_parse():
+    out = parser.parse(" (= (= Scalar(5.0)))")
+    assert isinstance(out, ops.assign)
+
+
 def test_blank_parse():
     assert parser.parse_class_or_scalar(" ") is None
 
@@ -80,6 +85,8 @@ def test_blank_parse():
         ("+ 5 3", "+", ["5", "3"]),
         ("+ 5 (+ 3 6)", "+", ["5", "(+ 3 6)"]),
         ("(+ 5 (+ 3 6))", "+", ["5", "(+ 3 6)"]),
+        ("(= Scalar(5.0))", "=", ["Scalar(5.0)"]),
+        ("(= (= Scalar(5.0)))", "=", ["(= Scalar(5.0))"]),
     ],
 )
 def test_prefix_op_str(string, expected_name, expected_args):

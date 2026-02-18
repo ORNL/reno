@@ -25,7 +25,7 @@ from scipy.stats import gaussian_kde
 import reno
 from reno.components import Flow, Scalar, Stock, Variable
 from reno.interactive_latex import InteractiveLatex
-from reno.parser import parse_class_or_scalar
+from reno.parser import parse
 from reno.utils import latex_eqline_wrap, latex_eqline_wrap_doc
 
 
@@ -511,7 +511,7 @@ def density(data: np.ndarray, smoothing: float = 0.1) -> tuple[np.ndarray, np.nd
     return xs, dens(xs)
 
 
-def plot_refs(
+def plot_refs(  # noqa: C901
     refs: list[
         reno.components.Reference
         | list[reno.components.Reference]
@@ -921,7 +921,8 @@ class ReferenceEditor:
 
     def parse_str_to_eq(self) -> reno.components.EquationPart:
         """Get the equivalent EquationPart equation for the string in the control."""
-        result = parse_class_or_scalar(self.control.value)
+        # result = parse_class_or_scalar(self.control.value)
+        result = parse(self.control.value)
 
         if isinstance(result, (float, int)):
             result = Scalar(result)

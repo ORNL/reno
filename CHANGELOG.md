@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   during parsing
 * Missing sub equation parts breaking implicit timerefs (repeated_pulse didn't
   work if no other time ref used)
+* Parsing full ops from explorer inputs not working
 
 
 
