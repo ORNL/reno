@@ -1491,8 +1491,9 @@ class repeated_pulse(reno.components.Operation):
                 (t >= start) & ((t - start) % interval < width),
             ],
         )
-        # super().__init__(start, interval, width, self.sub_eq)
-        super().__init__(start, interval, width)
+        super().__init__(start, interval, width, self.sub_eq)
+        # super().__init__(start, interval, width)
+        self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
 
     def latex(self, **kwargs):
         return f"\\text{{repeated\\_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"

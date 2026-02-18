@@ -963,9 +963,11 @@ class Model:
         """
         all_refs = []
         for flow in self.all_flows():
-            all_refs.extend(flow.eq.seek_refs())
+            # all_refs.extend(flow.eq.seek_refs())
+            all_refs.extend(flow.find_refs_of_type(reno.components.TimeRef))
         for var in self.all_vars():
-            all_refs.extend(var.eq.seek_refs())
+            # all_refs.extend(var.eq.seek_refs())
+            all_refs.extend(var.find_refs_of_type(reno.components.TimeRef))
 
         for ref in all_refs:
             if isinstance(ref, reno.components.TimeRef):
@@ -976,9 +978,11 @@ class Model:
     def get_timeref(self) -> reno.components.TimeRef:
         all_refs = []
         for flow in self.all_flows():
-            all_refs.extend(flow.eq.seek_refs())
+            # all_refs.extend(flow.eq.seek_refs())
+            all_refs.extend(flow.eq.find_refs_of_type(reno.components.TimeRef))
         for var in self.all_vars():
-            all_refs.extend(var.eq.seek_refs())
+            # all_refs.extend(var.eq.seek_refs())
+            all_refs.extend(var.eq.find_refs_of_type(reno.components.TimeRef))
 
         for ref in all_refs:
             if isinstance(ref, reno.components.TimeRef):

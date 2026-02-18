@@ -368,3 +368,13 @@ def test_implicit_metrics():
 
     assert "observation_0" in ds.prior
     assert "observation_0" not in [metric.name for metric in m.metrics]
+
+
+def test_implicit_timeref():
+    """A model that has a time ref added because of an operation should correctly pick that up in pymc land"""
+    m = Model()
+    with m:
+        v0 = Variable(ops.repeated_pulse(0, 3))
+
+    print(m.find_timeref_name())
+    ds = m.pymc(compute_prior_only=True)

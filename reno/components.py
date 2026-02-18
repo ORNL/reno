@@ -589,6 +589,9 @@ class Operation(EquationPart):
 
     def __init__(self, *operands):
         super().__init__(list(operands))
+        self.non_repr_part_indices = []
+        """Use this to "hide" a sub_equation_part in the string repr, e.g. if
+        it's important for computation but isn't part of parsing."""
 
     def eval(
         self,
@@ -681,7 +684,11 @@ class Operation(EquationPart):
 
     def __repr__(self):
         sub_parts_string = " ".join(
-            [subpart.__repr__() for subpart in self.sub_equation_parts]
+            [
+                subpart.__repr__()
+                for i, subpart in enumerate(self.sub_equation_parts)
+                if i not in self.non_repr_part_indices
+            ]
         )
         return f"({self.op_repr()} {sub_parts_string})"
 

@@ -4,7 +4,7 @@ See one_compartment notebook"""
 
 import reno as r
 
-t = r.TimeRef()
+# t = r.TimeRef()
 one_compartment_model = r.Model("one_compartment_model", steps=168)
 with one_compartment_model:
     drug_in_system = r.Stock(doc='mass of medication in the ("person\'s blood serum"?)')

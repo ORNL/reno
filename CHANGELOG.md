@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   part
 * Issue with json decode of invalid data not correctly throwing a syntax error
   during parsing
+* Missing sub equation parts breaking implicit timerefs (repeated_pulse didn't
+  work if no other time ref used)
 
 
 
