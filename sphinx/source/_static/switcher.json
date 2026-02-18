@@ -8,13 +8,13 @@
     {
         "name": "0.9.0",
         "version": "0.9.0",
-        "url": "https://ornl.github.io/reno/stable/",
+        "url": "https://ornl.github.io/reno/0.9.0/",
         "preferred": false
     },
     {
         "name": "0.8.0",
         "version": "0.8.0",
-        "url": "https://ornl.github.io/reno/stable/",
+        "url": "https://ornl.github.io/reno/0.8.0/",
         "preferred": false
     },
     {
