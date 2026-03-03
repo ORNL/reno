@@ -2379,8 +2379,15 @@ def create_explorer():  # noqa: C901
     return template
 
 
-if __name__ == "__main__":
+def main():
+    global SESSION_FOLDER
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version",
+        dest="version",
+        action="store_true",
+        help="Print out Reno library version.",
+    )
     parser.add_argument(
         "--session-path",
         dest="session_path",
@@ -2416,10 +2423,13 @@ if __name__ == "__main__":
     )
 
     cli_args = parser.parse_args()
+    if cli_args.version:
+        print(reno.__version__)
+        exit()
 
     SESSION_FOLDER = cli_args.session_path
 
-    websocket_origin = ["localhost"]
+    websocket_origin = ["localhost", f"localhost:{cli_args.port}"]
     if cli_args.websocket_origin is not None:
         websocket_origin.append(cli_args.websocket_origin)
 
@@ -2428,10 +2438,14 @@ if __name__ == "__main__":
             "explorer": create_explorer,
         },
         address=cli_args.address,
-        port=cli_args.port,
+        port=int(cli_args.port),
         show=False,
         root_path=cli_args.root_path,
         liveness=cli_args.liveness,
         websocket_origin=websocket_origin,
         extra_patterns=[("/api/session_list", SessionListerHandler)],
     )
+
+
+if __name__ == "__main__":
+    main()

@@ -41,14 +41,14 @@ dependencies = [
     "numpy",
     "pandas",
     "xarray",
-    "panel",
+    "panel<1.8",
     "pymc",
     "matplotlib",
     "selenium",
     "ipyvuetify",
     "graphviz"
 ]
-requires-python = ">=3.11,<3.14"  # pymc/pytensor having issues with 3.14?
+requires-python = ">=3.11"  # pymc/pytensor was initially having issues with 3.14
 readme = "README.md"
 authors = [
     {name = "Nathan Martindale, Jordan Stomps, Birdy Phathanapirom", email = "martindalena@ornl.gov"},
@@ -67,7 +67,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13"
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
 ]
 
 [project.urls]
@@ -75,3 +76,6 @@ Repository = "https://github.com/ORNL/reno"
 Changelog = "https://github.com/ORNL/reno/blob/main/CHANGELOG.md"
 Issues = "https://github.com/ORNL/reno/issues"
 Documentation = "https://ornl.github.io/reno/stable"
+
+[project.scripts]
+reno = "reno.explorer:main"
