@@ -19,6 +19,7 @@ import PIL
 import xarray as xr
 
 import reno
+from reno.explorer_rest_api import SessionListerHandler
 from reno.viz import ReferenceEditor, plot_trace_refs
 
 SESSION_FOLDER = ""
@@ -94,7 +95,6 @@ icon_save = """
 # ==================================================
 # /ICONS
 # ==================================================
-
 
 
 class Explorer(pn.custom.PyComponent):
@@ -1575,9 +1575,31 @@ class RunRow(pn.viewable.Viewer):
         self.observations = observations
         super().__init__(**params)
 
-        self.select_btn = pn.widgets.ButtonIcon(width=30, height=30, icon=icon_filled_check, active_icon=icon_filled_check, styles={"margin": "0px", "margin-left": "5px"})
-        self.remove_btn = pn.widgets.ButtonIcon(icon=icon_close, active_icon=icon_close, width=22, height=22, styles={"margin": "4px", "margin-left": "5px", "fill": "var(--danger-bg-color)"})
-        self.edit_btn = pn.widgets.ButtonIcon(icon=icon_pencil, active_icon=icon_pencil, styles={"margin": "2px"}, width=26, height=26)
+        self.select_btn = pn.widgets.ButtonIcon(
+            width=30,
+            height=30,
+            icon=icon_filled_check,
+            active_icon=icon_filled_check,
+            styles={"margin": "0px", "margin-left": "5px"},
+        )
+        self.remove_btn = pn.widgets.ButtonIcon(
+            icon=icon_close,
+            active_icon=icon_close,
+            width=22,
+            height=22,
+            styles={
+                "margin": "4px",
+                "margin-left": "5px",
+                "fill": "var(--danger-bg-color)",
+            },
+        )
+        self.edit_btn = pn.widgets.ButtonIcon(
+            icon=icon_pencil,
+            active_icon=icon_pencil,
+            styles={"margin": "2px"},
+            width=26,
+            height=26,
+        )
         self.done_btn = pn.widgets.Button(name="done")
 
         self.select_btn.on_click(self._handle_pnl_select_btn_clicked)
@@ -1609,9 +1631,7 @@ class RunRow(pn.viewable.Viewer):
                 parameters=["run_name"],
                 show_labels=False,
                 show_name=False,
-                widgets={
-                    "run_name": {"width": 150}
-                },
+                widgets={"run_name": {"width": 150}},
             ),
             self.done_btn,
         ]
@@ -2051,20 +2071,34 @@ def create_explorer():  # noqa: C901
     def get_active_session_switchers():
         controls = []
         if len(pn.state.cache["active_sessions"]) == 0:
-            controls.append("Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below.")
+            controls.append(
+                "Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below."
+            )
         for name in pn.state.cache["active_sessions"]:
             if name == active_session_name:
                 button = pn.widgets.Button(
-                    name=name, button_type="primary", sizing_mode="stretch_width", stylesheets=[session_btn_css, highlighted_session_btn_css]
+                    name=name,
+                    button_type="primary",
+                    sizing_mode="stretch_width",
+                    stylesheets=[session_btn_css, highlighted_session_btn_css],
                 )
             else:
                 button = pn.widgets.Button(
-                    name=name, button_type="primary", sizing_mode="stretch_width", stylesheets=[session_btn_css]
+                    name=name,
+                    button_type="primary",
+                    sizing_mode="stretch_width",
+                    stylesheets=[session_btn_css],
                 )
                 # button.css_classes.append("highlighted")
             button.on_click(partial(switch_active_session, name=name))
 
-            del_btn = pn.widgets.ButtonIcon(icon=icon_close, active_icon=icon_close, width=22, height=22, styles={"margin": "4px"})
+            del_btn = pn.widgets.ButtonIcon(
+                icon=icon_close,
+                active_icon=icon_close,
+                width=22,
+                height=22,
+                styles={"margin": "4px"},
+            )
             del_btn.on_click(partial(close_session, name=name))
             controls.append(pn.Row(button, del_btn))
         return controls
@@ -2074,7 +2108,9 @@ def create_explorer():  # noqa: C901
         nonlocal active_session_controls
 
         active_session_controls.objects = [
-            pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"),
+            pn.pane.HTML(
+                "<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"
+            ),
             *get_active_session_switchers(),
         ]
 
@@ -2142,14 +2178,13 @@ def create_explorer():  # noqa: C901
         background-color: var(--accent-fill-rest) !important;
     }
     """
-    
+
     # styling to highlight a session btn
     highlighted_session_btn_css = """
     .bk-btn-group > button.bk-btn.bk-btn-primary {
         border: 2px solid var(--accent-fill-rest) !important;
     }
     """
-
 
     # make the outline box go away from the session name textbox when
     # highlighted/entering text, this is normally a difficult task,
@@ -2268,10 +2303,14 @@ def create_explorer():  # noqa: C901
 
     # file upload option to allow someone to upload their own model serialized
     # in a json file
-    upload_model = pn.widgets.FileInput(accept=".json", stylesheets=[fix_upload_css], width=310)
+    upload_model = pn.widgets.FileInput(
+        accept=".json", stylesheets=[fix_upload_css], width=310
+    )
 
     new_session_controls.objects = [
-        pn.pane.HTML("<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"),
+        pn.pane.HTML(
+            "<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"
+        ),
         *model_buttons,
         upload_model,
     ]
@@ -2324,7 +2363,12 @@ def create_explorer():  # noqa: C901
         theme="dark",
         theme_toggle=True,
         favicon="./favicon.png",
-        header=[pn.pane.HTML(logo, sizing_mode="stretch_height", stylesheets=[logo_css]), pn.pane.HTML(logo_text, stylesheets=[logo_text_css]), pn.Spacer(sizing_mode="stretch_width"), header_controls],
+        header=[
+            pn.pane.HTML(logo, sizing_mode="stretch_height", stylesheets=[logo_css]),
+            pn.pane.HTML(logo_text, stylesheets=[logo_text_css]),
+            pn.Spacer(sizing_mode="stretch_width"),
+            header_controls,
+        ],
         main_layout=None,
         # accent="#2F5F6F",
         accent="#A0522D",
@@ -2389,4 +2433,5 @@ if __name__ == "__main__":
         root_path=cli_args.root_path,
         liveness=cli_args.liveness,
         websocket_origin=websocket_origin,
+        extra_patterns=[("/api/session_list", SessionListerHandler)],
     )

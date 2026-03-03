@@ -164,6 +164,21 @@ those observations to be met.
 
 For a more in-depth introduction to reno, see the tub example in the `./notebooks` folder.
 
+## Explorer UI
+
+Reno comes with a browser-based graphical explorer, allowing you to load models
+and interactively test different configurations and Bayesian analysis runs. The
+explorer implements a customizable tab view, where each tab can be populated
+with configurable diagrams, plots, and text panels to describe interesting
+results. Overall sessions can be saved and reloaded later, and tabs can be downloaded
+as PDF documents for easier sharing.
+
+![explorer_screenshot](https://github.com/ORNL/reno/blob/main/sphinx/source/_static/explorer_screenshot.png)
+
+To run the explorer, use the `reno` command. See command line arguments in the
+documentation:
+[https://ornl.github.io/reno/stable/user/explorer.html](https://ornl.github.io/reno/stable/user/explorer.html)
+
 
 ## Documentation
 
