@@ -22,7 +22,7 @@ import reno
 from reno.explorer_rest_api import SessionListerHandler
 from reno.viz import ReferenceEditor, plot_trace_refs
 
-SESSION_FOLDER = ""
+WORKSPACE_FOLDER = ""
 
 logo = """
 <svg
@@ -225,7 +225,7 @@ class Explorer(pn.custom.PyComponent):
         self.controls._layout.objects = [*controls_layout]
 
     def to_dict(self) -> dict:
-        """Serialize all info for current session so can be saved to file."""
+        """Serialize all info for current workspace so can be saved to file."""
         data = {
             "model": self.model.to_dict(),
             "runs": self.runs_list.to_dict(),
@@ -235,7 +235,7 @@ class Explorer(pn.custom.PyComponent):
 
     @staticmethod
     def from_dict(data: dict) -> "Explorer":
-        """Deserilalize data from previously saved session via ``to_dict()``."""
+        """Deserilalize data from previously saved workspace via ``to_dict()``."""
         model = reno.model.Model.from_dict(data["model"])
         explorer = Explorer(model)
         explorer.runs_list.from_dict(data["runs"])
@@ -751,7 +751,7 @@ class PanesSet(pn.viewable.Viewer):
                 btn.label = btn.label + "*"
 
     def export(self):
-        """Save all necessary data about current tab in session (including a
+        """Save all necessary data about current tab in workspace (including a
         copy of the model and any simulation data) and use the tab_exporter
         to produce an HTML and PDF in the ``.doccache`` path.
 
@@ -1904,40 +1904,40 @@ def create_explorer():  # noqa: C901
     # dictionary with values that are functions that return servable things.
     # This ended up being a much more flexible approach than the typical `panel
     # serve` CLI. (namely the ability to pass in custom args to this file's CLI,
-    # such as the session folder `--session-path` arg)
+    # such as the workspace folder `--workspace-path` arg)
     pn.extension("gridstack", "texteditor", "terminal", notifications=True, nthreads=4)
 
     active_explorer = None
     active_session_name = ""
-    if "active_sessions" not in pn.state.cache:
-        pn.state.cache["active_sessions"] = {}
+    if "active_workspaces" not in pn.state.cache:
+        pn.state.cache["active_workspaces"] = {}
 
     # find and load any models from pre-defined model list
-    # (the /models folder wherever sessions are being stored)
-    if not os.path.exists(f"{SESSION_FOLDER}/models"):
-        os.makedirs(f"{SESSION_FOLDER}/models", exist_ok=True)
-    model_list = os.listdir(f"{SESSION_FOLDER}/models")
+    # (the /models folder wherever workspaces are being stored)
+    if not os.path.exists(f"{WORKSPACE_FOLDER}/models"):
+        os.makedirs(f"{WORKSPACE_FOLDER}/models", exist_ok=True)
+    model_list = os.listdir(f"{WORKSPACE_FOLDER}/models")
 
     models = {}
     for model in model_list:
         if not model.endswith(".json"):
             continue
-        with open(f"{SESSION_FOLDER}/models/{model}") as infile:
+        with open(f"{WORKSPACE_FOLDER}/models/{model}") as infile:
             data = json.load(infile)
             name = model[: model.rfind(".")]
             if data["name"] is not None:
                 name += f' ({data["name"]})'
-            models[name] = f"{SESSION_FOLDER}/models/{model}"
+            models[name] = f"{WORKSPACE_FOLDER}/models/{model}"
 
     # ----------------------------------------------------------------------
     # ---- functions and event handlers for use by the overall template ----
     # ----------------------------------------------------------------------
 
-    def load_session(*args, path: str):
-        """Load all session data for a particular exploration from the specified path."""
+    def load_workspace(*args, path: str):
+        """Load all workspace data for a particular exploration from the specified path."""
         # (path is after *args because this is the target of an event handler
         # and is populated via a partial)
-        nonlocal active_explorer, session_name, main_ui_container, active_session_name
+        nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
 
         main_ui_container.loading = True
         try:
@@ -1946,22 +1946,24 @@ def create_explorer():  # noqa: C901
             ex = Explorer.from_dict(data)
             main_ui_container.objects = [ex._layout]
         except Exception as e:
-            pn.state.notifications.error(f"Failed to load session: {e}", 0)
+            pn.state.notifications.error(f"Failed to load workspace: {e}", 0)
             print(traceback.format_exc())
 
         main_ui_container.loading = False
 
-        path_session_name = path[: path.rfind(".")]
-        path_session_name = str(Path(path_session_name).relative_to(SESSION_FOLDER))
-        session_name.value = path_session_name
+        path_workspace_name = path[: path.rfind(".")]
+        path_workspace_name = str(
+            Path(path_workspace_name).relative_to(WORKSPACE_FOLDER)
+        )
+        workspace_name.value = path_workspace_name
         active_explorer = ex
-        pn.state.cache["active_sessions"][path_session_name] = ex
-        active_session_name = path_session_name
-        refresh_active_sessions()
+        pn.state.cache["active_workspaces"][path_workspace_name] = ex
+        active_session_name = path_workspace_name
+        refresh_active_workspaces()
 
-    def new_model_session(*args, model_path: str):
-        """Start a blank exploration session using a model loaded from the specified path."""
-        nonlocal active_explorer, session_name, main_ui_container, active_session_name
+    def new_model_workspace(*args, model_path: str):
+        """Start a blank exploration workspace using a model loaded from the specified path."""
+        nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
 
         try:
             model_path_name = model_path[
@@ -1976,71 +1978,71 @@ def create_explorer():  # noqa: C901
             # make sure we don't conflict with an existing active session
             name_check = name
             i = 1
-            while name_check in pn.state.cache["active_sessions"]:
+            while name_check in pn.state.cache["active_workspaces"]:
                 name_check = f"{name}_{i}"
                 i += 1
             name = name_check
 
-            session_name.value = name
+            workspace_name.value = name
             active_explorer = ex
             active_session_name = name
             ex.view.active_tab.add_diagram_pane()
 
-            pn.state.cache["active_sessions"][session_name.value] = ex
-            refresh_active_sessions()
+            pn.state.cache["active_workspaces"][workspace_name.value] = ex
+            refresh_active_workspaces()
         except Exception as e:
             pn.state.notifications.error(f"Failed to create new model session: {e}", 0)
             print(traceback.format_exc())
 
-    def switch_active_session(*args, name: str):
-        """Change to a different explorer UI (different active session)"""
-        nonlocal active_explorer, session_name, main_ui_container, active_session_name
+    def switch_active_workspace(*args, name: str):
+        """Change to a different explorer UI (different active workspace)"""
+        nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
         try:
-            ex = pn.state.cache["active_sessions"][name]
+            ex = pn.state.cache["active_workspaces"][name]
             main_ui_container.objects = [ex._layout]
-            session_name.value = name
+            workspace_name.value = name
             active_explorer = ex
             active_session_name = name
         except Exception as e:
-            pn.state.notifications.error(f"Failed to load active session: {e}", 0)
+            pn.state.notifications.error(f"Failed to switch active workspace: {e}", 0)
             print(traceback.format_exc())
-        refresh_active_sessions()
+        refresh_active_workspaces()
 
-    def close_session(*args, name: str):
+    def close_workspace(*args, name: str):
         """Remove explorer from cache."""
-        nonlocal active_explorer, active_session_name
+        nonlocal active_explorer, active_session_name, workspace_name
 
-        if name in pn.state.cache["active_sessions"]:
-            del pn.state.cache["active_sessions"][name]
+        if name in pn.state.cache["active_workspaces"]:
+            del pn.state.cache["active_workspaces"][name]
 
         if name == active_session_name:
             main_ui_container.objects = []
-            session_name.value = ""
+            workspace_name.value = ""
             active_explorer = None
             active_session_name = None
 
-        refresh_active_sessions()
+        refresh_active_workspaces()
 
-    def get_recursive_sessions(starting_path: str):
-        """Find all previously saved exploration sessions by recursing through the folders
-        starting at the root sessions folder.
+    def get_recursive_workspaces(starting_path: str) -> list[pn.widgets.base.Widget]:
+        """Find all previously saved exploration workspaces by recursing through the folders
+        starting at the root workspaces folder.
 
         This creates a set of nested BetterAccordion components with buttons for each found
-        session that roughly aligns with the actual folder structure, essentially a "session
+        workspaces that roughly aligns with the actual folder structure, essentially a "workspaces
         file browser".
         """
         controls = []
         for subpath in os.listdir(starting_path):
             if subpath.endswith(".json"):
-                session_name = subpath[: subpath.rfind(".")]
+                workspace_name = subpath[: subpath.rfind(".")]
                 button = pn.widgets.Button(
-                    name=session_name,
+                    name=workspace_name,
                     button_type="primary",
                     stylesheets=[session_btn_css],
                     sizing_mode="stretch_width",
                 )
                 button.on_click(
-                    partial(load_session, path=f"{starting_path}/{subpath}")
+                    partial(load_workspace, path=f"{starting_path}/{subpath}")
                 )
                 controls.append(button)
             # recurse into any subdirectories
@@ -2048,7 +2050,7 @@ def create_explorer():  # noqa: C901
                 accordion = BetterAccordion(
                     label=f"{subpath}/",
                     child=pn.Column(
-                        *get_recursive_sessions(f"{starting_path}/{subpath}"),
+                        *get_recursive_workspaces(f"{starting_path}/{subpath}"),
                         sizing_mode="stretch_width",
                     ),
                     sizing_mode="stretch_width",
@@ -2058,23 +2060,26 @@ def create_explorer():  # noqa: C901
 
         return controls
 
-    def refresh_loadable_sessions():
-        """Entry point for the get_recursive_sessions function, populates
-        the load_session_controls widget."""
+    def refresh_loadable_workspaces():
+        """Entry point for the get_recursive_workspaces function, populates
+        the load_workspace_controls widget."""
         nonlocal load_session_controls
 
         load_session_controls.objects = [
-            pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Load session:</b></p>"),
-            *get_recursive_sessions(SESSION_FOLDER),
+            pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Load workspace:</b></p>"),
+            *get_recursive_workspaces(WORKSPACE_FOLDER),
         ]
 
-    def get_active_session_switchers():
+    def get_active_workspace_switchers() -> list[pn.widgets.base.Widget]:
+        """Create a styled set of buttons corresponding to each active workspace in the cache,
+        where clicking one changes the displayed explorer to that cached one."""
         controls = []
-        if len(pn.state.cache["active_sessions"]) == 0:
+        if len(pn.state.cache["active_workspaces"]) == 0:
             controls.append(
-                "Create a new session by clicking on a button above, or load a previous session by selecting from previously saved ones below."
+                "Create a new workspace by clicking on a button above, or load a previous workspace by selecting from previously saved ones below."
             )
-        for name in pn.state.cache["active_sessions"]:
+        # for each workspace add a switch and a close button
+        for name in pn.state.cache["active_workspaces"]:
             if name == active_session_name:
                 button = pn.widgets.Button(
                     name=name,
@@ -2090,7 +2095,7 @@ def create_explorer():  # noqa: C901
                     stylesheets=[session_btn_css],
                 )
                 # button.css_classes.append("highlighted")
-            button.on_click(partial(switch_active_session, name=name))
+            button.on_click(partial(switch_active_workspace, name=name))
 
             del_btn = pn.widgets.ButtonIcon(
                 icon=icon_close,
@@ -2099,38 +2104,38 @@ def create_explorer():  # noqa: C901
                 height=22,
                 styles={"margin": "4px"},
             )
-            del_btn.on_click(partial(close_session, name=name))
+            del_btn.on_click(partial(close_workspace, name=name))
             controls.append(pn.Row(button, del_btn))
         return controls
 
-    def refresh_active_sessions():
-        """Create an option for each explorer that's been opened."""
+    def refresh_active_workspaces():
+        """Create an button to switch to each explorer that's been opened."""
         nonlocal active_session_controls
 
         active_session_controls.objects = [
             pn.pane.HTML(
-                "<p style='margin-bottom: 0px;'><b>Switch active session:</b></p>"
+                "<p style='margin-bottom: 0px;'><b>Switch active workspace:</b></p>"
             ),
-            *get_active_session_switchers(),
+            *get_active_workspace_switchers(),
         ]
 
-    def save_session(self, *args):
-        """Save the current system exploration session to whatever path is set in the
-        session_name widget."""
+    def save_workspace(self, *args):
+        """Save the current system exploration workspace to whatever path is set in the
+        workspace_name widget."""
         nonlocal active_session_name
 
         try:
             data = active_explorer.to_dict()
-            filename = session_name.value
+            filename = workspace_name.value
 
             # handle changing session name
             if filename != active_session_name:
-                pn.state.cache["active_sessions"][filename] = active_explorer
-                del pn.state.cache["active_sessions"][active_session_name]
+                pn.state.cache["active_workspaces"][filename] = active_explorer
+                del pn.state.cache["active_workspaces"][active_session_name]
                 active_session_name = filename
-                refresh_active_sessions()
+                refresh_active_workspaces()
 
-            output_path = f"{SESSION_FOLDER}/{filename}.json"
+            output_path = f"{WORKSPACE_FOLDER}/{filename}.json"
             output_folder = output_path[: output_path.rfind("/")]
             os.makedirs(output_folder, exist_ok=True)
             with open(output_path, "w") as outfile:
@@ -2139,7 +2144,7 @@ def create_explorer():  # noqa: C901
             pn.state.notifications.error(f"Failed to save session: {e}", 0)
             print(traceback.format_exc())
 
-        refresh_loadable_sessions()
+        refresh_loadable_workspaces()
 
     def server_ready():
         """This gets called every refresh or page change, and flipping the theme
@@ -2158,7 +2163,7 @@ def create_explorer():  # noqa: C901
     # -----------------------
 
     # styling for each clickable session button in the "session file explorer"
-    # created in the get_recursive_sessions function.
+    # created in the get_recursive_workspaces function.
     session_btn_css = """
     :host {
         margin-top: 2px;
@@ -2281,13 +2286,13 @@ def create_explorer():  # noqa: C901
         icon_size="2em",
         description="Save session state",
     )
-    save_btn.on_click(save_session)
+    save_btn.on_click(save_workspace)
     # -- /save session button --
 
-    session_name = pn.widgets.TextInput(
-        placeholder="Session name", stylesheets=[session_name_theme]
+    workspace_name = pn.widgets.TextInput(
+        placeholder="Workspace name", stylesheets=[session_name_theme]
     )
-    header_controls.objects = [session_name, save_btn]
+    header_controls.objects = [workspace_name, save_btn]
 
     # --- /HEADER CONTROLS ---
 
@@ -2299,7 +2304,7 @@ def create_explorer():  # noqa: C901
             name=f"{model}", button_type="primary", sizing_mode="stretch_width"
         )
         model_buttons.append(btn)
-        btn.on_click(partial(new_model_session, model_path=models[model]))
+        btn.on_click(partial(new_model_workspace, model_path=models[model]))
 
     # file upload option to allow someone to upload their own model serialized
     # in a json file
@@ -2309,7 +2314,7 @@ def create_explorer():  # noqa: C901
 
     new_session_controls.objects = [
         pn.pane.HTML(
-            "<p style='margin-bottom: 0px; margin-top: 0px;'><b>New session with model:</b></p>"
+            "<p style='margin-bottom: 0px; margin-top: 0px;'><b>New workspace with model:</b></p>"
         ),
         *model_buttons,
         upload_model,
@@ -2318,11 +2323,11 @@ def create_explorer():  # noqa: C901
 
     # --- LOAD SESSION CONTROLS ---
     # set up the "session file explorer" in the sidebar
-    refresh_loadable_sessions()
+    refresh_loadable_workspaces()
     # --- /LOAD SESSION CONTROLS ---
 
     # --- ACTIVE SESSION CONTROLS ---
-    refresh_active_sessions()
+    refresh_active_workspaces()
     # --- /ACTIVE SESSION CONTROLS ---
 
     # hook up the theme switcher
@@ -2380,7 +2385,7 @@ def create_explorer():  # noqa: C901
 
 
 def main():
-    global SESSION_FOLDER
+    global WORKSPACE_FOLDER
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--version",
@@ -2389,10 +2394,10 @@ def main():
         help="Print out Reno library version.",
     )
     parser.add_argument(
-        "--session-path",
-        dest="session_path",
+        "--workspace-path",
+        dest="workspace_path",
         default="work_sessions",
-        help="Where to store and load saved explorer sessions and models from.",
+        help="Where to store and load saved explorer workspaces and models from.",
     )
     parser.add_argument(
         "--url-root-path",
@@ -2427,7 +2432,7 @@ def main():
         print(reno.__version__)
         exit()
 
-    SESSION_FOLDER = cli_args.session_path
+    WORKSPACE_FOLDER = cli_args.workspace_path
 
     websocket_origin = ["localhost", f"localhost:{cli_args.port}"]
     if cli_args.websocket_origin is not None:
