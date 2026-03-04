@@ -84,11 +84,71 @@ Model Configuration
    :align: center
 
 Parameterizing the model is done in the System Free Variables section. Every
-free variable/initial stock condition gets a corresponding textbox, which
-accepts either direct values like ``42``, ``13.7``, or can parse any string of
-Reno's lisp-like equation syntax. This syntax is shown on the :ref:`math in
-reno` page, and corresponding syntax for any given operation is listed on the
-corresponding op page from :py:mod:`reno.ops`, labeled as "String notation".
+free variable/initial stock condition gets a corresponding textbox. Anything
+entered here can be parsed into direct values like ``42``, ``13.7``,  any string of
+Reno's lisp-like equation syntax such as ``(+ 2 3)`` (this syntax is shown on the :ref:`math in reno` page, and corresponding syntax for any given operation is listed on the
+corresponding op page from :py:mod:`reno.ops`, labeled as "String notation"), or
+directly referring to any distribution class and parameters, such as
+``Normal(13.0, std=1.0)``.
+
+Sampling and Observations
+-------------------------
+
+.. figure:: ../_static/screenshot_sampling_and_observations.png
+   :align: center
+
+Below the model configuration are sampling parameters, buttons to execute
+simulation runs, and a section for adding observations.
+
+The ``n`` and ``steps`` boxes control the number of samples run and how many
+steps each sample is run for. The "Run prior" button will start a simulation
+based only on prior probability distributions - it will ignore any entered
+observed data.
+
+The "Add observation" button creates a new set of fields where you can select a
+metric to specify an observation for, along with the observed value itself and
+the sigma or uncertainty around the value. (See :ref:`Bayesian Inference` for
+more details on this process.)
+
+The "Run posterior" button will run the Bayesian inference process and output
+updated probability distributions for the provided observations.
+
+
+Model Runs and Tab Controls
+---------------------------
+
+.. figure:: ../_static/screenshot_tab_controls.png
+   :align: center
+
+The right upper side of the interface contains a list of all previous
+prior/posterior simulation runs, along with toggle buttons to select or deselect
+them for visualizations within the current tab, edit buttons to modify the name
+of the run (this is reflected in the legends of the plots), and the ability to
+delete specific runs. Additionally, the name of the tab can be modified here.
+
+Tab Contents
+------------
+
+.. figure:: ../_static/screenshot_tab.png
+   :align: center
+
+The main section of the view is a tabbed interface where the user can add
+visualization types and customize their layout. Visualizations or "panes" can be
+added by clicking on their corresponding type button in the bottom controls row.
+Panes can be resized and moved around by toggling the "Edit layout" button and
+clicking and dragging.
+
+Pane Configuration
+------------------
+
+.. figure:: ../_static/screenshot_panecontrols.png
+   :align: center
+
+Clicking on any pane within the tab contents populates the bottom right with
+controls to configure the selected pane. This is different for each pane type,
+but for the selected plots pane, the user can control the grid size of the plots
+and select the subset of variables from the model to include.
+
 
 Building up a tab
 =================
