@@ -21,7 +21,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    # "sphinx_favicon",
+    "sphinx_favicon",
 ]
 
 autosummary_generate = True
@@ -53,6 +53,7 @@ exclude_patterns = []
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
 html_theme_options = {
     "show_nav_level": 3,
     "navigation_depth": 6,

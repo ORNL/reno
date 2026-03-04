@@ -3,3 +3,4 @@ twine
 pytest
 sphinx
 pydata-sphinx-theme
+sphinx-favicon

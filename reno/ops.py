@@ -82,6 +82,8 @@ class series_max(reno.components.Operation):
     """Maximum value in an array. Effectively a row-wise np.max. This can either be applied
     to a timeseries or a value with a data dimension.
 
+    String notation: ``(max A)``
+
     Example:
         .. code-block:: python
 
@@ -135,6 +137,8 @@ class series_min(reno.components.Operation):
     """Minimum value in an array. Effectively a row-wise np.min. This can either be applied
     to a timeseries or a value with a data dimension.
 
+    String notation: ``(min A)``
+
     Example:
         .. code-block:: python
 
@@ -184,6 +188,8 @@ class series_min(reno.components.Operation):
 
 class mean(reno.components.Operation):
     """Average across the values of a vector (either timeseries or data dim.)
+
+    String notation: ``(mean A)``
 
     Example:
         .. code-block:: python
@@ -235,7 +241,10 @@ class mean(reno.components.Operation):
 
 
 class sum(reno.components.Operation):
-    """Series-wise sum (e.g. row-wise if a matrix)."""
+    """Series-wise sum (e.g. row-wise if a matrix).
+
+    String notation: ``(sum A)``
+    """
 
     # NOTE: sums of static values won't give you a multiple by timesteps by default, e.g.
     # if you have a static variable with value 5, the variable.sum() will return 5. In order
@@ -281,6 +290,8 @@ class nonzero(reno.components.Operation):
 
     Note that in numpy evaluation this returns a "jagged" array, padded at the end by np.NaN values.
     Also note that since np.NaN is a float value, the resulting array is converted to floats.
+
+    String notation: ``(nonzero A)``
 
     Example:
         .. code-block::
@@ -367,7 +378,10 @@ class nonzero(reno.components.Operation):
 
 
 class diff(reno.components.Operation):
-    """Returns the difference between every value in the list and the value before it. Note that the size of the output list is one less than the input, so likely need to process in some other way instead of directly including in e.g. a metric."""
+    """Returns the difference between every value in the list and the value before it. Note that the size of the output list is one less than the input, so likely need to process in some other way instead of directly including in e.g. a metric.
+
+    String notation: ``(diff A)``
+    """
 
     def __init__(self, a):
         super().__init__(a)
@@ -386,6 +400,8 @@ class diff(reno.components.Operation):
 class nanindex(reno.components.Operation):
     """Special index op for jagged arrays that come from the nonzero op. These convert any negative indices to
     ignore any nans at the end of each row. Is equivalent to normal index for pymc math.
+
+    String notation: ``(nanindex A INDEX)``
     """
 
     def __init__(self, a, ind):
@@ -419,7 +435,10 @@ class nanindex(reno.components.Operation):
 
 class index(reno.components.Operation):
     """Get a previous value in the time series at specified index, only works for tracked references
-    inside of equations for metrics."""
+    inside of equations for metrics.
+
+    String notation: ``(index A INDEX)``
+    """
 
     def __init__(self, a, ind):
         super().__init__(a, ind)
@@ -460,6 +479,8 @@ class slice(reno.components.Operation):
     can be applied generally in equations when dealing with vector data.
 
     Similar to normal python slices, top is exclusive
+
+    String notation: ``(slice A [START] [STOP])``
     """
 
     def __init__(self, a, start=None, stop=None):
@@ -561,6 +582,8 @@ class orient_timeseries(reno.components.Operation):
     stops of the relevant variables
 
     NOTE: only use this in a non-metric equation if a _range_ of timeseries values are needed. Otherwise use `.history()` for single values
+
+    String notation: ``(orient_timeseries A)``
     """
 
     # TODO: it probably doesn't make sense to call this on anything except a trackedreference,
@@ -719,6 +742,8 @@ def adjust_shapes_for_n(*parts, **kwargs):
 class add(reno.components.Operation):
     """a + b
 
+    String notation: ``(+ A B)``
+
     Example:
         .. code-block:: python
 
@@ -758,6 +783,8 @@ class add(reno.components.Operation):
 
 class sub(reno.components.Operation):
     """a - b
+
+    String notation: ``(- A B)``
 
     Example:
         .. code-block:: python
@@ -799,6 +826,8 @@ class sub(reno.components.Operation):
 class mul(reno.components.Operation):
     """a * b
 
+    String notation: ``(* A B)``
+
     Example:
         .. code-block:: python
 
@@ -839,6 +868,8 @@ class mul(reno.components.Operation):
 class div(reno.components.Operation):
     """a / b
 
+    String notation: ``(/ A B)``
+
     Example:
         .. code-block:: python
 
@@ -877,7 +908,10 @@ class div(reno.components.Operation):
 
 
 class mod(reno.components.Operation):
-    """a % b"""
+    """a % b
+
+    String notation: ``(% A B)``
+    """
 
     OP_REPR = "%"
 
@@ -901,7 +935,10 @@ class mod(reno.components.Operation):
 
 
 class abs(reno.components.Operation):
-    """|a| (absolute value)"""
+    """|a| (absolute value)
+
+    String notation: ``(abs A B)``
+    """
 
     def __init__(self, a):
         super().__init__("abs", a)
@@ -920,7 +957,10 @@ class abs(reno.components.Operation):
 
 
 class lt(reno.components.Operation):
-    """a < b"""
+    """a < b
+
+    String notation: ``(< A B)``
+    """
 
     OP_REPR = "<"
 
@@ -947,7 +987,10 @@ class lt(reno.components.Operation):
 
 
 class lte(reno.components.Operation):
-    """a <= b"""
+    """a <= b
+
+    String notation: ``(<= A B)``
+    """
 
     OP_REPR = "<="
 
@@ -974,7 +1017,10 @@ class lte(reno.components.Operation):
 
 
 class gt(reno.components.Operation):
-    """a > b"""
+    """a > b
+
+    String notation: ``(> A B)``
+    """
 
     OP_REPR = ">"
 
@@ -1001,7 +1047,10 @@ class gt(reno.components.Operation):
 
 
 class gte(reno.components.Operation):
-    """a >= b"""
+    """a >= b
+
+    String notation: ``(>= A B)``
+    """
 
     OP_REPR = ">="
 
@@ -1028,7 +1077,10 @@ class gte(reno.components.Operation):
 
 
 class eq(reno.components.Operation):
-    """a == b"""
+    """a == b
+
+    String notation: ``(== A B)``
+    """
 
     OP_REPR = "=="
 
@@ -1056,7 +1108,10 @@ class eq(reno.components.Operation):
 
 
 class ne(reno.components.Operation):
-    """a != b"""
+    """a != b
+
+    String notation: ``(!= A B)``
+    """
 
     OP_REPR = "!="
 
@@ -1085,7 +1140,10 @@ class ne(reno.components.Operation):
 
 # TODO: rename to just and?
 class bool_and(reno.components.Operation):
-    """a and b"""
+    """a and b
+
+    String notation: ``(and A B)``
+    """
 
     OP_REPR = "and"
 
@@ -1113,7 +1171,10 @@ class bool_and(reno.components.Operation):
 
 # TODO: rename to just or?
 class bool_or(reno.components.Operation):
-    """a or b"""
+    """a or b
+
+    String notation: ``(or A B)``
+    """
 
     OP_REPR = "or"
 
@@ -1140,7 +1201,10 @@ class bool_or(reno.components.Operation):
 
 
 class minimum(reno.components.Operation):
-    """Element-wise minimum of array elements between two arrays or values, same as np.minimum."""
+    """Element-wise minimum of array elements between two arrays or values, same as np.minimum.
+
+    String notation: ``(minimum A B)``
+    """
 
     def __init__(self, a, b):
         super().__init__(a, b)
@@ -1163,7 +1227,10 @@ class minimum(reno.components.Operation):
 
 
 class maximum(reno.components.Operation):
-    """Element-wise maximum of array elements between two arrays or values, same as np.maximum."""
+    """Element-wise maximum of array elements between two arrays or values, same as np.maximum.
+
+    String notation: ``(maximum A B)``
+    """
 
     def __init__(self, a, b):
         super().__init__(a, b)
@@ -1186,7 +1253,10 @@ class maximum(reno.components.Operation):
 
 
 class clip(reno.components.Operation):
-    """Simultaneously apply upper and lower bound constraint (element-wise)."""
+    """Simultaneously apply upper and lower bound constraint (element-wise).
+
+    String notation: ``(clip A B C)``
+    """
 
     def __init__(self, a, b, c):
         super().__init__(a, b, c)
@@ -1213,7 +1283,10 @@ class clip(reno.components.Operation):
 
 
 class log(reno.components.Operation):
-    """ln(a) (natural log, naming it log because this is pytensor's and numpy's default)"""
+    """ln(a) (natural log, naming it log because this is pytensor's and numpy's default)
+
+    String notation: ``(log A B C)``
+    """
 
     def __init__(self, a):
         super().__init__(a)
@@ -1235,7 +1308,10 @@ class log(reno.components.Operation):
 
 
 class sin(reno.components.Operation):
-    """sin(a)"""
+    """sin(a)
+
+    String notation: ``(sin A B C)``
+    """
 
     def __init__(self, a):
         super().__init__(reno.utils.ensure_scalar(a))
@@ -1262,6 +1338,8 @@ class sin(reno.components.Operation):
 class interpolate(reno.components.Operation):
     """Given a dataset of x -> y datapoints, interpolate any new data along the line formed by the points.
     Equivalent to numpy's interp function.
+
+    String notation: ``(interpolate X X_DATA Y_DATA)``
 
     Args:
         x: The input x-coordinates that you want interpolated into y outputs.
@@ -1300,7 +1378,10 @@ class interpolate(reno.components.Operation):
 class assign(reno.components.Operation):
     """This is to handle the weird seek_refs issues when you just set a tracked ref's
     equation to another tracked ref. By "wrapping" it in an effectively blank operation,
-    this mitigates the annoying recursion issue."""
+    this mitigates the annoying recursion issue.
+
+    String notation: ``(= A)``
+    """
 
     OP_REPR = "="
 
@@ -1327,7 +1408,10 @@ class assign(reno.components.Operation):
 
 
 class astype(reno.components.Operation):
-    """Allow explicitly converting to float, int, etc."""
+    """Allow explicitly converting to float, int, etc.
+
+    String notation: ``(astype A DTYPE)``
+    """
 
     def __init__(self, a, dtype: type):
         self.__dtype = dtype
@@ -1379,6 +1463,8 @@ class stack(reno.components.Operation):
 
     This does not yet implement stacking multiple multidim values.
     (may need to be a separate concat operator for that)
+
+    String notation: ``(stack A ...)``
     """
 
     def __init__(self, *args):
@@ -1435,7 +1521,10 @@ class stack(reno.components.Operation):
 
 class pulse(reno.components.Operation):
     """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``.
-    Returns 0 at all other timesteps."""
+    Returns 0 at all other timesteps.
+
+    String notation: ``(pulse START [WIDTH=1])``
+    """
 
     def __init__(self, start, width=1):
         t = reno.components.TimeRef()
@@ -1465,6 +1554,8 @@ class repeated_pulse(reno.components.Operation):
     """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``,
     with ``interval`` number of timesteps between each subsequent leading edge. Returns 0
     at all other timesteps.
+
+    String notation: ``(repeated_pulse START INTERVAL [WIDTH=1])``
 
     Example:
         .. code-block:: python
@@ -1512,7 +1603,10 @@ class repeated_pulse(reno.components.Operation):
 
 
 class step(reno.components.Operation):
-    """Return a specified value after a specified number of timesteps, otherwise 0."""
+    """Return a specified value after a specified number of timesteps, otherwise 0.
+
+    String notation: ``(step VALUE TIMESTEPS)``
+    """
 
     def __init__(self, value, timesteps):
         t = reno.components.TimeRef()
@@ -1535,6 +1629,11 @@ class step(reno.components.Operation):
 
 
 class delay1(reno.components.ExtendedOperation):
+    """First order material delay, returns an exponential delay of the input.
+
+    String notation: ``(delay1 INPUT DELAY_TIME)``
+    """
+
     def __init__(self, input, delay_time):
         self.inflow = reno.Flow(input)
         self.delay_stock = reno.Stock()
@@ -1564,6 +1663,12 @@ class delay1(reno.components.ExtendedOperation):
 
 
 class delay3(reno.components.ExtendedOperation):
+    """Third order material delay.
+    (Three chained first order delays.)
+
+    String notation: ``(delay3 INPUT DELAY_TIME)``
+    """
+
     def __init__(self, input, delay_time):
         self.delay1 = delay1(input, delay_time / 3)
         self.delay2 = delay1(self.delay1, delay_time / 3)
@@ -1588,7 +1693,10 @@ class delay3(reno.components.ExtendedOperation):
 
 
 class smooth(reno.components.ExtendedOperation):
-    """An information delay, material isn't necessarily preserved but the range is?"""
+    """An information delay, material isn't necessarily preserved but the range is?
+
+    String notation: ``(smooth INPUT ADJUSTMENT_TIME [INITIAL_VALUE=0])``
+    """
 
     def __init__(self, input, adjustment_time, initial_value=0):
         self.actual_value = reno.Variable(input, dtype=float)
@@ -1631,7 +1739,10 @@ class inflow(reno.components.Operation):
 
     This is relevant e.g. when a flow is purely a modification on some other flow,
     and is subsequently used as an inflow to a stock. This op helps avoid the
-    separated "islands" that can crop up in certain circumstances"""
+    separated "islands" that can crop up in certain circumstances
+
+    String notation: ``(inflow FLOW)``
+    """
 
     def __init__(self, flow):
         super().__init__(flow)
@@ -1663,6 +1774,11 @@ class inflow(reno.components.Operation):
 
 
 class outflows(reno.components.Operation):
+    """Returns the combined value (sum) outflows from a stock in the (current?) timestep.
+
+    String notation: ``(outflows STOCK)``
+    """
+
     def __init__(self, stock):
         # WAIT: optionally include a list of flows to exclude??
         super().__init__(stock)
@@ -1771,6 +1887,11 @@ def dist_dim_shape_args_str(
 
 
 class Normal(reno.components.Distribution):
+    """Normal/Gaussian distribution
+
+    String notation: ``Normal(mean, std=1.0, per_timestep=False)``
+    """
+
     def __init__(self, mean, std=1.0, per_timestep: bool = False):
         # super().__init__()
         # self.mean = mean
@@ -1811,6 +1932,11 @@ class Normal(reno.components.Distribution):
 
 
 class Uniform(reno.components.Distribution):
+    """Uniform/flat distribution across a provided range.
+
+    String notation: ``Uniform(low=0.0, high=1.0, per_timestep=False)``
+    """
+
     def __init__(self, low=0.0, high=1.0, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
 
@@ -1848,7 +1974,12 @@ class Uniform(reno.components.Distribution):
 
 
 class DiscreteUniform(reno.components.Distribution):
-    """Low is inclusive, high is exclusive."""
+    """Uniform/flat distribution across a provided range, returning only integer values.
+
+    Low is inclusive, high is exclusive.
+
+    String notation: ``DiscreteUniform(low=0, high=2, per_timestep=False)``
+    """
 
     def __init__(self, low: int = 0, high: int = 2, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
@@ -1889,7 +2020,13 @@ class DiscreteUniform(reno.components.Distribution):
 
 
 class Bernoulli(reno.components.Distribution):
-    """Discrete single event probability (p is probability of eval == 1)"""
+    """Discrete single event probability (p is probability of eval == 1)
+
+    Specifying ``use_p_dist`` models p (in pymc) with an additional interpolated distribution
+    with a prior pdf_points set at 0 and 1 with the 1-p, p values.
+
+    String notation: ``Bernoulli(p, use_p_dist=False, per_timestep=False)``
+    """
 
     def __init__(self, p: float, use_p_dist: bool = False, per_timestep: bool = False):
         super().__init__(p, per_timestep=per_timestep)
@@ -1940,7 +2077,13 @@ class Bernoulli(reno.components.Distribution):
 
 class Categorical(reno.components.Distribution):
     """Random categorical distribution - you specify the probability per category,
-    and the output is a set of category indices."""
+    and the output is a set of category indices.
+
+    Specifying ``use_p_dist`` models p (in pymc) with an additional dirichlet distribution
+    with a prior of the passed p.
+
+    String notation: ``Categorical(p, use_p_dist=False, per_timestep=False)``
+    """
 
     def __init__(
         self, p: list[float], use_p_dist: bool = False, per_timestep: bool = False

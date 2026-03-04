@@ -1303,7 +1303,7 @@ class EditableTextPane(
     model exploration/analysis."""
 
     def __init__(self, **params):
-        self.editor = pn.widgets.TextEditor()
+        self.editor = pn.widgets.TextEditor(max_width=320)
         super().__init__(**params)
 
         self.text = "(text field, click to edit in controls sidebar)"
@@ -1905,7 +1905,14 @@ def create_explorer():  # noqa: C901
     # This ended up being a much more flexible approach than the typical `panel
     # serve` CLI. (namely the ability to pass in custom args to this file's CLI,
     # such as the workspace folder `--workspace-path` arg)
-    pn.extension("gridstack", "texteditor", "terminal", notifications=True, nthreads=4)
+    pn.extension(
+        "gridstack",
+        "texteditor",
+        "terminal",
+        notifications=True,
+        nthreads=4,
+        theme="dark",
+    )
 
     active_explorer = None
     active_session_name = ""
@@ -1991,7 +1998,9 @@ def create_explorer():  # noqa: C901
             pn.state.cache["active_workspaces"][workspace_name.value] = ex
             refresh_active_workspaces()
         except Exception as e:
-            pn.state.notifications.error(f"Failed to create new model session: {e}", 0)
+            pn.state.notifications.error(
+                f"Failed to create new model workspace: {e}", 0
+            )
             print(traceback.format_exc())
 
     def switch_active_workspace(*args, name: str):
