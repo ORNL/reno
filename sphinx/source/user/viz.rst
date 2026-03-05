@@ -6,8 +6,55 @@ Diagrams
 ========
 
 
-As already shown in the Stock and flow diagrams ...
+Stock and flow diagrams are a useful way to visually check that component references are
+set up as expected, with corresponding lines between flow, variables, and stock
+based on what other equations they're used in. The basic method for generating a
+stock and flow diagram is the :py:func:`model.graph() <reno.model.Model.graph>`
+function, which as shown on the getting started page might look something like
+this:
 
+.. figure:: ../_static/tub_sf_diagram.png
+   :align: center
+
+
+Highly complex models with lots of variables can render a simplified diagram by
+either excluding variables entirely with ``exclude_vars=True``, or hiding a
+specific set of variables with names listed in ``exclude_var_names=["my_var1",
+..."]``.
+
+Highly linear models that don't have many branches or cycles can be oriented
+left-to-right instead of top-down by passing ``lr=True``.
+
+
+Sparklines
+----------
+
+Mini "sparkline" plots can be added to the sides of various component types
+within the stock and flow diagrams to quickly get an overview of component values
+in the context of where they sit in the overall system. The three parameters to
+control this are ``sparklines``, ``sparkdensities``, and ``sparkall``.
+
+Running with ``sparklines=True`` will add a sparkline plot to every stock in the
+system.
+
+.. figure:: ../_static/tub_w_sparklines.png
+   :align: center
+
+``sparkall=True`` will further add plots for every flow:
+
+.. figure:: ../_static/tub_sparkall.png
+   :align: center
+
+Finally, ``sparkdensities=True`` will add histograms/density plots for all
+variables (mostly only useful when variables have probability distributions
+associated with them either directly or upstream.)
+
+.. figure:: ../_static/tub_all_sparks.png
+   :align: center
+
+By default, the sparkline plots will be based on the last simulation run that
+completed. To use specific runs or render multiple runs at the same time, pass
+the traces to the ``traces`` array parameter
 
 Groups/Color groups
 -------------------
@@ -81,17 +128,34 @@ Get a list of the groups/cgroups on a model with the :py:attr:`groups
 Universe
 --------
 
-
+To limit diagram rendering to only a specific set of components (beyond just
+hiding certain variables), directly pass a list of tracked references to include
+in the diagram to the ``universe`` parameter. This is useful if a very large
+system has multiple "areas" and you want to individually render each area
+separately.
 
 Latex
 =====
 
+As shown on the getting started page, an interactive latex output listing all
+component equations can be generated with the :py:func:`model.latex()
+<reno.model.Model.latex>` function:
 
-Reloading previous runs
------------------------
+.. figure:: ../_static/tub_latex_example.png
+   :align: center
 
-(load_dataset)
 
+The latex view can also be useful for debugging systems by passing a ``t``
+parameter - this will include the values of every reference at the specified
+timestep:
+
+
+.. code-block:: python
+
+    tub.latex(t=5)
+
+.. figure:: ../_static/tub_latex_t_example.png
+   :align: center
 
 
 Plots
@@ -101,6 +165,35 @@ Plots
 Multi-trace plots
 -----------------
 
+The :py:func:`reno.viz.plot_trace_refs` function allows comparing specified
+components across multiple different simulation runs.
+
+.. code-block:: python
+
+    trace = predator_prey(
+        rabbit_growth_rate=0.07,
+        rabbit_death_rate=0.0001,
+        fox_death_rate=0.01,
+        fox_growth_rate=1e-05,
+        rabbits_0=200.0,
+        foxes_0=700.0,
+        steps=2000
+    )
+    reno.plot_trace_refs(predator_prey, {"run": trace}, ref_list=["foxes", predator_prey.rabbits])
+
+.. figure:: ../_static/foxes_rabbits_separate.png
+   :align: center
 
 Single axis plots
 -----------------
+
+A common figure type used for system dynamics models compares multiple
+components on the same plot axes. The logic for labelling the axes is a bit
+tricky, so :py:func:`reno.viz.plot_refs_single_axis` handles it for you:
+
+.. code-block:: python
+
+    reno.plot_refs_single_axis(trace, [predator_prey.foxes, predator_prey.rabbits])
+
+.. figure:: ../_static/foxes_rabbits_single_axis.png
+   :align: center

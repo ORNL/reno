@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [unreleased]
+
+### Added
+
+* `reno` CLI to run the explorer UI server
+
+### Changed
+
+* "Session" in explorer UI to "Workspace" to avoid confusion with actual web
+  sessions
+* Pinned dependencies, newer pytensor works with python 3.14 and newest
+  panel/bokeh combo currently not working
+
+### Fixed
+
+* Assignment ops and scalar text unnecessarily cluttering up various places of
+  explorer UI
+
+
+
+
 ## [0.10.0] - 2026-02-18
 
 ### Added

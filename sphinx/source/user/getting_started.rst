@@ -86,8 +86,8 @@ separately from instantiation by setting the ``.eq`` attribute:
     tub.faucet_flow_rate.eq = 5
 
 
-For more info on how equations in Reno work and how to construct them, see TODO
-(math page)
+For more info on how equations in Reno work and how to construct them, see
+:ref:`Math in Reno`.
 
 
 Model ``with`` blocks
@@ -127,7 +127,7 @@ Inspecting a model
 ==================
 
 The methods discussed below will be based on this example (which can
-also be found in the [LINK] notebook).
+also be found in the `tub notebook<https://github.com/ORNL/reno/blob/main/notebooks/tub.ipynb>`_)
 
 .. code-block:: python
 
@@ -311,19 +311,30 @@ and a standard deviation of 5 with:
 .. code-block::
 
     >>> random_results = tub(n=1000, faucet_off_time=reno.Normal(10, 5))
-    >>>
+    >>> reno.plot_trace_refs(tub, [random_results], ["faucet_off_time"])
 
-TODO: example with normal
+.. figure:: ../_static/tub_prior_faucet_dist.png
+   :align: center
 
-Much more can be done with this, discussed further on the TODO: link bayes page.
-
-
-Visualizing results
-===================
+Systems with probability distributions can be optimized with respect to observed
+data, see the :ref:`Bayesian Inference` page for more details.
 
 
+The rest of this guide
+======================
 
+See the other pages in the user guide for topics of interest!
 
-
-
-TODO: links to the rest of the user guide
+* :ref:`Components` - provides a more in depth description of
+  stock/flow/variable components and how to define them.
+* :ref:`Math in Reno` - explains how the underlying math system works and more
+  details on how to make equations.
+* :ref:`Bayesian Inference` - shows how the PyMC integration works and how to use it
+  to update prior probability distributions based on observed data.
+* :ref:`Visualizations` - how to create all the nifty stock and flow diagrams
+  and the plotting helper functions that come with Reno.
+* :ref:`Model Explorer UI` - a description of the fancy web UI for playing with
+  models and how to run it.
+* :ref:`Submodels` - learn how to make models reusable and compositional.
+* :ref:`Extending Reno` - how to add capabilities and make Reno do more than its
+  defaults.

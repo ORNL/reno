@@ -1,9 +1,6 @@
 Math in Reno
 ############
 
-TODO: this top paragraph feels like a good description of what Reno offers
-technically, move to main user_guide/main doc page?
-
 A system dynamics model allows exploration of the behavior of a set
 of equations describing information or material flow over time. Reno provides a
 framework for creating and evaluating these equations similar to something like
@@ -13,7 +10,7 @@ can then be populated with different values/data and run to create simulations.
 The math API itself looks similar to numpy, but a lot of the functions are being
 added as I go/need them, if you need a numpy function that doesn't yet exist in
 Reno, please submit an issue! (Or add them yourself locally in your project, see
-TODO: extending)
+:ref:`Custom operations`)
 
 All aspects of models and their equations are made up of Reno's
 :py:class:`reno.components.EquationPart` class, essentially a tree data
@@ -82,27 +79,12 @@ Symbolic operations, like what's shown above, are the core of how Reno's math
 system works. A full list can be found at :py:mod:`reno.ops`. Conceptually
 Reno's math is intended to act similarly to PyTensor (what PyMC uses under the hood),
 though in our implementation acting as a thunk for Numpy operations, while providing
-a way to translate directly into the PyTensor math system for TODO: link bayesian reasons.
+a way to translate directly into the PyTensor math system for :ref:`Bayesian
+Inference` reasons.
 
 Reno's operations are a growing list of mappings to various numpy functions,
 but there are some special types of operations and considerations discussed
 below.
-
-
-TODO: not sure where this belongs or if necessary, but a defense of why we're
-"reinventing the wheel":
-
-* Reno operations can be parsed from strings/supporting easy save/load and user entry
-* simpler to use and modify directly than PyTensor, at obvious cost of not being the
-  hyper-optimized/compilation method that they enable/not having
-  nearly the feature set they support
-* directly encodes how to compute both in numpy *and* in pytensor
-* simpler to build out custom operations
-* Reno is geared very specifically towards SDM, several considerations that merit
-  having much more/easier control over equation compute graph/ability to parse and
-  evaluate it in specific ways (e.g. component references, specific shape
-  expectations, static values, etc.)
-
 
 As shown above, Reno operations overload many common python operators
 when Reno components are involved, (e.g. ``+``, ``-``, ``*``, ``/``,

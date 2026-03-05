@@ -219,7 +219,7 @@ used to retrieve a specific value or run a basic analysis/measurement on
 something. Metrics are useful from a convenience standpoint (making it
 semantically simpler to get e.g. the last value of the ``coffee`` stock like in
 the previous example), since they are then available to include in Reno's
-:ref:`Visuzliations`, but they can also be used as targets for observed/measured
+:ref:`Visualizations`, but they can also be used as targets for observed/measured
 values ("data") for :ref:`Bayesian Inference`.
 
 We can add a metric to the previous system to capture the final value in the
@@ -368,4 +368,4 @@ cgroup/group
 ------------
 
 ``cgroup`` and ``group`` parameters are used for controlling diagram rendering,
-see TODO: link to visualization cgroups page
+see :ref:`Groups/Color groups`.
