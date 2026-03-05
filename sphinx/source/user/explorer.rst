@@ -52,7 +52,7 @@ To populate this directory with Reno's packaged example models, one could run:
 Interface
 =========
 
-Workspace Management
+Workspace management
 --------------------
 
 .. figure:: ../_static/screenshot_ws_manager.png
@@ -77,7 +77,7 @@ bottom of the workspace management section. Clicking on any of these will reload
 that workspace into your active workspaces, and populate the main view.
 
 
-Model Configuration
+Model configuration
 -------------------
 
 .. figure:: ../_static/screenshot_free_vars.png
@@ -91,7 +91,7 @@ corresponding op page from :py:mod:`reno.ops`, labeled as "String notation"), or
 directly referring to any distribution class and parameters, such as
 ``Normal(13.0, std=1.0)``.
 
-Sampling and Observations
+Sampling and observations
 -------------------------
 
 .. figure:: ../_static/screenshot_sampling_and_observations.png
@@ -114,7 +114,7 @@ The "Run posterior" button will run the Bayesian inference process and output
 updated probability distributions for the provided observations.
 
 
-Model Runs and Tab Controls
+Model runs and tab controls
 ---------------------------
 
 .. figure:: ../_static/screenshot_tab_controls.png
@@ -126,7 +126,11 @@ them for visualizations within the current tab, edit buttons to modify the name
 of the run (this is reflected in the legends of the plots), and the ability to
 delete specific runs. Additionally, the name of the tab can be modified here.
 
-Tab Contents
+The "Export" button generates both a PDF and raw HTML file containing the
+contents of the current tab, and will display buttons for downloading both of
+these.
+
+Tab contents
 ------------
 
 .. figure:: ../_static/screenshot_tab.png
@@ -138,7 +142,7 @@ added by clicking on their corresponding type button in the bottom controls row.
 Panes can be resized and moved around by toggling the "Edit layout" button and
 clicking and dragging.
 
-Pane Configuration
+Pane configuration
 ------------------
 
 .. figure:: ../_static/screenshot_panecontrols.png
@@ -148,11 +152,3 @@ Clicking on any pane within the tab contents populates the bottom right with
 controls to configure the selected pane. This is different for each pane type,
 but for the selected plots pane, the user can control the grid size of the plots
 and select the subset of variables from the model to include.
-
-
-Building up a tab
-=================
-
-
-Saving/loading
-==============

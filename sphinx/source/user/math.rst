@@ -92,8 +92,7 @@ below.
 TODO: not sure where this belongs or if necessary, but a defense of why we're
 "reinventing the wheel":
 
-* Reno operations can be parsed from strings/supporting easy save/load and
-  (possibly eventually) user entry
+* Reno operations can be parsed from strings/supporting easy save/load and user entry
 * simpler to use and modify directly than PyTensor, at obvious cost of not being the
   hyper-optimized/compilation method that they enable/not having
   nearly the feature set they support
@@ -262,7 +261,7 @@ inflow
 treat a flow used in another flow equation as an "inflow", as if it were a
 stock. This doesn't change the math or underlying equation, it only modifies how
 the stock and flow diagram gets rendered -- the thicker inflow/outflow line gets
-applied to the flow to flow reference edge, which in some cases can help retain
+applied to the flow to flow reference edge, which in some cases can help maintain
 consistency in visualizing how material is moving in the overarching structure.
 
 As an example, suppose we have a system with two stocks, and two flows in

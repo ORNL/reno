@@ -13,7 +13,7 @@ Groups/Color groups
 -------------------
 
 Every tracked reference optionally has both a :py:attr:`group
-<reno.components.TrackedReference.group>` and :py:attr`cgroup
+<reno.components.TrackedReference.group>` and :py:attr:`cgroup
 <reno.components.TrackedReference.cgroup>` attribute, which influences how they
 appear in the diagrams. The ``group`` attribute is used to encourage graphviz to
 visually tighten up/keep elements within the same group closer to each other.
@@ -39,7 +39,7 @@ The stock/flow diagram looks like this:
     :align: center
 
 If we assign the same group name to the variable and the second flow, it
-straightens out the connection between ``v1`` and ``v2``:
+straightens out the connection between ``v1`` and ``f2``:
 
 .. code-block:: python
 

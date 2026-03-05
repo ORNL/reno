@@ -1568,7 +1568,15 @@ class RunRow(pn.viewable.Viewer):
 
     def __init__(self, trace, config, observations, **params):
         if config is not None:
-            self.config = {key: str(val) for key, val in config.items()}
+            # self.config = {key: str(val) for key, val in config.items()}
+            self.config = {}
+            for key, val in config.items():
+                while isinstance(val, reno.ops.assign):
+                    val = val.sub_equation_parts[0]
+                if isinstance(val, reno.Scalar):
+                    self.config[key] = str(val.value)
+                else:
+                    self.config[key] = str(val)
         else:
             self.config = None
         self.trace = trace

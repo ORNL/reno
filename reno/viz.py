@@ -913,10 +913,17 @@ class ReferenceEditor:
     def get_eq_str(self) -> str:
         """Get the string version of the current equation."""
         eq = self.get_eq()
+        while isinstance(eq, reno.ops.assign):
+            eq = eq.sub_equation_parts[0]
         if eq is None:
             return ""
         if isinstance(eq, Scalar):
             return str(eq.value)
+
+        # deal with weirdly nested assign ops, this has something to do with the
+        # way stock's __setattr__ is currently handling init assignment. TODO:
+        # need to write some tests around this and figure out what's actually
+        # going on
         return str(eq)
 
     def parse_str_to_eq(self) -> reno.components.EquationPart:

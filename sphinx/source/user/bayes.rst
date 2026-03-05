@@ -13,11 +13,16 @@ timeseries outputs, and then take advantage of PyMC's samplers to approximate
 posterior distributions.
 
 The value of doing this through Reno as opposed to directly through PyMC is due
-to a few reasons:
+to a couple of reasons:
 
-* ...
-
-
+* Setting up timeseries evaluation in pytensor involves a lot of boilerplate
+  that can be confusing to learn.
+* The order in which equations are executed during evaluation matters to avoid
+  circular dependency issues or incorrect calculations. Reno handles dependency
+  ordering for you.
+* Re-parameterizing or modifying equations involves changing the boilerplate or
+  redefining the model. Reno handles this step for you since it recompiles the
+  PyMC version from scratch.
 
 Running a Reno model with PyMC is very similar to a normal run by using the
 model's :py:func:`.pymc() <reno.model.Model.pymc>` call. This acts similarly to

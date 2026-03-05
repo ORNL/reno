@@ -765,7 +765,7 @@ class add(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} + {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -807,7 +807,7 @@ class sub(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} - {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -1310,11 +1310,11 @@ class log(reno.components.Operation):
 class sin(reno.components.Operation):
     """sin(a)
 
-    String notation: ``(sin A B C)``
+    String notation: ``(sin A)``
     """
 
     def __init__(self, a):
-        super().__init__(reno.utils.ensure_scalar(a))
+        super().__init__(a)
 
     def get_type(self) -> type:
         return float
@@ -1474,6 +1474,7 @@ class stack(reno.components.Operation):
         return len(self.sub_equation_parts)
 
     def get_type(self) -> type:
+        # any float types need to make the entire thing float-based
         types = [part.dtype for part in self.sub_equation_parts]
         if float in types:
             return float
