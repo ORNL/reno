@@ -1,0 +1,703 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/favicon.svg" type="image/svg+xml">
+    <title>Model Explorer UI &#8212; Reno 0.11.0 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=9879d157" />
+
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user/explorer';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ornl.github.io/reno/stable/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Submodels" href="submodels.html" />
+    <link rel="prev" title="Visualizations" href="viz.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="dark">
+
+
+
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+
+  <dialog id="pst-search-dialog">
+
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+
+
+
+
+
+
+
+    <img src="../_static/header_logo_dark.svg" class="logo__image only-dark" alt="Reno 0.11.0 documentation - Home"/>
+    <img src="../_static/header_logo_light.svg" class="logo__image only-light pst-js-only" alt="Reno 0.11.0 documentation - Home"/>
+
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+
+
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+
+
+
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+
+
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/ORNL/reno/releases">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/ORNL/reno" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://pypi.org/project/reno-sd/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math.html">Math in Reno</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayes.html">Bayesian Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="viz.html">Visualizations</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Model Explorer UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submodels.html">Submodels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending Reno</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main" role="main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../user_guide.html" class="nav-link">User Guide</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Model Explorer UI</span></li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="model-explorer-ui">
+<h1>Model Explorer UI<a class="headerlink" href="#model-explorer-ui" title="Link to this heading">#</a></h1>
+<p>Reno comes with a <a class="reference external" href="https://panel.holoviz.org">Panel</a> web application for
+experimenting with models and constructing mini narrative dashboards around
+specific results.</p>
+<figure class="align-center">
+<img alt="../_images/explorer_screenshot.png" src="../_images/explorer_screenshot.png" />
+</figure>
+<section id="running">
+<h2>Running<a class="headerlink" href="#running" title="Link to this heading">#</a></h2>
+<p>Reno installs with a <code class="docutils literal notranslate"><span class="pre">reno</span></code> command, which runs the panel server (by default on port 5006)</p>
+<p>The full set of CLI args can be found by running <code class="docutils literal notranslate"><span class="pre">reno</span> <span class="pre">-h</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">reno</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">version</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">workspace</span><span class="o">-</span><span class="n">path</span> <span class="n">WORKSPACE_PATH</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">url</span><span class="o">-</span><span class="n">root</span><span class="o">-</span><span class="n">path</span> <span class="n">ROOT_PATH</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">port</span> <span class="n">PORT</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">address</span> <span class="n">ADDRESS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">liveness</span><span class="o">-</span><span class="n">check</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">websocket</span><span class="o">-</span><span class="n">origin</span> <span class="n">WEBSOCKET_ORIGIN</span><span class="p">]</span>
+
+<span class="n">options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">--</span><span class="n">version</span>             <span class="n">Print</span> <span class="n">out</span> <span class="n">Reno</span> <span class="n">library</span> <span class="n">version</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">workspace</span><span class="o">-</span><span class="n">path</span> <span class="n">WORKSPACE_PATH</span>
+                        <span class="n">Where</span> <span class="n">to</span> <span class="n">store</span> <span class="ow">and</span> <span class="n">load</span> <span class="n">saved</span> <span class="n">explorer</span> <span class="n">workspaces</span> <span class="ow">and</span> <span class="n">models</span> <span class="n">from</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">url</span><span class="o">-</span><span class="n">root</span><span class="o">-</span><span class="n">path</span> <span class="n">ROOT_PATH</span>
+                        <span class="n">Root</span> <span class="n">path</span> <span class="n">the</span> <span class="n">application</span> <span class="ow">is</span> <span class="n">being</span> <span class="n">served</span> <span class="n">on</span> <span class="n">when</span> <span class="n">behind</span> <span class="n">a</span> <span class="n">reverse</span> <span class="n">proxy</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">port</span> <span class="n">PORT</span>           <span class="n">What</span> <span class="n">port</span> <span class="n">to</span> <span class="n">run</span> <span class="n">the</span> <span class="n">server</span> <span class="n">on</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">address</span> <span class="n">ADDRESS</span>     <span class="n">What</span> <span class="n">address</span> <span class="n">to</span> <span class="n">listen</span> <span class="n">on</span> <span class="k">for</span> <span class="n">HTTP</span> <span class="n">requests</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">liveness</span><span class="o">-</span><span class="n">check</span>      <span class="n">Flag</span> <span class="n">to</span> <span class="n">host</span> <span class="n">a</span> <span class="n">liveness</span> <span class="n">endpoint</span> <span class="n">at</span> <span class="o">/</span><span class="n">liveness</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">websocket</span><span class="o">-</span><span class="n">origin</span> <span class="n">WEBSOCKET_ORIGIN</span>
+                        <span class="n">Host</span> <span class="n">that</span> <span class="n">can</span> <span class="n">connect</span> <span class="n">to</span> <span class="n">the</span> <span class="n">websocket</span><span class="p">,</span> <span class="n">localhost</span> <span class="n">by</span> <span class="n">default</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">--workspace-path</span></code> argument refers to a cache or save directory to use for
+persisting a particular workspace session/explorer views. By default this is set to
+<code class="docutils literal notranslate"><span class="pre">./work_sessions</span></code>. Inside the workspace path directory, any Reno model files
+saved within the <code class="docutils literal notranslate"><span class="pre">models/</span></code> directory will populate new workspace buttons in the
+upper left of the interface to allow quickly starting new workspace.</p>
+<p>To populate this directory with Reno’s packaged example models, one could run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;from reno.examples.lotka_volterra import predator_prey; predator_prey.save(&#39;work_sessions/models/predator_prey.json&#39;)&quot;</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;from reno.examples.one_compartment import one_compartment_model; one_compartment_model.save(&#39;work_sessions/models/one_compartment.json&#39;)&quot;</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;from reno.examples.tub import tub; tub.save(&#39;work_sessions/models/tub.json&#39;)&quot;</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;from reno.examples.urban_growth import urban_growth; urban_growth.save(&#39;work_sessions/models/urban_growth.json&#39;)&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="interface">
+<h2>Interface<a class="headerlink" href="#interface" title="Link to this heading">#</a></h2>
+<section id="workspace-management">
+<h3>Workspace management<a class="headerlink" href="#workspace-management" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_ws_manager.png" src="../_images/screenshot_ws_manager.png" />
+</figure>
+<p>The left sidebar contains three sections for creating, switching, and loading
+workspaces. A workspace is an individual exploration interface for a particular
+model. The buttons along the top (corresponding to any found models in the
+workspace directory <code class="docutils literal notranslate"><span class="pre">models/</span></code> folder) create a new active workspace for the
+specified model. A new model can be uploaded and used by clicking on the browse
+button and selecting your local model json file.</p>
+<p>Active workspaces are all workspaces currently open in memory - this middle
+section can be used for switching back and forth between several models or
+explorations. Use the x buttons to close them out. Note that workspaces are not
+automatically saved, so be sure to use the save button in the top right in the
+header of the interface. (The textbox to the left of this button can be used for
+changing the path and name of the saved session.)</p>
+<p>Any previously saved workspace shows up in a file-explorer-like view in the
+bottom of the workspace management section. Clicking on any of these will reload
+that workspace into your active workspaces, and populate the main view.</p>
+</section>
+<section id="model-configuration">
+<h3>Model configuration<a class="headerlink" href="#model-configuration" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_free_vars.png" src="../_images/screenshot_free_vars.png" />
+</figure>
+<p>Parameterizing the model is done in the System Free Variables section. Every
+free variable/initial stock condition gets a corresponding textbox. Anything
+entered here can be parsed into direct values like <code class="docutils literal notranslate"><span class="pre">42</span></code>, <code class="docutils literal notranslate"><span class="pre">13.7</span></code>,  any string of
+Reno’s lisp-like equation syntax such as <code class="docutils literal notranslate"><span class="pre">(+</span> <span class="pre">2</span> <span class="pre">3)</span></code> (this syntax is shown on the <a class="reference internal" href="math.html#math-in-reno"><span class="std std-ref">Math in Reno</span></a> page, and corresponding syntax for any given operation is listed on the
+corresponding op page from <a class="reference internal" href="../api/reno.ops.html#module-reno.ops" title="reno.ops"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reno.ops</span></code></a>, labeled as “String notation”), or
+directly referring to any distribution class and parameters, such as
+<code class="docutils literal notranslate"><span class="pre">Normal(13.0,</span> <span class="pre">std=1.0)</span></code>.</p>
+</section>
+<section id="sampling-and-observations">
+<h3>Sampling and observations<a class="headerlink" href="#sampling-and-observations" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_sampling_and_observations.png" src="../_images/screenshot_sampling_and_observations.png" />
+</figure>
+<p>Below the model configuration are sampling parameters, buttons to execute
+simulation runs, and a section for adding observations.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">steps</span></code> boxes control the number of samples run and how many
+steps each sample is run for. The “Run prior” button will start a simulation
+based only on prior probability distributions - it will ignore any entered
+observed data.</p>
+<p>The “Add observation” button creates a new set of fields where you can select a
+metric to specify an observation for, along with the observed value itself and
+the sigma or uncertainty around the value. (See <a class="reference internal" href="bayes.html#bayesian-inference"><span class="std std-ref">Bayesian Inference</span></a> for
+more details on this process.)</p>
+<p>The “Run posterior” button will run the Bayesian inference process and output
+updated probability distributions for the provided observations.</p>
+</section>
+<section id="model-runs-and-tab-controls">
+<h3>Model runs and tab controls<a class="headerlink" href="#model-runs-and-tab-controls" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_tab_controls.png" src="../_images/screenshot_tab_controls.png" />
+</figure>
+<p>The right upper side of the interface contains a list of all previous
+prior/posterior simulation runs, along with toggle buttons to select or deselect
+them for visualizations within the current tab, edit buttons to modify the name
+of the run (this is reflected in the legends of the plots), and the ability to
+delete specific runs. Additionally, the name of the tab can be modified here.</p>
+<p>The “Export” button generates both a PDF and raw HTML file containing the
+contents of the current tab, and will display buttons for downloading both of
+these.</p>
+</section>
+<section id="tab-contents">
+<h3>Tab contents<a class="headerlink" href="#tab-contents" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_tab.png" src="../_images/screenshot_tab.png" />
+</figure>
+<p>The main section of the view is a tabbed interface where the user can add
+visualization types and customize their layout. Visualizations or “panes” can be
+added by clicking on their corresponding type button in the bottom controls row.
+Panes can be resized and moved around by toggling the “Edit layout” button and
+clicking and dragging.</p>
+</section>
+<section id="pane-configuration">
+<h3>Pane configuration<a class="headerlink" href="#pane-configuration" title="Link to this heading">#</a></h3>
+<figure class="align-center">
+<img alt="../_images/screenshot_panecontrols.png" src="../_images/screenshot_panecontrols.png" />
+</figure>
+<p>Clicking on any pane within the tab contents populates the bottom right with
+controls to configure the selected pane. This is different for each pane type,
+but for the selected plots pane, the user can control the grid size of the plots
+and select the subset of variables from the model to include.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer d-print-none">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="viz.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Visualizations</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="submodels.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Submodels</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interface">Interface</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-management">Workspace management</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-configuration">Model configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling-and-observations">Sampling and observations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-runs-and-tab-controls">Model runs and tab controls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tab-contents">Tab contents</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pane-configuration">Pane configuration</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user/explorer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2025, UT Battelle, LLC.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

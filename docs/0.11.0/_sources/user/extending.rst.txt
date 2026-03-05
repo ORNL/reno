@@ -1,0 +1,196 @@
+Extending Reno
+##############
+
+Custom operations
+=================
+
+One of the main ways to extend Reno's functionality is by implementing custom
+operations. This is conceptually similar to custom PyMC operations, where you
+define a class that specifies how the operation works in the context of the
+compute graph. A custom operation can be defined anywhere and imported/used in
+your own codebase.
+
+In Reno, a custom operation class needs to define how to execute the operation in
+numpy and how to convert it into an equivalent PyMC operation. As an example,
+below is the Reno definition for the ``add`` operation:
+
+.. code-block:: python
+
+    # custom operations extend the Operation component class
+    class add(reno.components.Operation):
+        OP_REPR = "+"  # optional, if defined this is used as the symbol name in the lisp syntax
+        # e.g. "(+ 3 5)" instead of the default "(add 3 5)"
+
+        def __init__(self, a, b):
+            super().__init__(a, b)
+
+        # optional, specify how the operation should be rendered in a latex output
+        def latex(self, **kwargs) -> str:
+            return f"{self.sub_equation_parts[0].latex(**kwargs)} + {self.sub_equation_parts[1].latex(**kwargs)}"
+
+        # note that self.sub_equation_parts is an array of the inputs passed to
+        # the constructor. This array is guaranteed to contain EquationPart
+        # instances (even for raw scalar values that are passed in), so
+        # recursively calling functions like latex/pt/pt_str is safe.
+
+        # required, define how to evaluate the operation assuming inputs are numpy arrays
+        def op_eval(self, **kwargs):
+            # adjust_shapes_for_n is a helper function to deal with differences in how
+            # certain shapes broadcast, essentially ensuring the shapes are compatible
+            a, b = reno.ops.adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
+            # the actual numpy operation:
+            return a + b
+
+        # required, define how to directly convert this operation into an
+        # equivalent pytensor/pymc one. This typically involves recursively
+        # getting the pytensor equivalent of all the sub equation parts, and
+        # then running the operation on the results. Note that refs can be used
+        # to resolve component references that have already been defined to
+        # inject them into the operation, but this is in most cases already
+        # being handled in the component/reference .pt code. Reno will also pass
+        # some "dunder" values through this references dictionary too however,
+        # such as "__PT_SEQ_LEN__", which holds the number of steps the
+        # simulation should be executed for.
+        def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+            return self.sub_equation_parts[0].pt(**refs) + self.sub_equation_parts[1].pt(
+                **refs
+            )
+
+        # required, defines the string equivalent of the pt implementation, to
+        # allow generating the string of PyMC code rather than creating the
+        # pymc model itself. This is very valuable for debugging, don't skip it!
+        def pt_str(self, **refs: dict[str, str]) -> str:
+            return f"({self.sub_equation_parts[0].pt_str(**refs)} + {self.sub_equation_parts[1].pt_str(**refs)})"
+
+The minimum required function implementations are ``op_eval``, ``pt``, and
+``pt_str``, but the full set of functions you can override can be found on the
+:py:class:`reno.components.Operation` page.
+
+Note that operation evaluation is implemented in ``op_eval``, as opposed to
+``EquationPart``'s ``eval`` function. An operation's ``eval`` has additional
+handling that shouldn't be reimplemented, so ``op_eval`` is the "inner"
+function. Recursive ``sub_equation_part`` evals should be called with the normal
+``eval`` call:
+
+.. code-block:: python
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[0].eval(**kwargs) + self.sub_equation_parts[1].eval(**kwargs)
+
+If a custom operation will always return a specific dimensionality or type,
+these can be defined in their ``get_shape()`` and ``get_type()`` functions. For
+example, the :py:class:`reno.ops.mean` operation averages across a series
+(aggregating/reducing the dimension to 1) and has to return a float due to the
+division, so that portion of the mean class looks like:
+
+.. code-block:: python
+
+    class mean(reno.components.Operation):
+        ...
+
+        def get_shape(self) -> int:
+            return 1
+
+        def get_type(self) -> type:
+            return float
+
+        ...
+
+Note that more complex implementations might involve getting the size or types
+of sub equation parts, accessible through the
+:py:func:`EquationPart.shape <reno.components.EquationPart.shape>` and
+:py:func:`EquationPart.dtype <reno.components.EquationPart.dtype>` properties
+respectively. An example of this can be found in the :py:class:`reno.ops.stack`
+definition:
+
+.. code-block:: python
+
+    class stack(reno.components.Operation):
+        ...
+
+        def get_shape(self) -> int:
+            return len(self.sub_equation_parts)
+
+        def get_type(self) -> type:
+            # any float types need to make the entire thing float-based
+            types = [part.dtype for part in self.sub_equation_parts]
+            if float in types:
+                return float
+            return types[0]
+
+        ...
+
+
+Custom extended operations
+--------------------------
+
+:ref:`Extended operations` are implemented very similarly to regular operation
+components but have the additional ability to create their own Reno
+components directly within the operation, for more complex time-based
+computations. To support this, :py:class:`reno.components.ExtendedOperation`
+instances take an additional ``implicit_components`` argument in their
+constructor, which is a dictionary of string reference names associated with
+new components (the names are mostly to help distinguish them when debugging.)
+
+Implicit components are hidden in diagrams and latex outputs.
+
+:py:class:`reno.ops.delay1` is an example extended operation, this class
+implements a first order material delay, or an exponentional delay of an input
+flow. The easiest way to implement this is with a separate stock with an outflow
+that outputs the stock value divided by the specified delay time:
+
+.. code-block:: python
+
+    class delay1(reno.components.ExtendedOperation):
+        def __init__(self, input, delay_time):
+            # create the internal components
+            self.inflow = reno.Flow(input)
+            self.delay_stock = reno.Stock()
+            self.outflow = reno.Flow(self.delay_stock / delay_time)
+            self.delay_stock += self.inflow
+            self.delay_stock -= self.outflow
+
+            super().__init__(
+                [input, delay_time],
+                # pass the internal components up to be marked "implicit"
+                {
+                    "inflow": self.inflow,
+                    "delay_stock": self.delay_stock,
+                    "outflow": self.outflow,
+                },
+            )
+
+        def op_eval(self, **kwargs):
+            return self.outflow.eval(**kwargs)
+
+        def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+            return self.outflow.pt(**refs)
+
+        def pt_str(self, **refs: dict[str, str]) -> str:
+            return self.outflow.pt_str(**refs)
+
+
+
+PyMC transpiling
+================
+
+Any Reno model can be transpiled into a string of PyMC code (covered on the
+:ref:`Transpiling` section of the bayesian inference docs.) Using this option
+allows you to further modify the PyMC code in ways that can't be done with Reno
+alone, for example specific optimizations, manual renaming of
+dimensions/coordinates, etc.
+
+
+Simulation timestep control
+===========================
+
+Running a model is typically done with the :py:func:`__call__() <reno.model.Model.__call__>`
+function, which runs the full simulation from beginning to end. The actual
+simulation evaluation is done through the :py:func:`reno.model.Model.simulator`
+generator, where each iteration in the generator evaluates an individual
+timestep.
+
+By manually interacting with the simulator generator, it's possible to have more
+control over the simulation process, either by doing extra
+steps/reporting/logging/analysis between timesteps, or potentially having
+multiple models running that operate on different timescales etc.

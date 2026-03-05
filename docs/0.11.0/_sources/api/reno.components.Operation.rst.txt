@@ -1,0 +1,53 @@
+reno.components.Operation
+=========================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Operation
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Operation.__init__
+      ~Operation.astype
+      ~Operation.clip
+      ~Operation.equal
+      ~Operation.eval
+      ~Operation.find_refs_of_type
+      ~Operation.get_shape
+      ~Operation.get_type
+      ~Operation.is_static
+      ~Operation.latex
+      ~Operation.mean
+      ~Operation.not_equal
+      ~Operation.op_eval
+      ~Operation.op_repr
+      ~Operation.op_types
+      ~Operation.pt
+      ~Operation.pt_str
+      ~Operation.seek_refs
+      ~Operation.series_max
+      ~Operation.series_min
+      ~Operation.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Operation.OP_REPR
+      ~Operation.dtype
+      ~Operation.shape
+      ~Operation.timeseries
+      ~Operation.non_repr_part_indices

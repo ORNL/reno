@@ -1,0 +1,53 @@
+reno.ops.eq
+===========
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: eq
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~eq.__init__
+      ~eq.astype
+      ~eq.clip
+      ~eq.equal
+      ~eq.eval
+      ~eq.find_refs_of_type
+      ~eq.get_shape
+      ~eq.get_type
+      ~eq.is_static
+      ~eq.latex
+      ~eq.mean
+      ~eq.not_equal
+      ~eq.op_eval
+      ~eq.op_repr
+      ~eq.op_types
+      ~eq.pt
+      ~eq.pt_str
+      ~eq.seek_refs
+      ~eq.series_max
+      ~eq.series_min
+      ~eq.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~eq.OP_REPR
+      ~eq.dtype
+      ~eq.shape
+      ~eq.timeseries
+      ~eq.non_repr_part_indices

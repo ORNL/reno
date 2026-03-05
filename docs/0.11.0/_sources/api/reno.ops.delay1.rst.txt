@@ -1,0 +1,53 @@
+reno.ops.delay1
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: delay1
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~delay1.__init__
+      ~delay1.astype
+      ~delay1.clip
+      ~delay1.equal
+      ~delay1.eval
+      ~delay1.find_refs_of_type
+      ~delay1.get_shape
+      ~delay1.get_type
+      ~delay1.is_static
+      ~delay1.latex
+      ~delay1.mean
+      ~delay1.not_equal
+      ~delay1.op_eval
+      ~delay1.op_repr
+      ~delay1.op_types
+      ~delay1.pt
+      ~delay1.pt_str
+      ~delay1.seek_refs
+      ~delay1.series_max
+      ~delay1.series_min
+      ~delay1.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~delay1.OP_REPR
+      ~delay1.dtype
+      ~delay1.shape
+      ~delay1.timeseries
+      ~delay1.non_repr_part_indices

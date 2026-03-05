@@ -1,0 +1,58 @@
+reno.components.Flag
+====================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: Flag
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Flag.__init__
+      ~Flag.astype
+      ~Flag.clip
+      ~Flag.debug_equation
+      ~Flag.equal
+      ~Flag.equation
+      ~Flag.eval
+      ~Flag.find_refs_of_type
+      ~Flag.from_dict
+      ~Flag.get_shape
+      ~Flag.get_type
+      ~Flag.is_static
+      ~Flag.latex
+      ~Flag.mean
+      ~Flag.not_equal
+      ~Flag.populate
+      ~Flag.pt
+      ~Flag.pt_str
+      ~Flag.qual_name
+      ~Flag.seek_refs
+      ~Flag.series_max
+      ~Flag.series_min
+      ~Flag.sum
+      ~Flag.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Flag.dtype
+      ~Flag.indices
+      ~Flag.shape
+      ~Flag.timeseries
+      ~Flag.model
+      ~Flag.label
+      ~Flag.doc

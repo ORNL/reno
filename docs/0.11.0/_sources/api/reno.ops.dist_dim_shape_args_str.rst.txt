@@ -1,0 +1,6 @@
+reno.ops.dist\_dim\_shape\_args\_str
+====================================
+
+.. currentmodule:: reno.ops
+
+.. autofunction:: dist_dim_shape_args_str

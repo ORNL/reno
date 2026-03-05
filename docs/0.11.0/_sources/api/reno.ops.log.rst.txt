@@ -1,0 +1,53 @@
+reno.ops.log
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: log
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~log.__init__
+      ~log.astype
+      ~log.clip
+      ~log.equal
+      ~log.eval
+      ~log.find_refs_of_type
+      ~log.get_shape
+      ~log.get_type
+      ~log.is_static
+      ~log.latex
+      ~log.mean
+      ~log.not_equal
+      ~log.op_eval
+      ~log.op_repr
+      ~log.op_types
+      ~log.pt
+      ~log.pt_str
+      ~log.seek_refs
+      ~log.series_max
+      ~log.series_min
+      ~log.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~log.OP_REPR
+      ~log.dtype
+      ~log.shape
+      ~log.timeseries
+      ~log.non_repr_part_indices

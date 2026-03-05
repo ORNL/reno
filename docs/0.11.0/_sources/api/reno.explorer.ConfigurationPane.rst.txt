@@ -1,0 +1,71 @@
+reno.explorer.ConfigurationPane
+===============================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: ConfigurationPane
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ConfigurationPane.__init__
+      ~ConfigurationPane.clone
+      ~ConfigurationPane.controls
+      ~ConfigurationPane.embed
+      ~ConfigurationPane.fire_on_cache_invalidated
+      ~ConfigurationPane.from_dict
+      ~ConfigurationPane.from_param
+      ~ConfigurationPane.from_values
+      ~ConfigurationPane.get_root
+      ~ConfigurationPane.jscallback
+      ~ConfigurationPane.jslink
+      ~ConfigurationPane.link
+      ~ConfigurationPane.on_cache_invalidated
+      ~ConfigurationPane.render
+      ~ConfigurationPane.save
+      ~ConfigurationPane.select
+      ~ConfigurationPane.servable
+      ~ConfigurationPane.server_doc
+      ~ConfigurationPane.show
+      ~ConfigurationPane.to_dict
+      ~ConfigurationPane.to_html
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ConfigurationPane.align
+      ~ConfigurationPane.aspect_ratio
+      ~ConfigurationPane.css_classes
+      ~ConfigurationPane.design
+      ~ConfigurationPane.height
+      ~ConfigurationPane.height_policy
+      ~ConfigurationPane.loading
+      ~ConfigurationPane.margin
+      ~ConfigurationPane.max_height
+      ~ConfigurationPane.max_width
+      ~ConfigurationPane.min_height
+      ~ConfigurationPane.min_width
+      ~ConfigurationPane.name
+      ~ConfigurationPane.param
+      ~ConfigurationPane.rx
+      ~ConfigurationPane.sizing_mode
+      ~ConfigurationPane.styles
+      ~ConfigurationPane.stylesheets
+      ~ConfigurationPane.tags
+      ~ConfigurationPane.value
+      ~ConfigurationPane.visible
+      ~ConfigurationPane.width
+      ~ConfigurationPane.width_policy

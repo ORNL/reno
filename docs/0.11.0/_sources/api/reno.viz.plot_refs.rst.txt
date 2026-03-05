@@ -1,0 +1,6 @@
+reno.viz.plot\_refs
+===================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: plot_refs

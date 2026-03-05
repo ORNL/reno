@@ -1,0 +1,53 @@
+reno.ops.inflow
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: inflow
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~inflow.__init__
+      ~inflow.astype
+      ~inflow.clip
+      ~inflow.equal
+      ~inflow.eval
+      ~inflow.find_refs_of_type
+      ~inflow.get_shape
+      ~inflow.get_type
+      ~inflow.is_static
+      ~inflow.latex
+      ~inflow.mean
+      ~inflow.not_equal
+      ~inflow.op_eval
+      ~inflow.op_repr
+      ~inflow.op_types
+      ~inflow.pt
+      ~inflow.pt_str
+      ~inflow.seek_refs
+      ~inflow.series_max
+      ~inflow.series_min
+      ~inflow.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~inflow.OP_REPR
+      ~inflow.dtype
+      ~inflow.shape
+      ~inflow.timeseries
+      ~inflow.non_repr_part_indices

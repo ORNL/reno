@@ -1,0 +1,32 @@
+reno.explorer.ViewControls
+==========================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: ViewControls
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ViewControls.__init__
+      ~ViewControls.servable
+      ~ViewControls.show
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ViewControls.name
+      ~ViewControls.param

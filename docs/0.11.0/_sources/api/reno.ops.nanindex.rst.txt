@@ -1,0 +1,53 @@
+reno.ops.nanindex
+=================
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: nanindex
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~nanindex.__init__
+      ~nanindex.astype
+      ~nanindex.clip
+      ~nanindex.equal
+      ~nanindex.eval
+      ~nanindex.find_refs_of_type
+      ~nanindex.get_shape
+      ~nanindex.get_type
+      ~nanindex.is_static
+      ~nanindex.latex
+      ~nanindex.mean
+      ~nanindex.not_equal
+      ~nanindex.op_eval
+      ~nanindex.op_repr
+      ~nanindex.op_types
+      ~nanindex.pt
+      ~nanindex.pt_str
+      ~nanindex.seek_refs
+      ~nanindex.series_max
+      ~nanindex.series_min
+      ~nanindex.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~nanindex.OP_REPR
+      ~nanindex.dtype
+      ~nanindex.shape
+      ~nanindex.timeseries
+      ~nanindex.non_repr_part_indices
