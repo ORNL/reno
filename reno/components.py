@@ -83,6 +83,9 @@ class EquationPart:
     def __mod__(self, obj):
         return reno.ops.mod(self, obj)
 
+    def __pow__(self, obj):
+        return reno.ops.pow(self, obj)
+
     def __radd__(self, obj):
         return reno.ops.add(obj, self)
 
@@ -96,7 +99,10 @@ class EquationPart:
         return reno.ops.div(obj, self)
 
     def __rmod__(self, obj):
-        return reno.ops.mod(self, obj)
+        return reno.ops.mod(obj, self)
+
+    def __rpow__(self, obj):
+        return reno.ops.pow(obj, self)
 
     def __lt__(self, obj):
         return reno.ops.lt(self, obj)

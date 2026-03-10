@@ -40,6 +40,7 @@ __all__ = [
     "minimum",
     "maximum",
     "clip",
+    "pow",
     "log",
     "sin",
     "interpolate",
@@ -1280,6 +1281,45 @@ class clip(reno.components.Operation):
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return f"pt.clip({self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}, {self.sub_equation_parts[2].pt_str(**refs)})"
+
+
+class pow(reno.components.Operation):
+    """a ** b: raise the first value to the power of the second.
+
+    String notation: ``(^ A B)``
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(3) ** 2
+            (^ Scalar(3) Scalar(2))
+
+            >>> (r.Scalar(3) ** 2).eval()
+            9
+
+            >>> a = r.Variable([3, 3, 9])
+            >>> b = r.Variable([1, 2, .5])
+            >>> (a ** b).eval()
+            array([3., 9., 3.])
+    """
+    OP_REPR = "^"
+
+    def __init__(self, a, b):
+        super().__init__(a, b)
+
+    def latex(self, **kwargs) -> str:
+        return f"{self.sub_equation_parts[0].latex(**kwargs)}^{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
+
+    def op_eval(self, **kwargs):
+        return self.sub_equation_parts[0].eval(**kwargs) ** self.sub_equation_parts[1].eval(**kwargs) 
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_equation_parts[0].pt(**refs)**self.sub_equation_parts[1].pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return f"{self.sub_equation_parts[0].pt_str(**refs)}**{self.sub_equation_parts[1].pt_str(**refs)}"
+
 
 
 class log(reno.components.Operation):
