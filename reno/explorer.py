@@ -19,7 +19,11 @@ import PIL
 import xarray as xr
 
 import reno
-from reno.explorer_rest_api import SessionListerHandler
+from reno.explorer_rest_api import (
+    RunPosteriorHandler,
+    RunPriorHandler,
+    WorkspaceListerHandler,
+)
 from reno.viz import ReferenceEditor, plot_trace_refs
 
 WORKSPACE_FOLDER = ""
@@ -337,11 +341,11 @@ class Observable(pn.viewable.Viewer):
 
         # TODO: need way to specify additional optional operation(s) to apply
 
-        options = {metric.name: metric for metric in self.model.all_metrics()}
+        self.options = {metric.name: metric for metric in self.model.all_metrics()}
 
         self.reference = pn.widgets.AutocompleteInput(
             name="Metric",
-            options=options,
+            options=self.options,
             search_strategy="includes",
             min_characters=0,
             sizing_mode="stretch_width",
@@ -2465,7 +2469,11 @@ def main():
         root_path=cli_args.root_path,
         liveness=cli_args.liveness,
         websocket_origin=websocket_origin,
-        extra_patterns=[("/api/session_list", SessionListerHandler)],
+        extra_patterns=[
+            ("/api/workspace_list", WorkspaceListerHandler),
+            ("/api/run_prior", RunPriorHandler),
+            ("/api/run_posterior", RunPosteriorHandler),
+        ],
     )
 
 

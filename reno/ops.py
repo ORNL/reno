@@ -48,6 +48,7 @@ __all__ = [
     "astype",
     "stack",
     # -- "higher order" --
+    "ifelse",
     "pulse",
     "repeated_pulse",
     "step",
@@ -1303,6 +1304,7 @@ class pow(reno.components.Operation):
             >>> (a ** b).eval()
             array([3., 9., 3.])
     """
+
     OP_REPR = "^"
 
     def __init__(self, a, b):
@@ -1312,14 +1314,17 @@ class pow(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)}^{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
     def op_eval(self, **kwargs):
-        return self.sub_equation_parts[0].eval(**kwargs) ** self.sub_equation_parts[1].eval(**kwargs) 
+        return self.sub_equation_parts[0].eval(**kwargs) ** self.sub_equation_parts[
+            1
+        ].eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        return self.sub_equation_parts[0].pt(**refs)**self.sub_equation_parts[1].pt(**refs)
+        return self.sub_equation_parts[0].pt(**refs) ** self.sub_equation_parts[1].pt(
+            **refs
+        )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         return f"{self.sub_equation_parts[0].pt_str(**refs)}**{self.sub_equation_parts[1].pt_str(**refs)}"
-
 
 
 class log(reno.components.Operation):
@@ -1560,6 +1565,36 @@ class stack(reno.components.Operation):
 # ==================================================
 
 
+class ifelse(reno.components.Operation):
+    """A simpler piecewise for a single boolean conditional, easier than constantly having to have
+    r.Piecewise([SOMETHING, 0], [CONDITION.equal(True), CONDITION.not_equal(True)])
+
+    String notation: ``(if CONDITION VAL_IF_TRUE [VAL_IF_FALSE=0])``
+    """
+
+    OP_REPR = "if"
+
+    def __init__(self, condition, val_if_true, val_if_false=0):
+        self.sub_eq = reno.components.Piecewise(
+            [val_if_true, val_if_false],
+            [condition.equal(True), condition.not_equal(True)],
+        )
+        super().__init__(val_if_true, val_if_false, condition, self.sub_eq)
+        self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
+
+    def latex(self, **kwargs):
+        return self.sub_eq.latex(**kwargs)
+
+    def op_eval(self, **kwargs):
+        return self.sub_eq.eval(**kwargs)
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.sub_eq.pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        return self.sub_eq.pt_str(**refs)
+
+
 class pulse(reno.components.Operation):
     """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``.
     Returns 0 at all other timesteps.
@@ -1577,6 +1612,7 @@ class pulse(reno.components.Operation):
             ],
         )
         super().__init__(start, width, self.sub_eq)
+        self.non_repr_part_indices.append(2)  # ignore sub_eq in parsing/str
 
     def latex(self, **kwargs):
         return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"

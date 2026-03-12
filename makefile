@@ -43,6 +43,10 @@ test: ## run unit tests
 run: ## run the standalone web explorer
 	$(MAMBA) run -n $(ENV_NAME) python -m reno.explorer --websocket-origin localhost:5006
 
+.PHONY: test-api
+test-api: ## tell the reno explorer to run a prior run
+	curl -X POST localhost:5006/api/run_prior -H "Content-Type: application/json" --data '{"free_refs": {"water_level_0": "1.0"}}'
+
 .PHONY: example_models
 example_models: ## save the example models so the explorer can find them
 	$(MAMBA) run -n $(ENV_NAME) python -c "from reno.examples.tub import tub; tub.save('work_sessions/models/tub.json')"
