@@ -378,3 +378,14 @@ def test_implicit_timeref():
 
     print(m.find_timeref_name())
     ds = m.pymc(compute_prior_only=True)
+
+
+def test_bool_scalar_in_pymc():
+    """PyMC should handle raw boolean values okay"""
+    m = Model()
+    t = TimeRef()
+    with m:
+        v0 = Variable(ops.ifelse(t.equal(3), 4, 2))
+
+    ds = m.pymc(compute_prior_only=True)
+    assert (ds.prior.v0.values[0][0][:5] == [2, 2, 2, 4, 2]).all()

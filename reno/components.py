@@ -431,23 +431,29 @@ class Scalar(EquationPart):
 
     def __init__(self, value: int | float | list | np.ndarray):
         super().__init__()
-        if isinstance(value, list):
+        if isinstance(value, (list | bool)):
             value = np.array(value)
         self.value = value
 
     def get_shape(self) -> int:
         if isinstance(self.value, np.ndarray):
+            if self.value.shape == ():
+                return 1
             return self.value.shape[0]
         return 1
 
     def get_type(self) -> type:
         # TODO: this doesn't handle a value with a np array with shape > 1
         if isinstance(self.value, np.ndarray):
-            if isinstance(self.value[0], np.floating):
+            if self.value.shape == ():
+                value = self.value
+            else:
+                value = self.value[0]
+            if isinstance(value, np.floating):
                 return float
-            elif isinstance(self.value[0], np.integer):
+            elif isinstance(value, np.integer):
                 return int
-            elif isinstance(self.value[0], np.bool):
+            elif isinstance(value, np.bool):
                 return bool
             else:
                 # TODO: possibly raise warning here?
