@@ -1,0 +1,6 @@
+reno.utils.check\_for\_easy\_static\_time\_eq
+=============================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: check_for_easy_static_time_eq

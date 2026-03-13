@@ -1,0 +1,6 @@
+reno.utils.ensure\_scalar
+=========================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: ensure_scalar

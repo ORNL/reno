@@ -1,0 +1,6 @@
+reno.tab\_exporter.export\_clean\_html
+======================================
+
+.. currentmodule:: reno.tab_exporter
+
+.. autofunction:: export_clean_html

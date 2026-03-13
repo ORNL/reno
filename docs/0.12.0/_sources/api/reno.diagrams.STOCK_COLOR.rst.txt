@@ -1,0 +1,6 @@
+reno.diagrams.STOCK\_COLOR
+==========================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: STOCK_COLOR

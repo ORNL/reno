@@ -1,0 +1,73 @@
+reno.model.Model
+================
+
+.. currentmodule:: reno.model
+
+.. autoclass:: Model
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~Model.__init__
+      ~Model.add
+      ~Model.all_flows
+      ~Model.all_metrics
+      ~Model.all_refs
+      ~Model.all_stocks
+      ~Model.all_vars
+      ~Model.config
+      ~Model.copy
+      ~Model.dataset
+      ~Model.dependency_compute_order
+      ~Model.find_timeref_name
+      ~Model.free_refs
+      ~Model.from_dict
+      ~Model.get_context
+      ~Model.get_docs
+      ~Model.get_nonrecursive_config
+      ~Model.get_timeref
+      ~Model.graph
+      ~Model.latex
+      ~Model.load
+      ~Model.load_dataset
+      ~Model.plot_stocks
+      ~Model.pymc
+      ~Model.pymc_model
+      ~Model.pymc_str
+      ~Model.run_metrics
+      ~Model.save
+      ~Model.simulate
+      ~Model.simulator
+      ~Model.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Model.groups
+      ~Model.stocks
+      ~Model.flows
+      ~Model.vars
+      ~Model.metrics
+      ~Model.models
+      ~Model.parent
+      ~Model.label
+      ~Model.steps
+      ~Model.n
+      ~Model.doc
+      ~Model.trace
+      ~Model.trace_RVs
+      ~Model.group_colors
+      ~Model.default_hide_groups

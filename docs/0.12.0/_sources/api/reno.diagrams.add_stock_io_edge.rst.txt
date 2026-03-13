@@ -1,0 +1,6 @@
+reno.diagrams.add\_stock\_io\_edge
+==================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_stock_io_edge

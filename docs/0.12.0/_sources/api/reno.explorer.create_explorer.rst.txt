@@ -1,0 +1,6 @@
+reno.explorer.create\_explorer
+==============================
+
+.. currentmodule:: reno.explorer
+
+.. autofunction:: create_explorer

@@ -1,0 +1,54 @@
+reno.ops.ifelse
+===============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: ifelse
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ifelse.__init__
+      ~ifelse.astype
+      ~ifelse.clip
+      ~ifelse.equal
+      ~ifelse.eval
+      ~ifelse.find_refs_of_type
+      ~ifelse.get_shape
+      ~ifelse.get_type
+      ~ifelse.is_static
+      ~ifelse.latex
+      ~ifelse.mean
+      ~ifelse.not_equal
+      ~ifelse.op_eval
+      ~ifelse.op_latex
+      ~ifelse.op_repr
+      ~ifelse.op_types
+      ~ifelse.pt
+      ~ifelse.pt_str
+      ~ifelse.seek_refs
+      ~ifelse.series_max
+      ~ifelse.series_min
+      ~ifelse.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ifelse.OP_REPR
+      ~ifelse.dtype
+      ~ifelse.shape
+      ~ifelse.timeseries
+      ~ifelse.non_repr_part_indices

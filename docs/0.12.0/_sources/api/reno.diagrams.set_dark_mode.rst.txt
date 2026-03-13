@@ -1,0 +1,6 @@
+reno.diagrams.set\_dark\_mode
+=============================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: set_dark_mode

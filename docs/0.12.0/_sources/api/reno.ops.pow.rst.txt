@@ -1,0 +1,54 @@
+reno.ops.pow
+============
+
+.. currentmodule:: reno.ops
+
+.. autoclass:: pow
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~pow.__init__
+      ~pow.astype
+      ~pow.clip
+      ~pow.equal
+      ~pow.eval
+      ~pow.find_refs_of_type
+      ~pow.get_shape
+      ~pow.get_type
+      ~pow.is_static
+      ~pow.latex
+      ~pow.mean
+      ~pow.not_equal
+      ~pow.op_eval
+      ~pow.op_latex
+      ~pow.op_repr
+      ~pow.op_types
+      ~pow.pt
+      ~pow.pt_str
+      ~pow.seek_refs
+      ~pow.series_max
+      ~pow.series_min
+      ~pow.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~pow.OP_REPR
+      ~pow.dtype
+      ~pow.shape
+      ~pow.timeseries
+      ~pow.non_repr_part_indices

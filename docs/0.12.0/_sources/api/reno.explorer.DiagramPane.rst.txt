@@ -1,0 +1,77 @@
+reno.explorer.DiagramPane
+=========================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: DiagramPane
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~DiagramPane.__init__
+      ~DiagramPane.clone
+      ~DiagramPane.controls
+      ~DiagramPane.embed
+      ~DiagramPane.fire_on_cache_invalidated
+      ~DiagramPane.from_dict
+      ~DiagramPane.from_param
+      ~DiagramPane.from_values
+      ~DiagramPane.get_root
+      ~DiagramPane.jscallback
+      ~DiagramPane.jslink
+      ~DiagramPane.link
+      ~DiagramPane.on_cache_invalidated
+      ~DiagramPane.render
+      ~DiagramPane.save
+      ~DiagramPane.select
+      ~DiagramPane.servable
+      ~DiagramPane.server_doc
+      ~DiagramPane.show
+      ~DiagramPane.to_dict
+      ~DiagramPane.to_html
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DiagramPane.align
+      ~DiagramPane.aspect_ratio
+      ~DiagramPane.css_classes
+      ~DiagramPane.design
+      ~DiagramPane.fit
+      ~DiagramPane.height
+      ~DiagramPane.height_policy
+      ~DiagramPane.include_dependencies
+      ~DiagramPane.loading
+      ~DiagramPane.margin
+      ~DiagramPane.max_height
+      ~DiagramPane.max_width
+      ~DiagramPane.min_height
+      ~DiagramPane.min_width
+      ~DiagramPane.name
+      ~DiagramPane.param
+      ~DiagramPane.rx
+      ~DiagramPane.show_vars
+      ~DiagramPane.sizing_mode
+      ~DiagramPane.sparkdensities
+      ~DiagramPane.sparklines
+      ~DiagramPane.styles
+      ~DiagramPane.stylesheets
+      ~DiagramPane.tags
+      ~DiagramPane.universe
+      ~DiagramPane.value
+      ~DiagramPane.visible
+      ~DiagramPane.width
+      ~DiagramPane.width_policy

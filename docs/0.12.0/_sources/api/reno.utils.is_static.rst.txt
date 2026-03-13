@@ -1,0 +1,6 @@
+reno.utils.is\_static
+=====================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: is_static
