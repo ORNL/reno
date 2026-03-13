@@ -725,3 +725,13 @@ def test_inflow_list():
     assert s0.in_flows == [f0, f1]
     ds = m()
     assert ds.s0.values[0][1] == 3
+
+
+def test_variable_boolean():
+    """A variable that is a boolean should still work."""
+    m = Model()
+    with m:
+        v0 = Variable(True)
+
+    ds1 = m()
+    ds2 = m(v0=False)

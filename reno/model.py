@@ -522,7 +522,13 @@ class Model:
         return diagram
 
     def latex(
-        self, docs: bool = True, t: int = None, sample: int = 0, raw_str: bool = False
+        self,
+        docs: bool = True,
+        t: int = None,
+        sample: int = 0,
+        raw_str: bool = False,
+        ref_list: list = None,
+        debug_ops: bool = False,
     ):
         """Get an interactive latex ipywidget listing all of the equations in system. Each equation
         line is clickable, clicking will highlight where else in the system that equation's result
@@ -535,12 +541,22 @@ class Model:
             sample (int): Which sample (row) to show the values from if ``t`` was specified.
             raw_str (bool): Set this to True to just get the string of latex instead of
                 the interactive widget.
+            ref_list (list): The set of component references to show the equations for. If left None, will show all of them.
+            debug_ops (bool): If True, include the calculated value after every operation.
         """
         debug = False
         if t is not None:
             debug = True
 
-        latex_obj = reno.viz.ModelLatex(self, docs, t=t, sample=sample, debug=debug)
+        latex_obj = reno.viz.ModelLatex(
+            self,
+            docs,
+            t=t,
+            sample=sample,
+            debug=debug,
+            ref_list=ref_list,
+            debug_ops=debug_ops,
+        )
         if raw_str:
             return latex_obj.latex.data
         return latex_obj.widget

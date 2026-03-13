@@ -636,6 +636,8 @@ class ModelLatex:
             for displaying the current values within each equation.
         debug (bool): If true, display the value of every reference at the specified `t`
             and `sample`.
+        debug_ops (bool): If true, display the value of every individual operation at
+            specified `t` and `sample`.
 
     Example:
         >>> ModelLatex(my_model).widget
@@ -652,13 +654,25 @@ class ModelLatex:
         t: int = None,
         sample: int = 0,
         debug: bool = False,
+        ref_list=None,
+        debug_ops: bool = False,
     ):
         self.model = model
         self.widget = InteractiveLatex()
         """This is the actual displayable object, use this to "view" the equations."""
 
+        self.ref_list = ref_list
+        if self.ref_list is None:
+            self.ref_list = (
+                self.model.all_vars()
+                + self.model.all_flows()
+                + self.model.all_stocks()
+                + self.model.metrics
+            )
+
         self.show_docs = show_docs
         self.debug = debug
+        self.debug_ops = debug_ops
         self.t = t
         self.sample = sample
 
@@ -725,12 +739,7 @@ class ModelLatex:
         started = True if self.start_name is None else False
         stopped = False
 
-        for ref in (
-            self.model.all_vars()
-            + self.model.all_flows()
-            + self.model.all_stocks()
-            + self.model.metrics
-        ):
+        for ref in self.ref_list:
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
 
@@ -766,15 +775,12 @@ class ModelLatex:
         if self.debug:
             kwargs["t"] = self.t
             kwargs["sample"] = self.sample
+        if self.debug_ops:
+            kwargs["debug_ops"] = True
 
         string = "$\n\\begin{align*}\n"
 
-        for ref in (
-            self.model.all_vars()
-            + self.model.all_flows()
-            + self.model.all_stocks()
-            + self.model.metrics
-        ):
+        for ref in self.ref_list:
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
 

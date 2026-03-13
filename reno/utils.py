@@ -12,6 +12,7 @@ import reno
 # references in latex. Might want to change in disgusting lightmode contexts
 DOC_HIGHLIGHT_COLOR = "teal"
 EQ_HIGHLIGHT_COLOR = "cyan"
+VAL_COLOR = "lime"
 
 
 def _get_assigned_var_name(var: Any) -> str:
@@ -317,6 +318,41 @@ def latex_name(name: str, cmd: str = "text") -> str:
         return f"\\{cmd}{{{name}}}"
     escaped_name = name.replace("_", "\\_")
     return f"\\{cmd}{{{escaped_name}}}"
+
+
+def latex_debug_output(eq_part, latex_str, color=None, style="underset", **kwargs):
+    """Show the evaluated output of the equation part in brackets after the name
+
+    Style: "beside", "underset", "underbrace"
+    """
+    t = kwargs["t"]
+    sample = kwargs["sample"]
+    out_value = eq_part.eval(t)
+    if isinstance(out_value, (list, np.ndarray)):
+        if isinstance(out_value, np.ndarray) and out_value.shape == ():
+            pass
+        else:
+            out_value = out_value[sample]
+    # handle multidim case, for now just use first
+    if isinstance(out_value, np.ndarray) and out_value.shape != ():
+        out_value = out_value[0]
+
+    if color is None:
+        color = VAL_COLOR
+
+    value_latex_str = ""
+    value_latex_str += "{\\color{grey}\\{}{\\color{" + color + "}"
+    if isinstance(out_value, (int, np.int_, bool, np.bool_)):
+        value_latex_str += str(out_value)
+    else:
+        value_latex_str += f"{out_value:.2f}"
+    value_latex_str += "}{\\color{grey}\\}}"
+    if style == "beside":
+        return latex_str + value_latex_str
+    elif style == "underset":
+        return "\\underset{" + value_latex_str + "}{" + latex_str + "}"
+    elif style == "underbrace":
+        return "\\underbrace{" + latex_str + "}_{" + value_latex_str + "}"
 
 
 def latex_eqline_wrap_doc(doc_text: str, highlight: bool = False) -> str:

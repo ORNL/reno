@@ -111,7 +111,7 @@ class series_max(reno.components.Operation):
     def __init__(self, a):
         super().__init__(a)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
@@ -166,7 +166,7 @@ class series_min(reno.components.Operation):
     def __init__(self, a):
         super().__init__(a)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
@@ -217,7 +217,7 @@ class mean(reno.components.Operation):
         self.axis = axis
         super().__init__(a)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{mean}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
@@ -265,7 +265,7 @@ class sum(reno.components.Operation):
         # else:
         #     super().__init__(a)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\Sigma {self.sub_equation_parts[0].latex(**kwargs)}"
 
     def get_shape(self) -> int:
@@ -409,7 +409,7 @@ class nanindex(reno.components.Operation):
     def __init__(self, a, ind):
         super().__init__(a, ind)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
     def get_shape(self) -> int:
@@ -445,7 +445,7 @@ class index(reno.components.Operation):
     def __init__(self, a, ind):
         super().__init__(a, ind)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
     def get_shape(self) -> int:
@@ -505,7 +505,7 @@ class slice(reno.components.Operation):
             operands.append(self.stop)
         super().__init__(*operands)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         start = "" if self.start is None else self.start.latex(**kwargs)
         stop = "" if self.stop is None else self.stop.latex(**kwargs)
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{start}:{stop}]"
@@ -594,7 +594,7 @@ class orient_timeseries(reno.components.Operation):
     def __init__(self, a):
         super().__init__(a)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{timeseries}}"
 
     def __repr__(self):
@@ -767,7 +767,7 @@ class add(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} + {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -809,7 +809,7 @@ class sub(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} - {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -851,7 +851,7 @@ class mul(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} * {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -893,7 +893,7 @@ class div(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\frac{{{self.sub_equation_parts[0].latex(**kwargs)}}}{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
     def op_eval(self, **kwargs):
@@ -920,7 +920,7 @@ class mod(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\% {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def op_eval(self, **kwargs):
@@ -945,7 +945,7 @@ class abs(reno.components.Operation):
     def __init__(self, a):
         super().__init__("abs", a)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"|{self.sub_equation_parts[0].latex(**kwargs)}|"
 
     def op_eval(self, **kwargs):
@@ -969,7 +969,7 @@ class lt(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} < {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -999,7 +999,7 @@ class lte(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\leq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1029,7 +1029,7 @@ class gt(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} > {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1059,7 +1059,7 @@ class gte(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\geq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1089,7 +1089,7 @@ class eq(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} = {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1120,7 +1120,7 @@ class ne(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\neq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1152,7 +1152,7 @@ class bool_and(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ and }} {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1183,7 +1183,7 @@ class bool_or(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ or }} {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
@@ -1211,7 +1211,7 @@ class minimum(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1237,7 +1237,7 @@ class maximum(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1263,7 +1263,7 @@ class clip(reno.components.Operation):
     def __init__(self, a, b, c):
         super().__init__(a, b, c)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{clip}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1310,7 +1310,7 @@ class pow(reno.components.Operation):
     def __init__(self, a, b):
         super().__init__(a, b)
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}^{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
     def op_eval(self, **kwargs):
@@ -1339,7 +1339,7 @@ class log(reno.components.Operation):
     def get_type(self) -> type:
         return float
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{ln}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1364,7 +1364,7 @@ class sin(reno.components.Operation):
     def get_type(self) -> type:
         return float
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{sin}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1399,7 +1399,7 @@ class interpolate(reno.components.Operation):
         """The shapes of x_data and y_data don't matter, should be same as input."""
         return self.sub_equation_parts[0].shape
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{interpolate}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1439,7 +1439,7 @@ class assign(reno.components.Operation):
     def get_type(self) -> type:
         return self.sub_equation_parts[0].dtype
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return self.sub_equation_parts[0].latex(**kwargs)
 
     def op_eval(self, **kwargs):
@@ -1465,7 +1465,7 @@ class astype(reno.components.Operation):
     def get_type(self) -> type:
         return self.__dtype
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return self.sub_equation_parts[0].latex(**kwargs)
 
     def op_eval(self, **kwargs):
@@ -1525,7 +1525,7 @@ class stack(reno.components.Operation):
             return float
         return types[0]
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         building_str = (
             f"[{','.join(part.latex(**kwargs) for part in self.sub_equation_parts)}]"
         )
@@ -1582,7 +1582,7 @@ class ifelse(reno.components.Operation):
         super().__init__(val_if_true, val_if_false, condition, self.sub_eq)
         self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return self.sub_eq.latex(**kwargs)
 
     def op_eval(self, **kwargs):
@@ -1614,7 +1614,7 @@ class pulse(reno.components.Operation):
         super().__init__(start, width, self.sub_eq)
         self.non_repr_part_indices.append(2)  # ignore sub_eq in parsing/str
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1663,7 +1663,7 @@ class repeated_pulse(reno.components.Operation):
         # super().__init__(start, interval, width)
         self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{repeated\\_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1692,7 +1692,7 @@ class step(reno.components.Operation):
         )
         super().__init__(value, timesteps, self.sub_eq)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{step}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1726,7 +1726,7 @@ class delay1(reno.components.ExtendedOperation):
             },
         )
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{delay1}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1754,7 +1754,7 @@ class delay3(reno.components.ExtendedOperation):
         # don't need to pass any implicit components up because the individual
         # delays should handle that.
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{delay3}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     # TODO: does this work just as delay3 or do we need to explicitly reference
@@ -1791,7 +1791,7 @@ class smooth(reno.components.ExtendedOperation):
             },
         )
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{smooth}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs):
@@ -1837,7 +1837,7 @@ class inflow(reno.components.Operation):
     def get_type(self) -> type:
         return self.sub_equation_parts[0].dtype
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return self.sub_equation_parts[0].latex(**kwargs)
 
     def op_eval(self, **kwargs):
@@ -1870,7 +1870,7 @@ class outflows(reno.components.Operation):
         else:
             return {flow: ["outflows"] for flow in self.sub_equation_parts[0].out_flows}
 
-    def latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{outflows}}"
 
     def op_eval(self, **kwargs):
@@ -1975,7 +1975,7 @@ class Normal(reno.components.Distribution):
         # self.std = std
         super().__init__(mean, std, per_timestep=per_timestep)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
@@ -2017,7 +2017,7 @@ class Uniform(reno.components.Distribution):
     def __init__(self, low=0.0, high=1.0, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\mathcal{{U}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2061,7 +2061,7 @@ class DiscreteUniform(reno.components.Distribution):
     def __init__(self, low: int = 0, high: int = 2, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{DiscreteUniform}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2109,7 +2109,7 @@ class Bernoulli(reno.components.Distribution):
         super().__init__(p, per_timestep=per_timestep)
         self.use_p_dist = use_p_dist
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{Bernoulli}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
@@ -2169,7 +2169,7 @@ class Categorical(reno.components.Distribution):
         self.use_p_dist = use_p_dist
         self.expected_arg_num_dims[0] = 1
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"\\text{{Categorical}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2211,7 +2211,7 @@ class List(reno.components.Distribution):
         super().__init__()
         self.values = values
 
-    def latex(self, **kwargs):
+    def op_latex(self, **kwargs):
         return f"{self.values}"
 
     def get_shape(self):
@@ -2319,7 +2319,7 @@ class Observation(reno.components.Distribution):
 #         super().__init__()
 #         self.sweep_values = sweep_values
 #
-#     def latex(self, **kwargs):
+#     def op_latex(self, **kwargs):
 #         return f"\\text{{Sweep}}({self.sweep_values})"
 #
 #     def populate(self, n):

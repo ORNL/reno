@@ -15,6 +15,7 @@ from reno.utils import (
     check_for_easy_static_time_eq,
     ensure_scalar,
     is_static,
+    latex_debug_output,
     latex_name,
     range_eq_latex,
 )
@@ -453,7 +454,7 @@ class Scalar(EquationPart):
                 return float
             elif isinstance(value, np.integer):
                 return int
-            elif isinstance(value, np.bool):
+            elif isinstance(value, np.bool_):
                 return bool
             else:
                 # TODO: possibly raise warning here?
@@ -668,6 +669,20 @@ class Operation(EquationPart):
         logic in here, as opposed to overriding eval.)"""
         raise NotImplementedError()
 
+    def latex(self, **kwargs) -> str:
+        """Wrapper around op_latex, which subclasses should override"""
+        latex_str = self.op_latex(**kwargs)
+        if "t" in kwargs and "debug_ops" in kwargs and kwargs["debug_ops"]:
+            latex_str = f"({latex_str})"
+            latex_str = latex_debug_output(
+                self, latex_str, color="orange", style="underbrace", **kwargs
+            )
+        return latex_str
+
+    def op_latex(self, **kwargs) -> str:
+        """Override this in subclasses"""
+        super().latex(**kwargs)
+
     @classmethod
     def op_repr(cls) -> str:
         """Get a string representation for the op name/label, used for
@@ -755,20 +770,7 @@ class Reference(EquationPart):
         if hasattr(self, "model") and self.model.parent is not None:
             latex_str += f"_{{{latex_name(self.model.label)}}}"
         if "t" in kwargs:
-            t = kwargs["t"]
-            sample = kwargs["sample"]
-            out_value = self.eval(t)
-            if isinstance(out_value, (list, np.ndarray)):
-                out_value = out_value[sample]
-            # handle multidim case, for now just use first
-            if isinstance(out_value, np.ndarray):
-                out_value = out_value[0]
-
-            latex_str += (
-                "{\\color{grey}\\{}{\\color{red}"
-                + str(out_value)
-                + "}{\\color{grey}\\}}"
-            )
+            latex_str = latex_debug_output(self, latex_str, **kwargs)
         if "hl" in kwargs:
             if kwargs["hl"] == self.name or (
                 hasattr(self, "qual_name") and kwargs["hl"] == self.qual_name()
@@ -1127,16 +1129,10 @@ class Function(Reference):
         parameters = [part.latex(**kwargs) for part in self.sub_equation_parts]
         latex_str = f"{latex_name(self.label, 'texttt')}({', '.join(parameters)})"
         if "t" in kwargs:
-            t = kwargs["t"]
-            sample = kwargs["sample"]
-            out_value = self.eval(t)
-            if isinstance(out_value, (list, np.ndarray)):
-                out_value = out_value[sample]
-            latex_str += (
-                "{\\color{grey}\\{}{\\color{yellow}"
-                + str(out_value)
-                + "}{\\color{grey}\\}}"
-            )
+            # NOTE: we used to render output color for functions as yellow to
+            # visually distinguish, might be worth adding that back in at some
+            # point.
+            latex_str = latex_debug_output(self, latex_str, **kwargs)
         return latex_str
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1815,19 +1811,7 @@ class HistoricalValue(Reference):
             f"{latex_name(self.label, 'textit')}({self.index_eq.latex(**kwargs)})"
         )
         if "t" in kwargs:
-            t = kwargs["t"]
-            sample = kwargs["sample"]
-            out_value = self.eval(t)
-            if isinstance(out_value, (list, np.ndarray)):
-                out_value = out_value[sample]
-            # handle multidim case, for now just use first
-            if isinstance(out_value, np.ndarray):
-                out_value = out_value[0]
-            latex_str += (
-                "{\\color{grey}\\{}{\\color{red}"
-                + f"{out_value:.2f}"
-                + "}{\\color{grey}\\}}"
-            )
+            latex_str = latex_debug_output(self, latex_str, **kwargs)
         if "hl" in kwargs and kwargs["hl"] == self.tracked_ref.name:
             latex_str = "{\\color{cyan}" + latex_str + "}"
         return latex_str
@@ -2027,19 +2011,7 @@ class Flow(TrackedReference):
             latex_str += f"_{{{latex_name(self.model.label)}}}"
         latex_str += "(t)"
         if "t" in kwargs:
-            t = kwargs["t"]
-            sample = kwargs["sample"]
-            out_value = self.eval(t)
-            if isinstance(out_value, (list, np.ndarray)):
-                out_value = out_value[sample]
-            # handle multidim case, for now just use first
-            if isinstance(out_value, np.ndarray):
-                out_value = out_value[0]
-            latex_str += (
-                "{\\color{grey}\\{}{\\color{red}"
-                + f"{out_value:.2f}"
-                + "}{\\color{grey}\\}}"
-            )
+            latex_str = latex_debug_output(self, latex_str, **kwargs)
         if "hl" in kwargs and kwargs["hl"] == self.qual_name():
             latex_str = "{\\color{cyan}" + latex_str + "}"
         return latex_str

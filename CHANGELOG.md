@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * `pow` operation (overloads `**`)
 * `ifelse` operation (for simpler piecewise cases)
+* Ability to specify list of references to display latex equations for (instead
+  of always showing the entire system)
+* Cleaner latex debug views (component values now render underneath as a latex
+  `\underset`)
+* Excessive debug_ops mode to latex function, which renders the value of every
+  single operation underneath via latex `\underbrace`
+
+### Fixed
+
+* Raw boolean scalar values not handled correctly in pymc translation
 
 
 
