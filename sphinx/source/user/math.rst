@@ -312,10 +312,62 @@ with a more straightforward diagram:
 outflows
 --------
 
+:py:class:`reno.ops.outflows` is a convenience operation to provide the sum of
+all outflows from a stock. This is distinct from manually constructing an
+equation based on ``stock.out_flows`` because :py:class:`reno.ops.outflows`
+evaluates ``stock.out_flows`` at evaluation time rather than at the point of the
+equation's definition. The manual construction, in order to be accurate, would
+have to occur after all outflows for the stock have already been defined and
+attached.
+
+More semantically, you can use this operation by referring to the property on
+stocks: :py:attr:`stock.outflows <reno.components.Stock.outflows>`.
 
 
 space
 -----
+
+:py:attr:`stock.space <reno.components.Stock.space>` is a property that returns
+an operation (not a operation in and of itself) to help with setting up
+bottlenecks on inflows. The operation returns the difference between a stock's
+value and it's maximum allowable value, after taking the outflows for that
+timestep into account. (In other words ``stock.max - stock + stock.outflows``).
+
+This represents the maximum value that inflows should provide to keep the stock at
+or below it's maximum.
+
+To demonstrate, the following is an updated version of the problem specified in
+the :ref:`min/max` description regarding flow bottlenecks. We set the maximum of
+the flow to take ``s2``'s remaining space into account:
+
+
+.. code-block:: python
+
+    import reno as r
+
+    m = r.Model()
+    with m:
+        s1 = r.Stock(init=100)
+        s2 = r.Stock(max=10)
+        f1 = r.Flow(20, max=r.minimum(s1, s2.space))
+
+        s1 >> f1 >> s2
+
+With the above configuration, ``f1`` will never be greater than either ``s1``'s
+remaining value or the amount that ``s2`` can handle in any given timestep:
+
+.. code-block:: python
+
+    >>> run = m(steps=3)
+    >>> run.s1.values[0]
+    array([100, 90, 90])
+
+    >>> run.f1.values[0]
+    array([10, 0, 0])
+
+    >>> run.s2.values[0]
+    array([0, 10, 10])
+
 
 
 Shape and type info

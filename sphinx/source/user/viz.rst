@@ -178,7 +178,7 @@ parameter:
 
     tub.latex(t=5, ref_list=["faucet", tub.drain])
 
-.. figure:: ../_static/tub_latex_t_ref_list_example.png
+.. figure:: ../_static/tub_latex_ref_list_example.png
    :align: center
 
 
@@ -194,7 +194,7 @@ components across multiple different simulation runs.
 
 .. code-block:: python
 
-    trace = predator_prey(
+    trace1 = predator_prey(
         rabbit_growth_rate=0.07,
         rabbit_death_rate=0.0001,
         fox_death_rate=0.01,
@@ -203,7 +203,20 @@ components across multiple different simulation runs.
         foxes_0=700.0,
         steps=2000
     )
-    reno.plot_trace_refs(predator_prey, {"run": trace}, ref_list=["foxes", predator_prey.rabbits])
+    trace2 = predator_prey(
+        rabbit_growth_rate=0.071,
+        rabbit_death_rate=0.0001,
+        fox_death_rate=0.012,
+        fox_growth_rate=1e-05,
+        rabbits_0=200.0,
+        foxes_0=700.0,
+        steps=2000
+    )
+    reno.plot_trace_refs(
+        predator_prey,
+        {"run1": trace1, "run2": trace2},
+        ref_list=["foxes", predator_prey.rabbits]
+    )
 
 .. figure:: ../_static/foxes_rabbits_separate.png
    :align: center
@@ -215,9 +228,11 @@ A common figure type used for system dynamics models compares multiple
 components on the same plot axes. The logic for labelling the axes is a bit
 tricky, so :py:func:`reno.viz.plot_refs_single_axis` handles it for you:
 
+(Note this can only handle rendering from one trace/simulation run at a time.)
+
 .. code-block:: python
 
-    reno.plot_refs_single_axis(trace, [predator_prey.foxes, predator_prey.rabbits])
+    reno.plot_refs_single_axis(trace1, [predator_prey.foxes, predator_prey.rabbits])
 
 .. figure:: ../_static/foxes_rabbits_single_axis.png
    :align: center
