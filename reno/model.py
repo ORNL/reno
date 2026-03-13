@@ -527,7 +527,7 @@ class Model:
         t: int = None,
         sample: int = 0,
         raw_str: bool = False,
-        ref_list: list = None,
+        ref_list: list[str | reno.components.Reference] = None,
         debug_ops: bool = False,
     ):
         """Get an interactive latex ipywidget listing all of the equations in system. Each equation
@@ -541,8 +541,9 @@ class Model:
             sample (int): Which sample (row) to show the values from if ``t`` was specified.
             raw_str (bool): Set this to True to just get the string of latex instead of
                 the interactive widget.
-            ref_list (list): The set of component references to show the equations for. If left None, will show all of them.
-            debug_ops (bool): If True, include the calculated value after every operation.
+            ref_list (list): The set of component references/reference names to show the
+                equations for. If left None, will show all of them.
+            debug_ops (bool): If True, display the calculated value after every operation.
         """
         debug = False
         if t is not None:

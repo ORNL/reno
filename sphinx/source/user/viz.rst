@@ -158,6 +158,30 @@ timestep:
    :align: center
 
 
+This can be taken one step further by including ``debug_ops=True``, which will
+additionally use under braces to show the evaluated output at every single
+operation:
+
+.. code-block:: python
+
+    tub.latex(t=5, debug_ops=True)
+
+.. figure:: ../_static/tub_latex_t_debug_ops_example.png
+   :align: center
+
+
+Note that you can selectively render only a specific set of reference equations
+by passing a list of strings and/or component references with the ``ref_list``
+parameter:
+
+.. code-block:: python
+
+    tub.latex(t=5, ref_list=["faucet", tub.drain])
+
+.. figure:: ../_static/tub_latex_t_ref_list_example.png
+   :align: center
+
+
 Plots
 =====
 

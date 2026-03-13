@@ -654,7 +654,7 @@ class ModelLatex:
         t: int = None,
         sample: int = 0,
         debug: bool = False,
-        ref_list=None,
+        ref_list: list[str | reno.components.Reference] = None,
         debug_ops: bool = False,
     ):
         self.model = model
@@ -740,6 +740,8 @@ class ModelLatex:
         stopped = False
 
         for ref in self.ref_list:
+            if isinstance(ref, str):
+                ref = getattr(self.model, ref)
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
 
@@ -781,6 +783,8 @@ class ModelLatex:
         string = "$\n\\begin{align*}\n"
 
         for ref in self.ref_list:
+            if isinstance(ref, str):
+                ref = getattr(self.model, ref)
             if hasattr(ref, "implicit") and ref.implicit:
                 continue
 

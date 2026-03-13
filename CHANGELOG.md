@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Excessive debug_ops mode to latex function, which renders the value of every
   single operation underneath via latex `\underbrace`
 
+### Changed
+
+* Operation classes should now implement `op_latex` instead of `latex`
+
 ### Fixed
 
 * Raw boolean scalar values not handled correctly in pymc translation
