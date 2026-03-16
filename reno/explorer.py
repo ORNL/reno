@@ -20,6 +20,8 @@ import xarray as xr
 
 import reno
 from reno.explorer_rest_api import (
+    AddPaneHandler,
+    PaneListHandler,
     RunPosteriorHandler,
     RunPriorHandler,
     WorkspaceListerHandler,
@@ -819,6 +821,29 @@ class PanesSet(pn.viewable.Viewer):
 
         return data
 
+    def make_new_pane_from_data(self, data):
+        """Create a pane based on a dictionary specifying type and coniguration.
+
+        Used both by the from_dict as well as REST API handling."""
+        pane_type = data["type"]
+        pane_config = data["data"]
+        if pane_type == "PlotsPane":
+            pane = PlotsPane(self.model)
+            pane.render(self.active_traces)
+        elif pane_type == "DiagramPane":
+            pane = DiagramPane(self.model)
+            pane.render(self.active_traces)
+        elif pane_type == "EditableTextPane":
+            pane = EditableTextPane()
+        elif pane_type == "ConfigurationPane":
+            pane = ConfigurationPane(self.model)
+            pane.render(self.active_configs)
+        pane.from_dict(pane_config)
+        pane.clicker.on_click(
+            partial(self.fire_on_new_controls_needed, pane.controls, pane)
+        )
+        return pane
+
     def from_dict(self, data: dict, traces: dict = None):
         """Deserialize all config and widgets from data _into current instance_"""
         self.tab_name = data["tab_name"]
@@ -842,23 +867,7 @@ class PanesSet(pn.viewable.Viewer):
         for pane_data_and_pos in data["panes"]:
             loc = pane_data_and_pos["loc"]
             loc = (loc[0], loc[1], loc[2], loc[3])
-            pane_type = pane_data_and_pos["type"]
-            pane_data = pane_data_and_pos["data"]
-            if pane_type == "PlotsPane":
-                pane = PlotsPane(self.model)
-                pane.render(self.active_traces)
-            elif pane_type == "DiagramPane":
-                pane = DiagramPane(self.model)
-                pane.render(self.active_traces)
-            elif pane_type == "EditableTextPane":
-                pane = EditableTextPane()
-            elif pane_type == "ConfigurationPane":
-                pane = ConfigurationPane(self.model)
-                pane.render(self.active_configs)
-            pane.from_dict(pane_data)
-            pane.clicker.on_click(
-                partial(self.fire_on_new_controls_needed, pane.controls, pane)
-            )
+            pane = self.make_new_pane_from_data(pane_data_and_pos)
 
             # note that the way gridstack reports locations is a little
             # different than the recomended slice indexing mechanism specified
@@ -2473,6 +2482,8 @@ def main():
             ("/api/workspace_list", WorkspaceListerHandler),
             ("/api/run_prior", RunPriorHandler),
             ("/api/run_posterior", RunPosteriorHandler),
+            ("/api/panes", PaneListHandler),
+            ("/api/add_pane", AddPaneHandler),
         ],
     )
 

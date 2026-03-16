@@ -138,3 +138,75 @@ class RunPosteriorHandler(RequestHandler):
         explorer.run_posterior()
 
         # explorer.observables
+
+
+class PaneListHandler(RequestHandler):
+    """GET /api/panes
+    POST /api/panes
+
+    (GET) Return body:
+    [
+        {
+            "loc": [x0, y0, x1, y1],
+        },
+        ...
+    ]
+
+    (POST) Expected body:
+    [
+        (same as return body, data will be assigned, loc currently ignored)
+    ]
+    """
+
+    # TODO: don't forget this depends on the tab
+
+    def get(self):
+        explorer = pn.state.cache["active_workspaces"][
+            list(pn.state.cache["active_workspaces"])[0]
+        ]
+
+        paneset = explorer.view.active_tab  # .panes
+        ids = [pane.name for pane in explorer.view.active_tab.panes]
+        panes_info = paneset.to_dict()["panes"]
+        # panes_dict = {}
+        # for i, pane in enumerate(panes_info):
+        #     panes_dict[ids[i]] = panes_info[i]
+        self.set_header("Content-Type", "application/json")
+        self.write(json.dumps(panes_info))
+
+    def post(self):
+        explorer = pn.state.cache["active_workspaces"][
+            list(pn.state.cache["active_workspaces"])[0]
+        ]
+        body = json.loads(self.request.body)
+
+        for i, pane_mod in enumerate(body):
+            # find the corresponding pane on the explorer
+            # for pane in explorer.view.active_tab.panes:
+            #     if pane.name == pane_mod["name"]:
+            #         pane.from_dict[pane_mod]["data"]
+            explorer.view.active_tab.panes[i].from_dict(pane_mod["data"])
+
+        explorer.view.refresh_tab_contents()
+
+
+class AddPaneHandler(RequestHandler):
+    """POST /api/add_pane
+
+    Expected body:
+    {
+        "type": "PlotsPane",
+        "data": {
+            (pane config dict)
+        }
+    }
+    """
+
+    def post(self):
+        explorer = pn.state.cache["active_workspaces"][
+            list(pn.state.cache["active_workspaces"])[0]
+        ]
+        body = json.loads(self.request.body)
+
+        pane = explorer.view.active_tab.make_new_pane_from_data(body)
+        explorer.view.active_tab.add_pane(pane)
