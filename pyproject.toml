@@ -1,29 +1,56 @@
-[tool.isort]
-profile = "black"
 
-[tool.pylint]
-# W0612: unused-variable (I trust black/flake8's unused variable rules more.)
-# W0613: unused-argument
-# W0511: fixme  (it's okay for some todos to stick around)
-# W0223: abstract-method (tentatively disabling this, complaining about no copy/deepcopy on widget classes
-# W0622: redefined-builtin (Somewhat unavoidable for things like 'sum' and 'abs', but numpy does it so I'm allowed too)
-# W0212: protected-access (I label functions with _ so that code _outside_ the library knows not to use them, internal is fine.)
-# C0103: invalid-name (it doesn't like 'df', but this is convention.)
-# C0301: line-too-long (black will fix line length where necessary.)
-# C0302: too-many-lines (over-splitting code into sep modules leads to circular refs)
-# E1120: no-value-for-parameter (curifactory stages expect not passing function arguments.)
-# I1101: c-extension-no-member (don't penalize not having python source?)
-# R0903: too-few-public-methods (what a BS complaint.)
-# R0914: too-many-locals (I disagree that this is a useful measure of complexity.)
-# R1735: use-dict-literal (strongly disagree, I prefer dict(some="thing") to {"some": "thing"}
-# R0901: too-many-ancestors (can't help it, have to extend widget which has a long chain)
-# R0902: too-many-instance-attributes (vuetify widgets use attributes to comm to js, this is required)
-# R0913: too-many-arguments (look, parameterization has to occur _somewhere_.)
-# W0702: bare-except (flake8 already handles)
-disable = ["W0613", "W0511", "R1735", "C0103", "C0301", "C0302", "E1120", "I1101", "R0903", "W0612", "R0914", "R0901", "R0902", "W0223", "R0913", "W0622", "W0212", "W0702"]
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = [
+    "src",
+]
+format.docstring-code-format = true
+lint.select = [
+    "D", # pydocstyle
+    "DOC", # pydoclint
+    "E", # pycodestyle
+    "I", # isort
+    "F", # pyflakes
+    "ANN", # flake8 annotations
+    "Q", # flake8 quotes
+    "SIM", # flake8 simplify
+    "PTH", # flake8 pathlib
+    "UP", # pyupgrade
+    "RUF", # ruff
+]
+lint.pydocstyle.convention = "google"
 
-[tool.pylint.MASTER]
-ignore-paths = "^sphinx/.*$,^tests/.*$"
+
+
+
+# [tool.isort]
+# profile = "black"
+#
+# [tool.pylint]
+# # W0612: unused-variable (I trust black/flake8's unused variable rules more.)
+# # W0613: unused-argument
+# # W0511: fixme  (it's okay for some todos to stick around)
+# # W0223: abstract-method (tentatively disabling this, complaining about no copy/deepcopy on widget classes
+# # W0622: redefined-builtin (Somewhat unavoidable for things like 'sum' and 'abs', but numpy does it so I'm allowed too)
+# # W0212: protected-access (I label functions with _ so that code _outside_ the library knows not to use them, internal is fine.)
+# # C0103: invalid-name (it doesn't like 'df', but this is convention.)
+# # C0301: line-too-long (black will fix line length where necessary.)
+# # C0302: too-many-lines (over-splitting code into sep modules leads to circular refs)
+# # E1120: no-value-for-parameter (curifactory stages expect not passing function arguments.)
+# # I1101: c-extension-no-member (don't penalize not having python source?)
+# # R0903: too-few-public-methods (what a BS complaint.)
+# # R0914: too-many-locals (I disagree that this is a useful measure of complexity.)
+# # R1735: use-dict-literal (strongly disagree, I prefer dict(some="thing") to {"some": "thing"}
+# # R0901: too-many-ancestors (can't help it, have to extend widget which has a long chain)
+# # R0902: too-many-instance-attributes (vuetify widgets use attributes to comm to js, this is required)
+# # R0913: too-many-arguments (look, parameterization has to occur _somewhere_.)
+# # W0702: bare-except (flake8 already handles)
+# disable = ["W0613", "W0511", "R1735", "C0103", "C0301", "C0302", "E1120", "I1101", "R0903", "W0612", "R0914", "R0901", "R0902", "W0223", "R0913", "W0622", "W0212", "W0702"]
+#
+# [tool.pylint.MASTER]
+# ignore-paths = "^sphinx/.*$,^tests/.*$"
+#
 
 [tool.setuptools]
 packages = ["reno"]
