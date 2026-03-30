@@ -1,9 +1,11 @@
-"""This module contains the various math and system dynamics object
-components necessary to make up a model and construct its equations.
-"""
+"""Classes for enabling symbolic equations and system dynamics pieces."""
+
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
+from typing import ModuleType
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,11 +22,13 @@ from reno.utils import (
     range_eq_latex,
 )
 
+# TODO: type aliases for:
+# EquationPart | int | float | np.ndarray | list
+
 # ==================================================
 # EQUATION BASE CLASS
 # ==================================================
 # The root of all math things, the tree of life :)
-
 
 class EquationPart:
     """The base object that represents some portion/subtree of a compute
@@ -41,17 +45,19 @@ class EquationPart:
         operations applied to an EquationPart get replaced with their
         corresponding operation EquationPart. This means a ``5 + Scalar(4)``
         gets converted into an ``Operation("+", Scalar(5), Scalar(4))``
-
-    Args:
-        sub_equation_parts (List[EquationPart]): The list of all **immediate**
-            child equation subtrees, e.g. for the operation ``a + b``, the
-            root equation part is the operation ``+``, and ``[a, b]`` would be
-            its sub parts. These are used to help search the tree/connect
-            parts of diagrams up. TODO: probably not strictly defined/enforced
-            enough within the code, write tests for this.
     """
 
-    def __init__(self, sub_equation_parts: list["EquationPart"] = None):
+    def __init__(self, sub_equation_parts: list[EquationPart] = None):
+        """Create a root node of an equation tree with the provided parts as subtrees.
+        
+        Args:
+            sub_equation_parts (List[EquationPart]): The list of all **immediate**
+                child equation subtrees, e.g. for the operation ``a + b``, the
+                root equation part is the operation ``+``, and ``[a, b]`` would be
+                its sub parts. These are used to help search the tree/connect
+                parts of diagrams up. TODO: probably not strictly defined/enforced
+                enough within the code, write tests for this.
+        """
         if sub_equation_parts is None:
             sub_equation_parts = []
         # allow raw numbers to be passed in to any constructor, and ensure
@@ -66,73 +72,97 @@ class EquationPart:
 
     # ---- MATH OPERATION OVERLOADING/EQUATION PART REPLACEMENT ----
 
-    def __add__(self, obj):
-        return reno.ops.add(self, obj)
+    def __add__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '+' operation with the passed object."""
+        return reno.add(self, obj)
 
-    def __sub__(self, obj):
-        return reno.ops.sub(self, obj)
+    def __sub__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '-' operation with the passed object."""
+        return reno.sub(self, obj)
 
-    def __neg__(self):
-        return reno.ops.sub(0, self)
+    def __neg__(self) -> Operation:
+        """Returns symbolic negative operation (``-self``)."""
+        return reno.sub(0, self)
 
-    def __mul__(self, obj):
-        return reno.ops.mul(self, obj)
+    def __mul__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '*' operation with the passed object."""
+        return reno.mul(self, obj)
 
-    def __truediv__(self, obj):
-        return reno.ops.div(self, obj)
+    def __truediv__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '/' operation with the passed object."""
+        return reno.div(self, obj)
 
-    def __mod__(self, obj):
-        return reno.ops.mod(self, obj)
+    def __mod__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '%' operation with the passed object."""
+        return reno.mod(self, obj)
 
-    def __pow__(self, obj):
-        return reno.ops.pow(self, obj)
+    def __pow__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '**' operation with the passed object."""
+        return reno.pow(self, obj)
 
-    def __radd__(self, obj):
-        return reno.ops.add(obj, self)
+    def __radd__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '+' operation with the passed object."""
+        return reno.add(obj, self)
 
-    def __rsub__(self, obj):
-        return reno.ops.sub(obj, self)
+    def __rsub__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '-' operation with the passed object."""
+        return reno.sub(obj, self)
 
-    def __rmul__(self, obj):
-        return reno.ops.mul(obj, self)
+    def __rmul__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '*' operation with the passed object."""
+        return reno.mul(obj, self)
 
-    def __rtruediv__(self, obj):
-        return reno.ops.div(obj, self)
+    def __rtruediv__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '/' operation with the passed object."""
+        return reno.div(obj, self)
 
-    def __rmod__(self, obj):
-        return reno.ops.mod(obj, self)
+    def __rmod__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '%' operation with the passed object."""
+        return reno.mod(obj, self)
 
-    def __rpow__(self, obj):
-        return reno.ops.pow(obj, self)
+    def __rpow__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '**' operation with the passed object."""
+        return reno.pow(obj, self)
 
-    def __lt__(self, obj):
-        return reno.ops.lt(self, obj)
+    def __lt__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '<' operation with the passed object."""
+        return reno.lt(self, obj)
 
-    def __le__(self, obj):
-        return reno.ops.lte(self, obj)
+    def __le__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '<=' operation with the passed object."""
+        return reno.lte(self, obj)
 
-    def __gt__(self, obj):
-        return reno.ops.gt(self, obj)
+    def __gt__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '>' operation with the passed object."""
+        return reno.gt(self, obj)
 
-    def __ge__(self, obj):
-        return reno.ops.gte(self, obj)
+    def __ge__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '>=' operation with the passed object."""
+        return reno.gte(self, obj)
 
-    def __and__(self, obj):
-        return reno.ops.bool_and(self, obj)
+    def __and__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '&' operation with the passed object."""
+        return reno.bool_and(self, obj)
 
-    def __rand__(self, obj):
-        return reno.ops.bool_and(self, obj)
+    def __rand__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '&' operation with the passed object."""
+        return reno.bool_and(self, obj)
 
-    def __or__(self, obj):
-        return reno.ops.bool_or(self, obj)
+    def __or__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '|' operation with the passed object."""
+        return reno.bool_or(self, obj)
 
-    def __ror__(self, obj):
-        return reno.ops.bool_or(self, obj)
+    def __ror__(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns symbolic '|' operation with the passed object."""
+        return reno.bool_or(self, obj)
 
-    def __getitem__(self, obj):
+    def __getitem__(self, obj: EquationPart | int | float | np.ndarray | slice) -> Operation:
+        """Returns symbolic operation to index or slice with the provided index
+        expression.
+        """
         if isinstance(obj, slice):
-            return reno.ops.slice(self, obj.start, obj.stop)
-        return reno.ops.index(self, obj)
+            return reno.slice(self, obj.start, obj.stop)
+        return reno.index(self, obj)
 
     # NOTE: yeaaah weird things break if we override the eq portion.
     # Leaving this here as a reminder to not try to do this.
@@ -155,25 +185,32 @@ class EquationPart:
     # ---- CLEANER MATH API ----
     # (similar to how numpy allows either np.max(a) or a.max())
 
-    def series_max(self):
+    def series_max(self) -> Operation:
+        """Returns a symbolic operation to find the series-wise maximum of the array."""
         # See note in ops.py, not using 'max' because of TrackedReference
-        return reno.ops.series_max(self)
+        return reno.series_max(self)
 
-    def series_min(self):
+    def series_min(self) -> Operation:
+        """Returns a symbolic operation to find the series-wise minimum of the array."""
         # See note in ops.py, not using 'min' because of TrackedReference
-        return reno.ops.series_min(self)
+        return reno.series_min(self)
 
-    def sum(self, axis=0):
-        return reno.ops.sum(self, axis=axis)
+    def sum(self, axis: int = 0) -> Operation:
+        """Returns a symbolic operation to find the series-wise sum of the array."""
+        return reno.sum(self, axis=axis)
 
-    def mean(self, axis=0):
-        return reno.ops.mean(self, axis=axis)
+    def mean(self, axis: int = 0) -> Operation:
+        """Returns a symbolic operation to find the series-wise mean of the array."""
+        return reno.mean(self, axis=axis)
 
     @property
-    def timeseries(self) -> "Operation":
-        """Get a timeseries view of the data (includes all historical data across all timesteps.)"""
+    def timeseries(self) -> Operation:
+        """Returns symbolic operation for getting a timeseries view of the data.
+
+        (includes all historical data across all timesteps.)
+        """
         # TODO: possibly should be a property of TrackedReference instead
-        return reno.ops.orient_timeseries(self)
+        return reno.orient_timeseries(self)
 
     @property
     def shape(self) -> int:
@@ -193,17 +230,25 @@ class EquationPart:
             self._dtype = self.get_type()
         return self._dtype
 
-    def equal(self, obj):
-        return reno.ops.eq(self, obj)
+    def equal(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns a symbolic operation for checking equality with passed object."""
+        return reno.eq(self, obj)
 
-    def not_equal(self, obj):
-        return reno.ops.ne(self, obj)
+    def not_equal(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns a symbolic operation for checking inequality with passed object."""
+        return reno.ne(self, obj)
 
-    def clip(self, min, max):
-        return reno.ops.clip(self, min, max)
+    def clip(self, min: EquationPart | int | float | np.ndarray, max: EquationPart | int | float | np.ndarray) -> Operation:
+        """Returns a symbolic operation for enforcing the output is between the passed
+        min and max.
+        """
+        return reno.clip(self, min, max)
 
-    def astype(self, dtype):
-        return reno.ops.astype(self, dtype)
+    def astype(self, dtype: type) -> Operation:
+        """Returns a symbolic operation to convert the output of this equation to the
+        specified type.
+        """
+        return reno.astype(self, dtype)
 
     # ---- /CLEANER MATH API ----
 
@@ -212,7 +257,7 @@ class EquationPart:
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """Execute the compute graph for this equation, this needs to be
         implemented in every subclass.
@@ -228,26 +273,29 @@ class EquationPart:
                 passed down through all subsequent calls.
             force (bool): Whether to ignore a previously cached value and compute
                 regardless.
+            kwargs (dict): Any additional arguments to pass through evaluation tree.
         """
         raise NotImplementedError()
 
-    def latex(self, **kwargs) -> str:
+    def latex(self, **kwargs: dict) -> str:
         """Construct a string representation of this portion of the equation
         for use in a latex display. Should probably be overriden in most
         subclasses, and often needs to be called recursively on
-        sub_equation_parts."""
+        sub_equation_parts.
+        """
         return str(self.value)
 
-    def seek_refs(self, include_ref_types: bool = False):  # noqa: C901
-        """Immediate refs only, depth=1.
+    def seek_refs(self, include_ref_types: bool = False) -> list[Reference] | dict[Reference, list[str]]:  # noqa: C901
+        """Recursively find a list of all References immediately underneath this part.
 
         Either provides a list of references that appear underneath these equations
-        or a dictionary with the "roles" or types that those references play
+        or a dictionary with the "roles" or types that those references play.
+
+        Note that this doesn't infinitely recurse into TrackedReferences themselves, this is
+        used to find the outermost references that need to resolve. (Avoiding circular refs)
         """
-        # TODO: really not sure this is the best way of doing this, and it
-        # heavily impacts quality of graph viz rendering/determining how
-        # flows connect to what stocks and eachother etc. (can be implicit
-        # connections if equations are set up weird.)
+        # TODO: (2026-03-18): break this up so that components reponsible for
+        # the sub behavior, bad pattern to be defining _everything_ up here.
         try:
             # find the equation parts to look into for references
             check_parts = [*self.sub_equation_parts]
@@ -266,34 +314,9 @@ class EquationPart:
                     check_parts.append(self.max)
                     check_part_source_description.append("limit")
 
-            if include_ref_types:
-                refs = {}
-            else:
-                refs = []
+            refs = {} if include_ref_types else []
             for i, part in enumerate(check_parts):
-                if isinstance(part, Function):
-                    sub_refs = part.seek_refs(include_ref_types)
-                    if include_ref_types:
-                        for ref in sub_refs:
-                            if ref not in refs:
-                                refs[ref] = []
-                            refs[ref].extend(sub_refs[ref])
-                            if check_part_source_description[i] is not None:
-                                refs[ref].append(check_part_source_description[i])
-                    else:
-                        refs.extend(sub_refs)
-                elif isinstance(part, Operation):
-                    sub_refs = part.seek_refs(include_ref_types)
-                    if include_ref_types:
-                        for ref in sub_refs:
-                            if ref not in refs:
-                                refs[ref] = []
-                            refs[ref].extend(sub_refs[ref])
-                            if check_part_source_description[i] is not None:
-                                refs[ref].append(check_part_source_description[i])
-                    else:
-                        refs.extend(sub_refs)
-                elif isinstance(part, Piecewise):
+                if isinstance(part, (Function, Operation, Piecewise)):
                     sub_refs = part.seek_refs(include_ref_types)
                     if include_ref_types:
                         for ref in sub_refs:
@@ -350,27 +373,48 @@ class EquationPart:
             raise
 
     def get_shape(self) -> int:
-        """For now this is returning an integer because we only allow a single
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+
+        Override this in any subclass to control how shape is calculated.
+        
+        For now this is returning an integer because we only allow a single
         additional dimension. Note that this shape _does not_ incoporate time or
         batch dimensions, only the "data" dimension if applicable.
         This should be overridden by subclasses, e.g. operations which would
-        change the shape."""
+        change the shape.
+        """
         return 1
 
     def get_type(self) -> type:
-        """Similar to shape, this gets computed recursively, used to automatically
-        determine if the value needs to be initialized with a certain numpy type."""
-        # None means type doesn't matter/shouldn't influence anything upstream
+        """Get the type of the target output of this equation expression.
+
+        Prefer using ``dtype`` property over directly calling this function.
+
+        Override this in any subclass to control how the type gets determined.
+
+        A ``None`` return means that the type doesn't matter or shouldn't influence or
+        override anything upstream.
+
+        Similar to shape, this gets computed recursively, used to automatically
+        determine if the value needs to be initialized with a certain numpy type.
+        """
         return None
 
-    def find_refs_of_type(self, search_type, already_checked: list = None) -> list:
-        """Actually recursive as opposed to seek_refs, returns a list of all equation
-        parts matching passed type."""
+    def find_parts_of_type(self, search_type: type, already_checked: list[EquationPart] = None) -> list[EquationPart]:
+        """Recursively search for all EquationParts in the tree of the specified type.
 
+        Args:
+            search_type (type): The type of component/equation part to search for,
+                e.g. :py:class:`reno.components.ExtendedOperation`.
+            already_checked (list[EquationPart]): Used to avoid recursing into already
+                checked visited equation parts.
+        """
         if already_checked is None:
             already_checked = []
 
-        refs = []
+        matching_parts = []
         check_parts = [*self.sub_equation_parts]
         if isinstance(self.value, EquationPart):
             # TODO: I think this handles cases where you've directly assigned a
@@ -388,28 +432,30 @@ class EquationPart:
                 continue
             already_checked.append(part)
             if isinstance(part, search_type):
-                refs.append(part)
+                matching_parts.append(part)
 
-            refs.extend(part.find_refs_of_type(search_type, already_checked))
-        return refs
+            matching_parts.extend(part.find_parts_of_type(search_type, already_checked))
+        return matching_parts
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         """Get a pytensor graph representing this piece of an equation."""
         raise NotImplementedError(
-            f"Failed at {str(self)}, no pt() implementation found for this equation part."
+            f"Failed at {self}, no pt() implementation found for this equation part."
         )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         """Construct a string containing relevant pytensor code for this piece
-        of the equation. This is useful for "compiling" into pymc code."""
+        of the equation. This is useful for "compiling" into pymc code.
+        """
         raise NotImplementedError(
-            f"Failed at {str(self)}, no pt_str() implementation found for this equation part."
+            f"Failed at {self}, no pt_str() implementation found for this equation part."
         )
 
     def is_static(self) -> bool:
-        """Convenience shortcut for ``reno.utils.is_static()`` - True if this equation
-        doesn't rely on any dynamic values (thus constant), False if it does."""
-        return reno.utils.is_static(self)
+        """Convenience shortcut for :py:func:`reno.utils.is_static` - True if this equation
+        doesn't rely on any dynamic values (thus constant), False if it does.
+        """
+        return is_static(self)
 
 
 # ==================================================
@@ -425,18 +471,24 @@ class EquationPart:
 class Scalar(EquationPart):
     """A static, single value equation part, representing some simple value that
     doesn't need to be computed.
-
-    Args:
-        value (int | float | np.ndarray): The scalar value to use.
     """
-
+    
     def __init__(self, value: int | float | list | np.ndarray):
+        """Create a static value node holding the provided value.
+        
+        Args:
+            value (int | float | np.ndarray): The scalar value to use.
+        """
         super().__init__()
         if isinstance(value, (list | bool)):
             value = np.array(value)
         self.value = value
 
     def get_shape(self) -> int:
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+        """
         if isinstance(self.value, np.ndarray):
             if self.value.shape == ():
                 return 1
@@ -444,12 +496,13 @@ class Scalar(EquationPart):
         return 1
 
     def get_type(self) -> type:
+        """Get the type of the target output of this equation expression.
+
+        Prefer using ``dtype`` property over directly calling this function.
+        """
         # TODO: this doesn't handle a value with a np array with shape > 1
         if isinstance(self.value, np.ndarray):
-            if self.value.shape == ():
-                value = self.value
-            else:
-                value = self.value[0]
+            value = self.value if self.value.shape == () else self.value[0]
             if isinstance(value, np.floating):
                 return float
             elif isinstance(value, np.integer):
@@ -466,25 +519,24 @@ class Scalar(EquationPart):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
-        """No compute necessary, just get the previously specified value. (And
-        likely use it in the rest of the equation.)"""
+        """No compute necessary, just retrieve statically defined value."""
         return self.value
 
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:  # noqa: D102
         tensor = pt.as_tensor(self.value)
         # consolidate non-integer types to float64, otherwise pymc gets real mad
         if tensor.dtype == "float32":
             tensor = tensor.astype("float64")
         return tensor
 
-    def pt_str(self, **refs: dict[str, str]) -> str:
+    def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
         if pt.as_tensor(self.value).dtype == "float32":
             return f'pt.as_tensor({self.value}).astype("float64")'
         return f"pt.as_tensor({self.value})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         # print("Type", type(self.value))
         value = self.value
         if isinstance(self.value, np.ndarray):
@@ -499,13 +551,18 @@ class Distribution(EquationPart):
     Probably shouldn't directly be using this, although you can in theory
     likely pass in ``partial()``s with numpy functions (just minus the size
     variable.)
-
-    Args:
-        per_timestep (bool): Whether to draw a different value from the
-            distribution for each timestep.
     """
 
-    def __init__(self, *operands, per_timestep: bool = False):
+    def __init__(self, *operands: list[EquationPart], per_timestep: bool = False):
+        """Create a distribution equation part, this is likely being called from
+        a subclass.
+        
+        Args:
+            operands (list[EquationPart]): Any sub equation parts to track for
+                this distribution.
+            per_timestep (bool): Whether to draw a different value from the
+                distribution for each timestep.
+        """
         super().__init__(list(operands))
         self.per_timestep = per_timestep
         self.expected_arg_num_dims = {}
@@ -513,7 +570,7 @@ class Distribution(EquationPart):
         # parameter int index to 1, that way can be checked for in get_shape
         # NOTE: this same strategy may need to apply to operation as well
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         """Generate n x dim samples based on this probability distribution, assigns
         as a vector/matrix to ``self.value``.
 
@@ -528,6 +585,13 @@ class Distribution(EquationPart):
     # NOTE: arguably a distribution could directly inherit from operation and
     # work as expected?
     def get_shape(self) -> int:
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+
+        For a distribution we "broadcast" from any sub equation parts, so a >1
+        dim in a sub part will extend to this one.
+        """
         # by _default_, use a simple broadcast if all parts but one are just one
         # TODO: prob need to do similar to op_repr and have an op_get_shape
 
@@ -567,17 +631,24 @@ class Distribution(EquationPart):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> np.ndarray:
         """Get the vector of samples pulled from the probability distribution.
 
-        Note that this expects ``populate()`` to already have been called."""
+        Note that this expects ``populate()`` to already have been called.
+        """
         if not self.per_timestep:
             return self.value
         else:
             return self.value[:, t]
 
     def clean_part_repr(self, part_index: int) -> str:
+        """Get a non-"Scalar()" string version of a particular sub equation part.
+
+        Since all non-Scalar static values get converted into Scalar instances, this
+        is used to remove all the "Scalar" strings everywhere e.g. in repr outputs.
+        See ops.py __repr__ functions for examples of how it's used.
+        """
         part = self.sub_equation_parts[part_index]
         if isinstance(part, Scalar):
             return str(part.value)
@@ -590,17 +661,19 @@ class Operation(EquationPart):
     Pretty useless by itself, look in reno/ops.py, we use a parent class
     to make it easier to distinguish/find parts of an equation that are
     operations.
-
-    Args:
-        operands (list[EquationParts]): The sub equations the operation is
-            applying across.
     """
 
     OP_REPR = None
     """If defined, this is what gets printed as the 'label' for the operation in the repr,
     and is what's used during parsing. Otherwise, just uses class name."""
 
-    def __init__(self, *operands):
+    def __init__(self, *operands: list[EquationPart]):
+        """Create an operation node involving the passed sub equation parts.
+
+        Args:
+            operands (list[EquationParts]): The sub equations the operation is
+                applying across.
+        """
         super().__init__(list(operands))
         self.non_repr_part_indices = []
         """Use this to "hide" a sub_equation_part in the string repr, e.g. if
@@ -625,6 +698,12 @@ class Operation(EquationPart):
             raise
 
     def get_shape(self) -> int:
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+
+        "Broadcasts" any size 1 dims to a larger dim node if present.
+        """
         # by _default_, use a simple broadcast if all parts but one are just one
         # TODO: prob need to do similar to op_repr and have an op_get_shape
         try:
@@ -652,6 +731,10 @@ class Operation(EquationPart):
             raise
 
     def get_type(self) -> type:
+        """Get the type of the target output of this equation expression.
+
+        Prefer using ``dtype`` property over directly calling this function.
+        """
         types = []
         for sub_equation_part in self.sub_equation_parts:
             types.append(sub_equation_part.dtype)
@@ -664,13 +747,19 @@ class Operation(EquationPart):
             return bool
         return None
 
-    def op_eval(self, **kwargs) -> int | float | np.ndarray:
-        """Any new operations should implement this method. (Put all evaluation
-        logic in here, as opposed to overriding eval.)"""
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
+        """Any new operations should implement this method.
+
+        Put all evaluation logic in here, as opposed to overriding eval.
+        """
         raise NotImplementedError()
 
-    def latex(self, **kwargs) -> str:
-        """Wrapper around op_latex, which subclasses should override"""
+    def latex(self, **kwargs: dict) -> str:
+        """Get a string of latex representing this op.
+
+        Wrapper around op_latex, subclasses should override that
+        function as opposed to this one.
+        """
         latex_str = self.op_latex(**kwargs)
         if "t" in kwargs and "debug_ops" in kwargs and kwargs["debug_ops"]:
             latex_str = f"({latex_str})"
@@ -679,14 +768,16 @@ class Operation(EquationPart):
             )
         return latex_str
 
-    def op_latex(self, **kwargs) -> str:
-        """Override this in subclasses"""
+    def op_latex(self, **kwargs: dict) -> str:
+        """Output the latex string for this operation. Override this in subclasses."""
         super().latex(**kwargs)
 
     @classmethod
     def op_repr(cls) -> str:
-        """Get a string representation for the op name/label, used for
-        printing and parsing."""
+        """Get a string representation for the op name/label.
+
+        Used for printing and parsing.
+        """
         if cls.OP_REPR is not None:
             return cls.OP_REPR
         # use the class name if no OP_REPR was set on the class.
@@ -694,8 +785,7 @@ class Operation(EquationPart):
 
     @staticmethod
     def op_types() -> list[type]:
-        """Get a list of classes that inherit from this one, in other words all of
-        the possible defined operations."""
+        """Get a list of all defined operations/Operation subclasses."""
         subclasses = []  # collected list of types
         to_process = [Operation]  # the "frontier"
         while len(to_process) > 0:
@@ -709,7 +799,7 @@ class Operation(EquationPart):
                     to_process.append(child_class)
         return subclasses
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         sub_parts_string = " ".join(
             [
                 subpart.__repr__()
@@ -727,7 +817,17 @@ class ExtendedOperation(Operation):
     Defining this as a separate type to make it easier to search for in equation trees.
     """
 
-    def __init__(self, operands: list, implicit_components: dict):
+    def __init__(self, operands: list[EquationPart], implicit_components: dict[str, EquationPart]):
+        """Create a extended operation node with the provided and implicit components.
+
+        Args:
+            operands (list[EquationPart]): Any provided sub equation parts to track.
+            implicit_components (dict[str, EquationPart]): Any "private" components 
+                created within this class. They shouldn't show up in diagrams, but are
+                used for computation. See :py:class:`reno.ops.delay1` for an example.
+                Names can be any representative string, and are used to label pymc
+                outputs.
+        """
         super().__init__(*operands + list(implicit_components.values()))
         self.implicit_components = implicit_components
         for name, component in self.implicit_components.items():
@@ -748,14 +848,16 @@ class Reference(EquationPart):
     Semantically a reference is anything that will need to "resolve" somehow,
     either by looking up a historical value or running a sub equation to get
     the result.
-
-    Args:
-        label (str): The visual label for the reference. In the context of a model,
-            is set to the name assigned on the model if not explicitly provided.
-        doc (str): A docstring/description explaining what this component is.
     """
 
     def __init__(self, label: str = None, doc: str = None):
+        """Create a reference node/something that refers to another equation or thing.
+
+        Args:
+            label (str): The visual label for the reference. In the context of a model,
+                is set to the name assigned on the model if not explicitly provided.
+            doc (str): A docstring/description explaining what this component is.
+        """
         self.name = None
         self.label = label
         """Label is what's used in any visual representation (e.g. allows spaces where
@@ -779,7 +881,13 @@ class Reference(EquationPart):
 
         return latex_str
 
-    def __repr__(self):
+    # TODO: (2026-03-30) should qual_name be defined here? Prev ran into issues
+    # because e.g. timeref doesn't have that function, believe I solved at the
+    # time by looking specifically for HistoricalValue and TrackedReference, but
+    # might be easier to define reference-wide (plus if models have diff
+    # timerefs)
+
+    def __repr__(self) -> str:  # noqa: D105
         return f'"{self.label}"'
 
 
@@ -791,16 +899,6 @@ class Piecewise(EquationPart):
            ⎧ 1     if t < 4
     f(t) = ⎨ 5     if 4 <= t < 7
            ⎩ 9 + t if 7 <= t
-
-    Args:
-        equations (list[EquationPart]): The possible equation branches that
-            selectively evaluate based on which condition is true. Must have
-            same number of equations as conditions.
-        conditions (list[Callable]): The boolean conditions to evaluate to
-            determine which equation to output. These can all either be an
-            equation based on EquationPart (see the boolean ops in ops.py),
-            or a function that accepts a single parameter (t) as an input.
-            Must have same number of conditions as equations.
     """
 
     # TODO: is this an operation? It kind of is isn't it? Not sure if it's
@@ -811,6 +909,18 @@ class Piecewise(EquationPart):
     # condition would follow each equation. This would likely get rid of
     # separate need for parse
     def __init__(self, equations: list[EquationPart], conditions: list[Callable]):
+        """Create a piecewise ("if-else operation") node.
+
+        Args:
+            equations (list[EquationPart]): The possible equation branches that
+                selectively evaluate based on which condition is true. Must have
+                same number of equations as conditions.
+            conditions (list[Callable]): The boolean conditions to evaluate to
+                determine which equation to output. These can all either be an
+                equation based on EquationPart (see the boolean ops in ops.py),
+                or a function that accepts a single parameter (t) as an input.
+                Must have same number of conditions as equations.
+        """
         # ensure scalar on each equation to allow specifying raw integers as
         # outputs without having to specify Scalar
         equations = [ensure_scalar(equation) for equation in equations]
@@ -827,12 +937,14 @@ class Piecewise(EquationPart):
             self.conditions
         ), "Number of equations and number of conditions must match"
 
-    def eval_condition(self, i, *args, **kwargs):
-        """Recursively build nested np.where to handle all conditions. Note
-        that this does evaluate all equations and all conditions, there are
+    def eval_condition(self, i: int, *args: list, **kwargs: dict) -> bool | np.ndarray:
+        """Recursively build nested np.where to handle all conditions.
+
+        Note that this does evaluate all equations and all conditions, there are
         likely ways to improve efficiency/reduce unnecessary compute (e.g. this
         used to use np.piecewise, but adding data dimensions significantly
-        increased complexity)"""
+        increased complexity)
+        """
         condition = self.conditions[i].eval(*args, **kwargs)
         eqn1 = self.equations[i].eval(*args, **kwargs)
         if i < len(self.conditions) - 2:
@@ -846,7 +958,7 @@ class Piecewise(EquationPart):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """Evaluate condition equations/functions until a ``True`` is returned,
         and then evaluate and return the corresponding equation."""
@@ -881,11 +993,12 @@ class Piecewise(EquationPart):
             f"Piecewise function {self.value} had no valid conditions."
         )
 
-    def latex(self, **kwargs) -> str:
-        """Get a string representation for the cool left bracket with the equations
-        and their corresponding conditions. Conditions that aren't EquationParts can't
-        really be converted meaningfully, so are represented simply with
-        ``\\lambda(t)``"""
+    def latex(self, **kwargs: dict) -> str:
+        r"""Get a latex piecewise string (left bracket with eqs and conditions).
+
+        Conditions that aren't EquationParts can't really be converted meaningfully, so
+        are represented simply with ``\\lambda(t)``.
+        """
         # allow a more generic representation for limited latex environments,
         # like trying to output a text png from matplotlib
         # if "simplified_output" in kwargs and kwargs["simplified_output"]:
@@ -902,9 +1015,11 @@ class Piecewise(EquationPart):
         string += "\\end{cases}"
         return string
 
-    def pt_condition(self, i, refs) -> pt.TensorVariable:
+    def pt_condition(self, i: int, refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         """Get the pytensor equation starting at the ith condition (using ifelse).
-        Recursively includes all >i conditions."""
+        
+        Recursively includes all >i conditions.
+        """
         condition = self.conditions[i].pt(**refs)
         eqn1 = self.equations[i].pt(**refs)
         eqn2 = self.equations[i + 1].pt(**refs)
@@ -918,9 +1033,11 @@ class Piecewise(EquationPart):
             eqn2 = eqn2.astype("float64")
         return pt.switch(condition, eqn1, eqn2)
 
-    def pt_condition_str(self, i, refs) -> str:
+    def pt_condition_str(self, i: int, refs: dict[str, str]) -> str:
         """Get the string for the pytensor code for the ith condition (using ifelse).
-        Recursively includes all >i conditions."""
+        
+        Recursively includes all >i conditions.
+        """
         condition_str = self.conditions[i].pt_str(**refs)
         # we get the actual equations just so we can check if casts are necessary
         eqn1 = self.equations[i].pt()
@@ -936,13 +1053,19 @@ class Piecewise(EquationPart):
             eqn2_str += '.astype("float64")'
         return f"pt.switch({condition_str}, {eqn1_str}, {eqn2_str})"
 
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:  # noqa: D102
         return self.pt_condition(0, refs)
 
-    def pt_str(self, **refs: dict[str, str]) -> str:
+    def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
         return self.pt_condition_str(0, refs)
 
     def get_shape(self) -> int:
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+
+        "Broadcasts" any size 1 dims to a larger dim node if present.
+        """
         # by _default_, use a simple broadcast if all parts but one are just one
         # TODO: prob need to do similar to op_repr and have an op_get_shape
         try:
@@ -967,6 +1090,10 @@ class Piecewise(EquationPart):
             raise
 
     def get_type(self) -> type:
+        """Get the type of the target output of this equation expression.
+
+        Prefer using ``dtype`` property over directly calling this function.
+        """
         types = []
         for equation in self.equations:
             types.append(equation.dtype)
@@ -980,9 +1107,12 @@ class Piecewise(EquationPart):
         return None
 
     @staticmethod
-    def parse(arg_strs: list[str], refs: dict[str, Reference]):
-        """Parsing a piecewise has to be handled differently from normal operations because
-        of the collection of associated arguments."""
+    def parse(arg_strs: list[str], refs: dict[str, Reference]) -> Piecewise:
+        """Convert a set of argument strings and references into a piecewise node.
+
+        Parsing a piecewise has to be handled differently from normal operations because
+        of the collection of associated arguments.
+        """
         equations = []
         conditions = []
         for arg_str in arg_strs:
@@ -997,7 +1127,7 @@ class Piecewise(EquationPart):
             equations.append(equation)
         return Piecewise(equations, conditions)
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         piece_str = "(piecewise"
         for i, condition in enumerate(self.conditions):
             piece_str += f" ({condition.__repr__()} {self.equations[i].__repr__()})"
@@ -1022,20 +1152,6 @@ class Function(Reference):
         eval'ed timestep. (So the function should expect to do vector operations,
         numpy will probably automagically handle this.)
 
-    Args:
-        f (Callable): The python function to run when ``.eval()`` is called.
-        args (list[any]): Arguments to pass to ``f`` when ``.eval()`` is called.
-            Any ``EquationPart`` arguments will have their ``.eval()`` called prior
-            to ``f``'s execution.
-        inject_mathlib (bool): Whether to pass a `mathlib` arg to allow running
-            in both normal reno math mode as well as pymc. Requires underlying
-            function to take `mathlib`.
-        pt_mathlib: The library to use for pytensor operations.
-        np_mathlib: The library to use for numpy operations.
-        kwargs (list[any]): Keyword args to pass to ``f`` when ``.eval()`` is
-            called. Any ``EquationPart`` arguments will have their ``.eval()``
-            called prior to ``f``'s execution.
-
     NOTE: theoretically works in pymc conversion (as long as mathlib is used) but
     relatively untested as of writing.
 
@@ -1051,12 +1167,28 @@ class Function(Reference):
     def __init__(
         self,
         f: Callable,
-        *args,
+        *args: list,
         inject_mathlib: bool = True,
-        pt_mathlib=None,
-        np_mathlib=None,
-        **kwargs,
+        pt_mathlib: ModuleType = None,
+        np_mathlib: ModuleType = None,
+        **kwargs: dict,
     ):
+        """Create a function thunk node for an equation tree.
+        
+        Args:
+            f (Callable): The python function to run when ``.eval()`` is called.
+            args (list[any]): Arguments to pass to ``f`` when ``.eval()`` is called.
+                Any ``EquationPart`` arguments will have their ``.eval()`` called prior
+                to ``f``'s execution.
+            inject_mathlib (bool): Whether to pass a `mathlib` arg to allow running
+                in both normal reno math mode as well as pymc. Requires underlying
+                function to take `mathlib`.
+            pt_mathlib: The library to use for pytensor operations.
+            np_mathlib: The library to use for numpy operations.
+            kwargs (list[any]): Keyword args to pass to ``f`` when ``.eval()`` is
+                called. Any ``EquationPart`` arguments will have their ``.eval()``
+                called prior to ``f``'s execution.
+        """
         if pt_mathlib is None:
             pt_mathlib = pt
         if np_mathlib is None:
@@ -1084,7 +1216,7 @@ class Function(Reference):
         super().__init__(f.__name__)
         self.sub_equation_parts = eqn_parts
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.f.__name__}()"
 
     def eval(
@@ -1092,7 +1224,7 @@ class Function(Reference):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """Eval any function arguments as needed, and then call the function itself.
 
@@ -1100,6 +1232,9 @@ class Function(Reference):
             t (int): Timestep along simulation at which to evaluate.
             save (bool): Ignored in this subclass, but passed along in sub-
                 ``.eval()`` calls.
+            force (bool): Whether to ignore a previously cached value and compute
+                regardless.
+            kwargs (dict): Any additional arguments to pass through evaluation tree.
         """
         pass_args = []
         pass_kwargs = {}
@@ -1123,9 +1258,12 @@ class Function(Reference):
         # call the actual function
         return self.f(*pass_args, **pass_kwargs)
 
-    def latex(self, **kwargs) -> str:
-        """Get a latex-suitable string representation of the function, use texttt to
-        make it look like code and distinguishable from flows/vars/stocks/etc."""
+    def latex(self, **kwargs: dict) -> str:
+        """Get a latex-suitable string representation of the function.
+
+        Uses texttt to make it look like code and distinguishable from 
+        flows/vars/stocks/etc.
+        """
         parameters = [part.latex(**kwargs) for part in self.sub_equation_parts]
         latex_str = f"{latex_name(self.label, 'texttt')}({', '.join(parameters)})"
         if "t" in kwargs:
@@ -1136,6 +1274,7 @@ class Function(Reference):
         return latex_str
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        """Get a pytensor graph representing this piece of an equation."""
         pass_args = []
         pass_kwargs = {}
 
@@ -1204,6 +1343,7 @@ class TimeRef(Reference):
     """
 
     def __init__(self):
+        """Create an instance of a time reference for use in other equations."""
         super().__init__("t")
         self.name = "t"
 
@@ -1212,27 +1352,31 @@ class TimeRef(Reference):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int:
+        """Return the current timestep.
+
+        Args have no effect but are accepted from recursive calls.
+        """
         return t
 
-    def latex(self, **kwargs) -> str:
+    def latex(self, **kwargs: dict) -> str:
+        """Get latex string representation."""
         return "\\textit{t}"
 
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:  # noqa: D102
         if self.name in refs:
             refs[self.name].name = self.name
             return refs[self.name]
         return pt.scalar(self.name)
 
-    def pt_str(self, **refs: dict[str, str]) -> str:
+    def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
         if self.name in refs:
             return refs[self.name]
         return f'pt.scalar("{self.name}")'
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         return '"t"'
-
 
 # ==================================================
 # SYSTEM DYNAMICS FANCY COMPONENTS
@@ -1261,26 +1405,6 @@ class TrackedReference(Reference):
     This means that flows and vars should not have circular references (causing
     infinite recursion errors.)
 
-    Args:
-        eq (EquationPart): The equation that describes this reference.
-        label (str): Visual label for the reference. In the context of a model,
-            is set to the name assigned on the model if not explicitly provided.
-        doc (str): A docstring/description explaining what this component is.
-        min (EquationPart): An equation describing the minimum value of this reference.
-        max (EquationPart): An equation describing the maximum value of this reference.
-        init (int | float | Distribution | Scalar | EquationPart): The initial value
-            for this component at ``t = 0``.
-        dim (int): Size of an optional extra dimension, allowing a given reference
-            to describe a vector of values at every timestep. Default is 1 implying no
-            extra dimension.
-        group (str): An optional string to help group related references together,
-            primarily only used for visually tightening up elements in the stock/flow
-            graphs.
-        cgroup (str | list[str]): An optional string to refer to related elements and
-            specify colors in the stock/flow graphs or easier hiding. Can specify a list
-            to allow multiple ways of grouping.
-        dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
-
     Note:
         The shape of the value of a tracked reference depends on _sample_dim and
         _static with the following cases:
@@ -1307,14 +1431,38 @@ class TrackedReference(Reference):
         eq: EquationPart = None,
         label: str = None,
         doc: str = None,
-        min: EquationPart = None,  # pylint: disable=W0622
-        max: EquationPart = None,  # pylint: disable=W0622
+        min: EquationPart = None,
+        max: EquationPart = None,
         init: int | float | Distribution | Scalar | EquationPart = None,
         dim: int = 1,
         group: str = "",
         cgroup: str | list[str] = "",
         dtype: type = None,
     ):
+        """Create a TrackedReference node, this is likely only called from subclasses.
+
+        Args:
+            eq (EquationPart): The equation that describes this reference.
+            label (str): Visual label for the reference. In the context of a model,
+                is set to the name assigned on the model if not explicitly provided.
+            doc (str): A docstring/description explaining what this component is.
+            min (EquationPart): An equation describing the minimum value of this 
+                reference.
+            max (EquationPart): An equation describing the maximum value of this 
+                reference.
+            init (int | float | Distribution | Scalar | EquationPart): The initial value
+                for this component at ``t = 0``.
+            dim (int): Size of an optional extra dimension, allowing a given reference
+                to describe a vector of values at every timestep. Default is 1 implying 
+                no extra dimension.
+            group (str): An optional string to help group related references together,
+                primarily only used for visually tightening up elements in the 
+                stock/flow graphs.
+            cgroup (str | list[str]): An optional string to refer to related elements and
+                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                list to allow multiple ways of grouping.
+            dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
+        """
         super().__init__(label, doc)
         self.eq = eq
         self.group = group
@@ -1389,8 +1537,10 @@ class TrackedReference(Reference):
             reno.Model.get_context()._unnamed_references.append(self)
 
     def min_refs(self) -> list:
-        """Get any references found in the min constraint equation. Currently mostly
-        only used to aid in diagrams."""
+        """Get any references found in the min constraint equation.
+
+        Currently mostly only used to aid in diagrams.
+        """
         if self.min is None:
             return []
         if isinstance(self.min, TrackedReference):
@@ -1398,16 +1548,21 @@ class TrackedReference(Reference):
         return self.min.seek_refs()
 
     def max_refs(self) -> list:
-        """Get any references found in the max constraint equation. Currently mostly
-        only used to aid in diagrams."""
+        """Get any references found in the max constraint equation.
+        
+        Currently mostly only used to aid in diagrams.
+        """
         if self.max is None:
             return []
         if isinstance(self.max, TrackedReference):
             return [self.max]
         return self.max.seek_refs()
 
-    def _implied_eq(self, eq=None):
-        """The full equation that takes min/max equations into account."""
+    def _implied_eq(self, eq: EquationPart = None) -> EquationPart:
+        """The full equation that takes min/max equations into account.
+
+        Uses own equation if ``eq`` is not provided.
+        """
 
         # TODO: this doesn't handle if max < min or min > max
         implied_eq = self.eq if eq is None else eq
@@ -1418,18 +1573,26 @@ class TrackedReference(Reference):
 
         return implied_eq
 
-    def qual_name(self, dot: bool = False):
+    def qual_name(self, dot: bool = False) -> str:
         """Get a string with both the model and the reference name
         if this model is a submodel of something else.
 
         This is primarily used for helping distinguish things in a
-        multimodel setup."""
+        multimodel setup.
+        """
         if self.model is not None and self.model.parent is not None:
             delim = "_" if not dot else "."
             return f"{self.model.name}{delim}{self.name}"
         return self.name
 
     def get_shape(self) -> int:
+        """Get the size of the additional "data" dimension.
+
+        Prefer using ``shape`` property over directly calling this function.
+
+        If a dim was specified on this instance, that will be returned
+        unless the the shape of the sub-equation output doesn't match.
+        """
         if self._computing_shape:
             # acts as a placeholder in recursive instances
             return 1
@@ -1455,7 +1618,13 @@ class TrackedReference(Reference):
             self._computing_shape = False
             return eq.shape
 
-    def get_type(self) -> type:
+    def get_type(self) -> type:  # noqa: D102
+        """Get the type of the target output of this equation expression.
+
+        Prefer using ``dtype`` property over directly calling this function.
+
+        If a dtype was specified on this instance, that type will be returned.
+        """
         if self._requested_dtype:
             return self._requested_dtype
 
@@ -1469,9 +1638,9 @@ class TrackedReference(Reference):
         self._computing_type = False
         return type_
 
-    def populate(self, n: int, steps: int):
+    def populate(self, n: int, steps: int) -> None:
         """Initialize the matrix of values with size ``n x steps``. All
-        values initially nan to indicate they need to be computed still
+        values initially nan to indicate they need to be computed still.
 
         Args:
             n (int): The number of samples to simulate.
@@ -1513,9 +1682,12 @@ class TrackedReference(Reference):
             e.add_note(f"Was trying to populate {self.qual_name()}")
             raise
 
-    def _determine_if_static(self):
+    def _determine_if_static(self) -> None:
         """Used to help improve efficiency of static checks since done every
-        single eval call."""
+        single eval call.
+
+        Assigns _static and _sample_dim flags.
+        """
         self._static = (
             not isinstance(self, Stock)
             and is_static(self.eq)
@@ -1526,17 +1698,18 @@ class TrackedReference(Reference):
         # TODO: check to make sure this is actually true when directly assigned
         # a distribution, e.g. Variable(ops.Normal())
         self._sample_dim = (
-            len(self.find_refs_of_type(Distribution)) > 0
-            or len(self.find_refs_of_type(Piecewise)) > 0
+            len(self.find_parts_of_type(Distribution)) > 0
+            or len(self.find_parts_of_type(Piecewise)) > 0
             or not self._static
         )
         # including self._static condition for completeness, technically
         # sample dim always exists when not static
 
-    def resolve_init_array(self, obj_or_eq):
-        """Convert a number or scalar/distribution into correct
-        starting array. Can be used within initial_vals subclass
-        definition."""
+    def resolve_init_array(self, obj_or_eq: int | float | np.ndarray | EquationPart) -> int | float | np.ndarray:
+        """Convert a number or scalar/distribution into correct starting array.
+        
+        Can be used within initial_vals subclass definition.
+        """
         if isinstance(obj_or_eq, (int, float)):
             # technically redundant? Covered by case outside of conditionals
             return obj_or_eq
@@ -1553,8 +1726,10 @@ class TrackedReference(Reference):
             return obj_or_eq.eval(0)
         return obj_or_eq
 
-    def initial_vals(self):
-        """Subclasses that have a special way of defining the initial set of
+    def initial_vals(self) -> None:
+        """Assign the starting values for t=0, this is the first step of the simulation.
+
+        Subclasses that have a special way of defining the initial set of
         values (e.g. stocks with their _0 values) can override this function,
         automatically called at the end of ``populate()``.
         """
@@ -1564,9 +1739,8 @@ class TrackedReference(Reference):
         self,
         t: int = 0,
         save: bool = False,
-        compute_mask: np.ndarray = None,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """Compute the equation for the given timestep. If we've already computed
         for this step (indicated by a value in the matrix that is not NaN), return
@@ -1596,16 +1770,16 @@ class TrackedReference(Reference):
             # a re-compute wasn't explicitly requested
             if not force and self.value is not None:
                 # value/computed_mask shape cases
-                if self._static and not self._sample_dim:
+                if self._static and not self._sample_dim:  # noqa: SIM102
                     # case 1, raw or (dim,)
                     if self.computed_mask:
                         return self.value
-                if self._static and self._sample_dim:
+                if self._static and self._sample_dim:  # noqa: SIM102
                     # case 2, (sample,) or (sample, dim)
                     if self.computed_mask.all():
                         return self.value[:]
 
-                if not self._static:
+                if not self._static:  # noqa: SIM102
                     # case 3, (sample, t) or (sample, t, dim)
                     if self.computed_mask[:, t].all():
                         return self.value[:, t]
@@ -1680,7 +1854,7 @@ class TrackedReference(Reference):
                 )
             raise
 
-    def history(self, index_eq: EquationPart):
+    def history(self, index_eq: EquationPart) -> HistoricalValue:
         """Get a reference to a previous value of this reference.
 
         Args:
@@ -1690,14 +1864,14 @@ class TrackedReference(Reference):
         """
         return HistoricalValue(self, index_eq)
 
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:  # noqa: D102
         if self.qual_name() in refs:
             if refs[self.qual_name()].name is None:
                 refs[self.qual_name()].name = self.qual_name()
             return refs[self.qual_name()]
         return pt.scalar(self.qual_name())
 
-    def pt_str(self, **refs: dict[str, str]) -> str:
+    def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
         if self.qual_name() in refs:
             return refs[self.qual_name()]
         return f'pt.scalar("{self.qual_name()}")'
@@ -1715,9 +1889,10 @@ class TrackedReference(Reference):
             "implicit": self.implicit,
         }
 
-    def from_dict(self, data: dict, refs: dict[str, "TrackedReference"]):
+    def from_dict(self, data: dict, refs: dict[str, TrackedReference]) -> None:
         """Deserialize reference and parse data from dictionary previously saved from
-        ``to_dict()``."""
+        ``to_dict()``.
+        """
         self.label = data["label"]
         self.init = reno.parser.parse(data["init"], refs)
         self.doc = data["doc"]
@@ -1729,26 +1904,37 @@ class TrackedReference(Reference):
             print(f"Trying to parse: {data['eq']}")
             self.eq = reno.parser.parse(data["eq"], refs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         return f'"{self.qual_name()}"'
 
 
 class HistoricalValue(Reference):
-    """A wrapper class for a reference, specifically for getting a previous value indexed
-    by some other equation."""
+    """A wrapper class for a reference, specifically for getting a previous value
+    indexed by some other equation.
+    """
 
     def __init__(self, tracked_ref: TrackedReference, index_eq: EquationPart):
+        """Create a node to refer to a previous value of a tracked reference.
+
+        Prefer using :py:func:`reno.components.TrackedReference.history` to direct
+        initialization.
+
+        Args:
+            tracked_ref (TrackedReference): The reference to get a previous value for.
+            index_eq (EquationPart): The equation to compute what index to retrieve
+                from.
+        """
         super().__init__(label=tracked_ref.label)
         self.index_eq = ensure_scalar(index_eq)
         self.tracked_ref = tracked_ref
 
-    def eval(
+    def eval(  # noqa: D102
         self,
         t: int = 0,
         save: bool = False,
-        force=False,
-        **kwargs,
-    ):
+        force: bool = False,
+        **kwargs: dict,
+    ) -> int | float | np.ndarray:
         if t not in self.tracked_ref._computing:
             # the conditional is to prevent infinite recursion.
             # This piece is _really_ important, otherwise delays can mean
@@ -1781,10 +1967,16 @@ class HistoricalValue(Reference):
         ]
 
     def qual_name(self):
+        """Get a string with both the model and the reference name
+        if this model is a submodel of something else.
+
+        This is primarily used for helping distinguish things in a
+        multimodel setup.
+        """
         # TODO: 2025.09.09, is this reasonable?
         return self.tracked_ref.qual_name()
 
-    def get_shape(self) -> int:
+    def get_shape(self) -> int:  # noqa: D102
         if (
             self.tracked_ref.shape != 1
             and self.index_eq.shape != 1
@@ -1800,13 +1992,14 @@ class HistoricalValue(Reference):
         return self.tracked_ref.shape
 
     @property
-    def model(self) -> "reno.Model":
+    def model(self) -> reno.Model:
         """Get the model associated with this historical value."""
         return self.tracked_ref.model
 
-    def latex(self, **kwargs) -> str:
+    def latex(self, **kwargs: dict) -> str:
         """Get the string representation for referring to this reference, italicized
-        and as a function of ``t`` to highlight it's a different timestep"""
+        and as a function of ``t`` to highlight it's a different timestep.
+        """
         latex_str = (
             f"{latex_name(self.label, 'textit')}({self.index_eq.latex(**kwargs)})"
         )
@@ -1816,7 +2009,7 @@ class HistoricalValue(Reference):
             latex_str = "{\\color{cyan}" + latex_str + "}"
         return latex_str
 
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:  # noqa: D102
         force_array_index = (
             "__FORCE_ARRAY_INDEX__" in refs and refs["__FORCE_ARRAY_INDEX__"]
         )
@@ -1844,7 +2037,7 @@ class HistoricalValue(Reference):
         else:
             return pt.as_tensor(0.0).repeat(self.shape)
 
-    def pt_str(self, **refs: dict[str, str]) -> str:
+    def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
         force_array_index = (
             "__FORCE_ARRAY_INDEX__" in refs and refs["__FORCE_ARRAY_INDEX__"]
         )
@@ -1870,7 +2063,12 @@ class HistoricalValue(Reference):
             return f"pt.as_tensor(0.0).repeat({self.shape})"
 
     @staticmethod
-    def parse(arg_strs: list[str], refs: dict[str, Reference]):
+    def parse(arg_strs: list[str], refs: dict[str, Reference]) -> HistoricalValue:
+        """Convert a set of argument strings and references into a HistoricalValue node.
+
+        Parsing these has to be handled differently from normal operations because
+        it has to parse two separate references.
+        """
         if len(arg_strs) != 2:
             raise SyntaxError(
                 "history op expects two arguments, the tracked reference, and the indexing equation."
@@ -1879,7 +2077,7 @@ class HistoricalValue(Reference):
         index_eq = reno.parser.parse(arg_strs[1], refs)
         return HistoricalValue(tracked_ref, index_eq)
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         return f"(history {self.tracked_ref.__repr__()} {self.index_eq.__repr__()})"
 
 
@@ -1925,21 +2123,28 @@ class Flow(TrackedReference):
     # for simplistic chains this helps make sure you don't forget
     # to add a flow as both an inflow/outflow where necessary etc.
 
-    def __rshift__(self, stock):
-        """inflow >> stock"""
+    def __rshift__(self, stock: Stock) -> Stock:
+        """Return stock with this flow applied as an inflow.
+
+        (``inflow >> stock``)
+        """
         stock += self
         return stock
 
-    def __lshift__(self, stock):
-        """outflow << stock"""
+    def __lshift__(self, stock: Stock) -> Stock:
+        """Return stock with this flow applied as an outflow.
+        
+        (``outflow << stock``)
+        """
         stock -= self
         return stock
 
     # ---- /MATH OVERLOADING ----
 
-    def initial_vals(self):
+    def initial_vals(self) -> None:
         """Variables can be set to distributions, so the inital vals
-        in that case will be a population sampled from the eq distribution."""
+        in that case will be a population sampled from the eq distribution.
+        """
         try:
             init_eq = self._implied_eq(self.init)
             if init_eq is None:
@@ -1985,10 +2190,10 @@ class Flow(TrackedReference):
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
 
-    def equation(self, **kwargs) -> str:
+    def equation(self, **kwargs: dict) -> str:
         """Return the full latex string representation for the entire equation,
-        not just the right hand side."""
-
+        not just the right hand side.
+        """
         lhs = f"{latex_name(self.label, 'textit')}"
         if self.model.parent is not None:
             lhs += f"_{{{latex_name(self.model.label)}}}"
@@ -2000,10 +2205,11 @@ class Flow(TrackedReference):
             self.min, self.max, **kwargs
         )
 
-    def latex(self, **kwargs) -> str:
+    def latex(self, **kwargs: dict) -> str:
         """Get the string representation for referring to this flow, italized
         and as a function of ``t`` to better represent that this should be a
-        rate?"""
+        rate?
+        """
         if self.implicit:
             return f"({self.eq.latex(**kwargs)})"
         latex_str = f"{latex_name(self.label, 'textit')}"
@@ -2016,13 +2222,14 @@ class Flow(TrackedReference):
             latex_str = "{\\color{cyan}" + latex_str + "}"
         return latex_str
 
-    def display(self):
+    def display(self) -> None:
         """Display an ipython markdown with the equation latex."""
         # TODO: _repr_latex
         # https://github.com/jupyter/ngcm-tutorial/blob/master/Part-1/IPython%20Kernel/Custom%20Display%20Logic.ipynb
         display(Markdown(f"${self.equation()}$"))
 
-    def debug_equation(self, t, sample=0, **kwargs):
+    def debug_equation(self, t: int, sample: int = 0, **kwargs: dict) -> str:
+        """Get a latex string output with the debug version of this equation."""
         return (
             self.latex(t=t, sample=sample, **kwargs)
             + " = "
@@ -2030,7 +2237,7 @@ class Flow(TrackedReference):
             + range_eq_latex(self.min, self.max, t=t, sample=sample, **kwargs)
         )
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         if name == "eq" and value is not None:
             value = ensure_scalar(value)
             # assign ops are necessary when setting to a single 'thing' rather
@@ -2494,7 +2701,7 @@ class Metric(Reference):
         self.label = data["label"]
         self.eq = reno.parser.parse(data["eq"], refs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         return f'"{self.qual_name()}"'
 
     def __setattr__(self, name, value):

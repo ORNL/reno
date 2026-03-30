@@ -10,7 +10,7 @@ import pytensor.tensor as pt
 
 import reno
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # -- series math operations --
     "series_max",
     "series_min",

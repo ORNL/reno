@@ -1,11 +1,8 @@
 
 [tool.ruff]
-target-version = "py310"
-line-length = 100
 src = [
     "reno"
 ]
-format.docstring-code-format = true
 lint.select = [
     "D", # pydocstyle
     # "DOC", # pydoclint (only in preview mode)
@@ -16,10 +13,20 @@ lint.select = [
     "Q", # flake8 quotes
     "SIM", # flake8 simplify
     "PTH", # flake8 pathlib
+    "FA", # flake8 future annotations
     "UP", # pyupgrade
     "RUF", # ruff
+    "C90", # mccabe complexity
+]
+lint.ignore = [
+    "D205", # 1 blank line required between summary line and description
+    "RUF013", # PEP 484 prohibits implicit `Optional` (can't implicitly default something to None)
 ]
 lint.pydocstyle.convention = "google"
+target-version = "py311"
+format.docstring-code-format = true
+line-length = 88
+flake8-annotations.mypy-init-return = true  # don't require return type annotation on init
 
 
 

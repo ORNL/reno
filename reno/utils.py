@@ -167,7 +167,7 @@ def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
         return False
     if (
         not is_static(eq.sub_equation_parts[1])
-        or len(eq.sub_equation_parts[1].find_refs_of_type(reno.components.Distribution))
+        or len(eq.sub_equation_parts[1].find_parts_of_type(reno.components.Distribution))
         > 0
     ):
         # NOTE: currently not counting distributions as "easy" because of
@@ -279,7 +279,7 @@ def is_static(
 
     if isinstance(eq, reno.ops.orient_timeseries):
         return False
-    if len(eq.find_refs_of_type(reno.ops.orient_timeseries)) > 0:
+    if len(eq.find_parts_of_type(reno.ops.orient_timeseries)) > 0:
         return False
     # if hasattr(eq, "eq" and isinstance(eq, reno.ops.orient_timeseries):
     #     return False

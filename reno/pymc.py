@@ -890,11 +890,11 @@ def find_tracked_ref_historical_ref(
     historical_values = []
     timeseries_values = []
     for ref in model.all_refs():
-        historical_values.extend(ref.find_refs_of_type(reno.components.HistoricalValue))
+        historical_values.extend(ref.find_parts_of_type(reno.components.HistoricalValue))
         timeseries_values.extend(
             [
                 (ref, ts.sub_equation_parts[0])
-                for ts in ref.find_refs_of_type(reno.ops.orient_timeseries)
+                for ts in ref.find_parts_of_type(reno.ops.orient_timeseries)
             ]
         )
 
@@ -933,11 +933,11 @@ def find_historical_tracked_refs(
     historical_values = []
     timeseries_values = []
     for ref in model.all_refs():
-        historical_values.extend(ref.find_refs_of_type(reno.components.HistoricalValue))
+        historical_values.extend(ref.find_parts_of_type(reno.components.HistoricalValue))
         timeseries_values.extend(
             [
                 ts.sub_equation_parts[0]
-                for ts in ref.find_refs_of_type(reno.ops.orient_timeseries)
+                for ts in ref.find_parts_of_type(reno.ops.orient_timeseries)
             ]
         )
 
