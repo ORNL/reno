@@ -2,11 +2,13 @@
 
 # make it so we don't have to quote every type annotation ever
 from __future__ import annotations
+from typing import Any
 
 import warnings
 from collections.abc import Callable
-from typing import ModuleType
+from types import ModuleType
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytensor.tensor as pt
@@ -1563,7 +1565,6 @@ class TrackedReference(Reference):
 
         Uses own equation if ``eq`` is not provided.
         """
-
         # TODO: this doesn't handle if max < min or min > max
         implied_eq = self.eq if eq is None else eq
         if self.max is not None:
@@ -1618,7 +1619,7 @@ class TrackedReference(Reference):
             self._computing_shape = False
             return eq.shape
 
-    def get_type(self) -> type:  # noqa: D102
+    def get_type(self) -> type:
         """Get the type of the target output of this equation expression.
 
         Prefer using ``dtype`` property over directly calling this function.
@@ -1876,6 +1877,32 @@ class TrackedReference(Reference):
             return refs[self.qual_name()]
         return f'pt.scalar("{self.qual_name()}")'
 
+    def plot(self, ax: matplotlib.axes.Axes = None, **figargs: dict) -> matplotlib.axes.Axes:
+        """Plot (or add to passed axes) this reference's values. Note that this entails a
+        simulation having already run.
+
+        Note that this will plot as a distribution for variables.
+
+        Args:
+            ax (matplotlib.axes.Axes): Optional, add this reference's values to a 
+                pre-existing plot.
+            **figargs (dict): If no axes passed, use these args in the 
+                ``plt.subplots(**figargs)`` call.
+        """
+        if figargs is None:
+            figargs = {}
+        # technically the compare_seq/compare_posterior functions are expecting
+        # xarray datasets - we're cheating this by just setting up an
+        # appropriately weird dictionary:
+        # TODO: this prob doesn't work for static values?
+        data = {self.qual_name(): {self.qual_name(): self.value}}
+        if isinstance(self, Variable):
+            ax = reno.viz.compare_posterior(self.qual_name, traces=data, ax=ax, **figargs)
+        else:
+            ax = reno.viz.compare_seq(self.qual_name, traces=data, ax=ax, **figargs)
+        return ax
+        
+
     def to_dict(self) -> dict:
         """Serialize class into a dictionary for saving to file."""
         return {
@@ -1966,7 +1993,7 @@ class HistoricalValue(Reference):
             list(range(0, self.tracked_ref.value.shape[0])), index
         ]
 
-    def qual_name(self):
+    def qual_name(self) -> str:
         """Get a string with both the model and the reference name
         if this model is a submodel of something else.
 
@@ -2102,9 +2129,33 @@ class Flow(TrackedReference):
         max: EquationPart = None,
         dim: int = 1,
         group: str = "",
-        cgroup: str = "",
+        cgroup: str | list[str] = "",
         dtype: type = None,
     ):
+        """Create a rate of change equation.
+
+        Args:
+            eq (EquationPart): The equation that describes a rate of change.
+            label (str): Visual label for the Flow. In the context of a model, is set 
+                to the name assigned on the model if not explicitly provided.
+            doc (str): A docstring/description explaining what this flow is.
+            min (EquationPart): An equation describing the minimum value of this 
+                flow.
+            max (EquationPart): An equation describing the maximum value of this 
+                flow.
+            init (int | float | Distribution | Scalar | EquationPart): The initial value
+                for this flow at ``t = 0``.
+            dim (int): Size of an optional extra dimension, allowing a given reference
+                to describe a vector of values at every timestep. Default is 1 implying 
+                no extra dimension.
+            group (str): An optional string to help group related references together,
+                primarily only used for visually tightening up elements in the 
+                stock/flow graphs.
+            cgroup (str | list[str]): An optional string to refer to related elements and
+                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                list to allow multiple ways of grouping.
+            dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
+        """
         super().__init__(
             eq,
             label,
@@ -2237,7 +2288,7 @@ class Flow(TrackedReference):
             + range_eq_latex(self.min, self.max, t=t, sample=sample, **kwargs)
         )
 
-    def __setattr__(self, name, value) -> None:
+    def __setattr__(self, name: str, value: Any) -> None:
         if name == "eq" and value is not None:
             value = ensure_scalar(value)
             # assign ops are necessary when setting to a single 'thing' rather
@@ -2275,6 +2326,32 @@ class Variable(TrackedReference):
         cgroup: str = "",
         dtype: type = None,
     ):
+        """Create a variable reference.
+
+        Args:
+            eq (EquationPart): The equation that describes this variable.
+            label (str): Visual label for the Variable. In the context of a model, is 
+                set to the name assigned on the model if not explicitly provided.
+            doc (str): A docstring/description explaining what this variable is.
+            min (EquationPart): An equation describing the minimum value of this 
+                variable.
+            max (EquationPart): An equation describing the maximum value of this 
+                variable.
+            init (int | float | Distribution | Scalar | EquationPart): The initial value
+                for this variable at ``t = 0``.
+            dim (int): Size of an optional extra dimension, allowing a given reference
+                to describe a vector of values at every timestep. Default is 1 implying 
+                no extra dimension.
+            user (bool): Used by explorer, whether to include this variable as an editable
+                field in the front end.
+            group (str): An optional string to help group related references together,
+                primarily only used for visually tightening up elements in the 
+                stock/flow graphs.
+            cgroup (str | list[str]): An optional string to refer to related elements and
+                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                list to allow multiple ways of grouping.
+            dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
+        """
         # TODO: missing init parameter?
         self.user = user
         """If True, use visual interface to allow changing it via widgets."""
@@ -2295,9 +2372,12 @@ class Variable(TrackedReference):
             dtype=dtype,
         )
 
-    def initial_vals(self):
-        """Variables can be set to distributions, so the inital vals
-        in that case will be a population samled from the eq distribution."""
+    def initial_vals(self) -> None:
+        """Assign the starting values for t=0, the first step of the simulation.
+
+        Variables can be set to distributions, so the inital vals
+        in that case will be a population samled from the eq distribution.
+        """
         try:
             init_eq = self._implied_eq(self.init)
             if init_eq is None:
@@ -2346,9 +2426,10 @@ class Variable(TrackedReference):
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
 
-    def equation(self, **kwargs) -> str:
+    def equation(self, **kwargs: dict) -> str:
         """Get the representation of the full equation for a variable as a latex
-        string."""
+        string.
+        """
         lhs = f"{latex_name(self.label)}"
         if self.model.parent is not None:
             lhs += f"_{{{latex_name(self.model.label)}}}"
@@ -2358,8 +2439,9 @@ class Variable(TrackedReference):
         return f"{lhs} = {self.eq.latex(**kwargs)}" + range_eq_latex(
             self.min, self.max, **kwargs
         )
-
-    def debug_equation(self, t, sample=0, **kwargs):
+ 
+    def debug_equation(self, t: int, sample: int = 0, **kwargs: dict) -> str:
+        """Get a latex string output with the debug version of this equation."""
         return (
             self.latex(t=t, sample=sample, **kwargs)
             + " = "
@@ -2367,7 +2449,7 @@ class Variable(TrackedReference):
             + range_eq_latex(self.min, self.max, t=t, sample=sample, **kwargs)
         )
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any) -> None:
         if name == "eq" and value is not None:
             value = ensure_scalar(value)
             # assign ops are necessary when setting to a single 'thing' rather
@@ -2407,9 +2489,34 @@ class Stock(TrackedReference):
         max: EquationPart = None,
         dim: int = 1,
         group: str = "",
-        cgroup: str = "",
+        cgroup: str | list[str] = "",
         dtype: type = None,
     ):
+        """Create a stock component.
+
+        Args:
+            label (str): Visual label for the stock. In the context of a model, is set 
+                to the name assigned on the model if not explicitly provided.
+            doc (str): A docstring/description explaining what this stock is.
+            init (int | float | EquationPart): An equation, distribution, or scalar that
+                defines initial conditions, or 
+            min (EquationPart): An equation describing the minimum value of this 
+                flow.
+            max (EquationPart): An equation describing the maximum value of this 
+                flow.
+            init (int | float | Distribution | Scalar | EquationPart): The initial value
+                for this flow at ``t = 0``.
+            dim (int): Size of an optional extra dimension, allowing a given reference
+                to describe a vector of values at every timestep. Default is 1 implying 
+                no extra dimension.
+            group (str): An optional string to help group related references together,
+                primarily only used for visually tightening up elements in the 
+                stock/flow graphs.
+            cgroup (str | list[str]): An optional string to refer to related elements and
+                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                list to allow multiple ways of grouping.
+            dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
+        """
         super().__init__(
             label,
             doc=doc,
@@ -2432,11 +2539,15 @@ class Stock(TrackedReference):
     # bath_water += Flow("faucet")
     # bath_water -= Flow("drain")
 
-    def __iadd__(self, obj):
+    def __iadd__(self, obj: Flow | EquationPart | list[EquationPart | Flow]) -> Stock:
+        """Return stock with specified flow(s) or equation(s) (implicit flow)
+        as an inflow.
+        """
         self.add_inflow(obj)
         return self
 
-    def __isub__(self, obj):
+    def __isub__(self, obj: Flow | list[Flow]) -> Stock:
+        """Return stock with specified flow applied as an outflow."""
         self.add_outflow(obj)
         return self
 
@@ -2445,34 +2556,44 @@ class Stock(TrackedReference):
     # for simplistic chains this helps make sure you don't forget
     # to add a flow as both an inflow/outflow where necessary etc.
 
-    def __rshift__(self, flow):
-        """stock >> outflow"""
+    def __rshift__(self, flow: Flow | list[Flow]) -> Flow | list[Flow]:
+        """Return flow, having applied as an outflow to this stock.
+
+        (``stock >> outflow``)
+        """
         self -= flow
         return flow
 
-    def __rrshift__(self, flow):
-        """inflow >> stock"""
+    def __rrshift__(self, flow: Flow | EquationPart | list[EquationPart | Flow]) -> Stock:
+        """Return stock with flow(s) or equation(s) (implicit flow) as an inflow.
+
+        (``inflow >> stock``)
+        """
         self += flow
         return self
 
-    def __lshift__(self, flow):
-        """stock << inflow"""
+    def __lshift__(self, flow: Flow | EquationPart | list[EquationPart | Flow]) -> Flow | EquationPart | list[EquationPart | Flow]:
+        """Return flow(s), having applied as an inflow to this stock.
+
+        (``stock << inflow``)
+        """
         self += flow
         return flow
 
     # ---- /MATH OVERLOADING ----
 
     @property
-    def outflows(self) -> "Operation":
-        """An operation representing the sum of the flows leaving this stock."""
+    def outflows(self) -> Operation:
+        """Returns operation representing the sum of the flows leaving this stock."""
         return reno.ops.outflows(self)
 
     @property
-    def space(self) -> "Operation":
-        """An operation that computes how much space is remaining in this stock
+    def space(self) -> Operation:
+        """Returns an operation that computes how much space is remaining in this stock
         after taking into account any outflows for this timestep.
 
-        Note that this requires a ``max`` value to be set on this stock."""
+        Note that this requires a ``max`` value to be set on this stock.
+        """
         if self.max is None:
             warnings.warn(
                 f"The ``space`` operation requires a maximum to be set on the stock, specify ``{self.qual_name()}.max``"
@@ -2481,7 +2602,10 @@ class Stock(TrackedReference):
 
     # TODO: "operation" for "immediate space", just max - self?
 
-    def add_inflow(self, obj):
+    def add_inflow(self, obj: Flow | EquationPart | list[EquationPart | Flow]) -> None:
+        """Add the flow or equation (creating an implicit flow) or a list of either as
+        inflow(s) to this stock.
+        """
         if isinstance(obj, Flow):
             self.in_flows.append(obj)
         elif isinstance(obj, list):
@@ -2499,7 +2623,8 @@ class Stock(TrackedReference):
             if self.model is not None:
                 self.model.add(name, implicit_inflow)
 
-    def add_outflow(self, obj):
+    def add_outflow(self, obj: Flow | list[Flow]) -> None:
+        """Add the specified flow to the set of outflows on this stock."""
         if isinstance(obj, Flow):
             self.out_flows.append(obj)
         elif isinstance(obj, list):
@@ -2510,7 +2635,8 @@ class Stock(TrackedReference):
                 "Only flows and lists of flows can currently be specified as a stock outflow."
             )
 
-    def initial_vals(self):
+    def initial_vals(self) -> None:
+        """Assign the starting values for t=0, the first step of the simulation."""
         try:
             if self.init is not None:
                 self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
@@ -2522,9 +2648,8 @@ class Stock(TrackedReference):
             raise
         self.eq = self.compute_diff_eq()
 
-    def equations(self, **kwargs) -> list[str]:
+    def equations(self, **kwargs: dict) -> list[str]:
         """Get a list of string latex representations for all in and out flows."""
-
         lhs = f"{latex_name(self.label)}"
         if self.model.parent is not None:
             lhs += f"_{{{latex_name(self.model.label)}}}"
@@ -2542,7 +2667,8 @@ class Stock(TrackedReference):
             eqns.append(f"{lhs}{range_eq_latex(self.min, self.max, **kwargs)}")
         return eqns
 
-    def debug_equation(self, t, sample=0, **kwargs):
+    def debug_equation(self, t: int, sample: int = 0, **kwargs: dict) -> str:
+        """Get a latex string output with the debug version of this equation."""
         return (
             self.latex(
                 t=t + 1, sample=sample, **kwargs
@@ -2553,14 +2679,16 @@ class Stock(TrackedReference):
             + self.compute_diff_eq().latex(t=t, sample=sample, **kwargs)
         )
 
-    def display(self):
+    def display(self) -> None:
         """Display a markdown with latex for inflow equations and outflow equations."""
         for eqn in self.equations():
             display(Markdown(f"${eqn}$"))
 
     def combine_eqs(self, eqs: list[EquationPart]) -> EquationPart:
         """Helper function to convert a list of equations into a single combined equation.
-        (Essentially a big summation operator.)"""
+
+        (Essentially a big summation operator.)
+        """
         # TODO: could be moved out
         if len(eqs) == 0:
             return Scalar(0)
@@ -2583,40 +2711,33 @@ class Stock(TrackedReference):
 
         return inflows - outflows
 
-    def _implied_eq(self, eq=None):
-        """Overriding parent to automatically add the self + self.eq"""
+    def _implied_eq(self, eq: EquationPart = None) -> EquationPart:
+        """The implied equation for a stock is adding the full combination equation
+        of inflows - outflows to the previous value (self).
+
+        If an equation is passed to this function, simply add the min/max constraints
+        like a normal ``_implied_eq``.
+        """
         if eq is None:
             eq = self + self.compute_diff_eq()
         return super()._implied_eq(eq=eq)
 
-    def plot(self, ax=None, plot_kwargs=None):
-        """Generate a matplotlib plot for this stock's simulation."""
-        # TODO: to reduce necessary dependencies of core component classes,
-        # should maybe move plotting stuff into functions in separate module.
-        # TODO: more specifically, diagrams add_stocks is still depending
-        # on this, but should be able to switch to plot_trace_refs?
-        if plot_kwargs is None:
-            plot_kwargs = {}
-        if ax is None:
-            fig, ax = plt.subplots()
-        if self.value is not None:
-            for row in range(self.value.shape[0]):
-                ax.plot(self.value[row])
-        return ax
-
     def to_dict(self) -> dict:
-        """Serialize class into a dictionary for saving to file. Stock has to modify
-        the parent TrackedReference class serialization to account for equations being
-        handled a little differently."""
+        """Serialize class into a dictionary for saving to file.
+
+        Stock has to modify the parent TrackedReference class serialization to account
+        for equations being handled a little differently.
+        """
         tracked_ref_dict = super().to_dict()
         del tracked_ref_dict["eq"]
         tracked_ref_dict["in_flows"] = [str(flow) for flow in self.in_flows]
         tracked_ref_dict["out_flows"] = [str(flow) for flow in self.out_flows]
         return tracked_ref_dict
 
-    def from_dict(self, data: dict, refs: dict[str, TrackedReference]):
+    def from_dict(self, data: dict, refs: dict[str, TrackedReference]) -> None:
         """Deserialize reference and parse data from dictionary previously saved from
-        ``to_dict()``."""
+        ``to_dict()``.
+        """
         super().from_dict(data, refs)
         for in_flow in data["in_flows"]:
             # self.in_flows.append(reno.parser.parse(in_flow, refs))
@@ -2625,7 +2746,7 @@ class Stock(TrackedReference):
             # self.out_flows.append(reno.parser.parse(out_flow, refs))
             self.add_outflow(reno.parser.parse(out_flow, refs))
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any) -> None:
         # TODO: this is mostly the same across all tracked refs, can prob move
         # to parent class
         if name == "min" or name == "max" or name == "init":
@@ -2646,11 +2767,22 @@ class Stock(TrackedReference):
 
 
 class Metric(Reference):
-    """Metrics run in a separate after-simulation analysis. Generally intended to be
-    a series aggregate type equation (e.g. using series_min/series_max/sum on
-    slices of values across time from references computed during the simulation etc."""
+    """An equation for a measurement or observation on the overall simulation.
+
+    These run in a separate after-simulation analysis.
+    
+    Generally intended to be a series aggregate type equation (e.g. using 
+    series_min/series_max/sum on slices of values across time from references computed 
+    during the simulation etc.
+    """
 
     def __init__(self, eq: EquationPart = None, label: str = None):
+        """Create a metric equation node.
+
+        Args:
+            eq (EquationPart): The equation that describes this measurement/observable
+            label (str): Visual label for the reference.
+        """
         super().__init__(label)
         self.eq = eq
         self.model = None
@@ -2663,26 +2795,29 @@ class Metric(Reference):
         if reno.Model.get_context() is not None:
             reno.Model.get_context()._unnamed_references.append(self)
 
-    def equation(self, **kwargs) -> str:
+    def equation(self, **kwargs: dict) -> str:
         """Get the representation of the full equation for the metric as a latex
-        string."""
+        string.
+        """
         if self.eq is None:
             return f"{latex_name(self.label)} = \\texttt{{None}}"
         return f"{latex_name(self.label)} = {self.eq.latex(**kwargs)}"
 
-    def debug_equation(self, t, sample=0, **kwargs):
+    def debug_equation(self, t: int, sample: int=0, **kwargs: dict) -> str:
+        """Get a latex string output with the debug version of this equation."""
         return (
             self.latex(t=t, sample=sample, **kwargs)
             + " = "
             + self.eq.latex(t=t, sample=sample, **kwargs)
         )
 
-    def qual_name(self, dot: bool = False):
+    def qual_name(self, dot: bool = False) -> str:
         """Get a string with both the model and the reference name
         if this model is a submodel of something else.
 
         This is primarily used for helping distinguish things in a
-        multimodel setup."""
+        multimodel setup.
+        """
         if self.model is not None and self.model.parent is not None:
             delim = "_" if not dot else "."
             return f"{self.model.name}{delim}{self.name}"
@@ -2695,16 +2830,17 @@ class Metric(Reference):
             "eq": str(self.eq),
         }
 
-    def from_dict(self, data: dict, refs: dict[str, "TrackedReference"]):
+    def from_dict(self, data: dict, refs: dict[str, TrackedReference]) -> None:
         """Deserialize reference and parse data from dictionary previously saved from
-        ``to_dict()``"""
+        ``to_dict()``.
+        """
         self.label = data["label"]
         self.eq = reno.parser.parse(data["eq"], refs)
 
     def __repr__(self) -> str:  # noqa: D105
         return f'"{self.qual_name()}"'
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any):
         if name == "eq" and value is not None:
             if isinstance(value, (Variable, Flow, Stock, HistoricalValue)):
                 value = reno.ops.assign(value)
@@ -2716,8 +2852,9 @@ class Metric(Reference):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
-    ):
+        **kwargs: dict,
+    ) -> int | float | np.ndarray:
+        """Compute the equation for the given timestep."""
         try:
             value = self.eq.eval(t, save, force, **kwargs)
             if save:
@@ -2729,6 +2866,7 @@ class Metric(Reference):
         return value
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        """Get a pytensor graph representing this piece of an equation."""
         if self.qual_name() in refs:
             if refs[self.qual_name()].name is None:
                 refs[self.qual_name()].name = self.qual_name()
@@ -2736,6 +2874,9 @@ class Metric(Reference):
         return pt.scalar(self.qual_name())
 
     def pt_str(self, **refs: dict[str, str]) -> str:
+        """Construct a string containing relevant pytensor code for this piece
+        of the equation. This is useful for "compiling" into pymc code.
+        """
         if self.qual_name() in refs:
             return refs[self.qual_name()]
         # return self.eq.pt_str(**refs)
@@ -2761,7 +2902,7 @@ class Flag(Metric):
         # self.first.eval = lambda t, save, force: self.first.eq.eval(t, save, force)
         # self.first.eq = Function(self.first_event)
 
-    def populate(self, n: int, steps: int):
+    def populate(self, n: int, steps: int) -> None:
         # TODO: TODO: this needs to act the same way as TrackedReference, using
         # NaN's instead of an internal step
         self.value = np.zeros((n, steps))
@@ -2772,7 +2913,7 @@ class Flag(Metric):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """If the timestep is less than our internal_step tracker, return the
         corresponding previous column in the tracking matrix, since that
@@ -2783,7 +2924,6 @@ class Flag(Metric):
         save is ``True``, this class and subclasses are why save is being
         passed through all other ``.eval()`` methods.
         """
-
         self._computing.append(t)
 
         # TODO: if eq is just a scalar or distribution, don't do this,
@@ -2805,9 +2945,12 @@ class Flag(Metric):
     # TODO: think through whether the rising edge is what actually makes most
     # sense for a property by this name.
     @property
-    def indices(self):
-        """Get the timesteps where the value changes from 0 to 1. Note that this returns a "jagged" array, padded with NaN. If indexing into this array, you will likely need to use the nanindex op"""
-
+    def indices(self) -> Operation:
+        """Get equation for the timesteps where the value changes from 0 to 1.
+        
+        Note that this returns a "jagged" array, padded with NaN. If indexing into this
+        array, you will likely need to use the nanindex op.
+        """
         return reno.nonzero(reno.diff(self.value))
 
         # sample_indices, t_indices = np.where(np.diff(self.value) == 1)
