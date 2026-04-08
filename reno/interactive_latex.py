@@ -1,6 +1,7 @@
 """IPyVuetify component to wrap a jupyter latex widget with the ability
 to click on equation lines to highlight everywhere else that equation
-is used."""
+is used.
+"""
 
 from collections.abc import Callable
 

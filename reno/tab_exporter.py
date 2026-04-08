@@ -91,7 +91,8 @@ def export_clean_html(model_file: str, panesset_file: str, output_path: str):
 def export_bokeh_html(model_file: str, panesset_file: str, output_path: str):
     """Leaving in just in case we find it useful, but this effectively dumps out a small HTML
     that just loads in a ****ton of JS to populate every bokeh component. This is fine for
-    just HTML outputs, but very messy to try to create printable PDFs with."""
+    just HTML outputs, but very messy to try to create printable PDFs with.
+    """
     paneset = load_pn_panes(model_file, panesset_file)
 
     # simplify objects a little

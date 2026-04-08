@@ -24,8 +24,8 @@ import reno.explorer
 import reno.model
 import reno.ops
 import reno.pymc
-import reno.viz
 import reno.utils
+import reno.viz
 from reno.components import (
     Flag,
     Flow,
@@ -170,6 +170,6 @@ __all__ = [
     "step",
     "sub",
     "sum",
-    "viz",
     "utils",
+    "viz",
 ]

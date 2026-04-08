@@ -1,6 +1,7 @@
 """Functions to handle parsing strings of reno ops/equations into the actual
 reno op objects themselves. This is primarily needed for the interative viz
-portions and the ability to serialize models for saving/loading to file."""
+portions and the ability to serialize models for saving/loading to file.
+"""
 
 import json
 
@@ -256,7 +257,8 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
 
 def parse_class_or_scalar(string) -> reno.components.EquationPart:
     """Parse a single non-math op concatenated equation part, e.g.
-    a scalar (float or int) or distribution with parameters."""
+    a scalar (float or int) or distribution with parameters.
+    """
     string = string.strip()
     if string == "" or string == "None":
         return None

@@ -1,5 +1,6 @@
 """The main system dynamics model, handles tracking and running
-stock and flow equations to run simulation(s)."""
+stock and flow equations to run simulation(s).
+"""
 
 import json
 import math
@@ -10,12 +11,12 @@ from typing import Any
 
 import arviz as az
 import numpy as np
-import pymc as pm
 import xarray as xr
 from graphviz import Digraph, set_jupyter_format
 from pytensor import compile
 from tqdm.auto import tqdm
 
+import pymc as pm
 import reno
 
 
@@ -23,7 +24,8 @@ class _ModelContexts(threading.local):
     """Similar to how PyMC manages this, we keep a model manager to allow models
     to be used as context managers, so a model name of ``my_really_long_model``
     doesn't have to be repeated over and over and over when defining all of the
-    stocks and flows on it."""
+    stocks and flows on it.
+    """
 
     def __init__(self):
         self.current_models: list[Model] = []
@@ -155,7 +157,8 @@ class Model:
         """Get the list of groups and cgroups in the model. These can
         be used to control colors of components in stock/flow diagrams
         (see ``model.group_color``) and default show/hide behavior (see
-        ``model.default_hide_groups``)"""
+        ``model.default_hide_groups``)
+        """
         group_list = {}
         for ref in self.all_refs():
             if ref.group != "":
@@ -291,7 +294,8 @@ class Model:
     def add(self, name: str, value: "reno.components.Reference | reno.Model"):
         """Add the passed tracked reference to the model with the provided name. This is used for
         programmatically adding stocks/flows in a context where the name is dynamically created and
-        you can't simply ``model.my_name = ``."""
+        you can't simply ``model.my_name = ``.
+        """
         # this is effectively just an alias for __setattr__ but I don't want
         # people to have to manually call model.__setattr__
         setattr(self, name, value)
@@ -319,7 +323,8 @@ class Model:
 
     def all_refs(self) -> list:
         """Get all stocks, flows, and vars, from this and all submodels in one giant
-        ordered list (does not include metrics, use ``all_metrics()`` separately.)"""
+        ordered list (does not include metrics, use ``all_metrics()`` separately.)
+        """
         return self.all_stocks() + self.all_flows() + self.all_vars()
 
     def all_metrics(self) -> list:
@@ -346,7 +351,8 @@ class Model:
 
     def _populate(self, n: int, steps: int):
         """Initialize all tracked references with appropriately sized numpy
-        matrices."""
+        matrices.
+        """
         self._reset_type_and_shape_info()
         self._find_all_extended_op_implicit_components()
         self._recursive_sub_populate_n_steps(n, steps)
@@ -358,7 +364,8 @@ class Model:
 
     def _find_all_extended_op_implicit_components(self):
         """Go through every equation and assign any implicit components from
-        extended operations."""
+        extended operations.
+        """
         extended_ops = []
         assoc_refs = []  # parallel list with which ref the correspo op came from
         # (not necessarily accurate, but we need an easy way to be able to name
@@ -391,7 +398,8 @@ class Model:
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
     ):
         """An iterator to use for running the simulation step by step. Leaving n and/or
-        steps None will use the model's default (as defined in constructor.)"""
+        steps None will use the model's default (as defined in constructor.)
+        """
         if n is None:
             n = self.n
         if steps is None:
@@ -419,13 +427,15 @@ class Model:
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
     ):
         """Run each step of the the full simulation. Leaving n and/or
-        steps None will use the model's default (as defined in constructor.)"""
+        steps None will use the model's default (as defined in constructor.)
+        """
         for step in self.simulator(n, steps, quiet, debug):
             pass
 
     def run_metrics(self, n: int = None, steps: int = None):
         """Run all metric equations on a completed simulation. Calling this
-        function assumes the full simulation has already run."""
+        function assumes the full simulation has already run.
+        """
         if n is None:
             n = self.n
         if steps is None:
@@ -635,7 +645,8 @@ class Model:
         """Get a full docstring for using this model as a function, maybe useful for
         allowing a model to be used as a tool for LLMs?
 
-        Use as_dict for submodels, so example string shows args as dictionary."""
+        Use as_dict for submodels, so example string shows args as dictionary.
+        """
         free_refs = self.free_refs()
 
         docstring = self.doc if self.doc is not None else ""
@@ -669,7 +680,9 @@ class Model:
 
         return docstring
 
-    def config(self, **free_refs) -> dict:
+    # TODO: free_refs can also have sub dictionaries right? for submodels?
+    # Include in typing info
+    def config(self, **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart]) -> dict[str, int | float | np.ndarray]:
         """Get/set model configuration. This function allows specifying one or more
         free variables - anything not set uses the default.
 
@@ -732,10 +745,11 @@ class Model:
 
         return config
 
-    def get_nonrecursive_config(self):
+    def get_nonrecursive_config(self) -> dict[str, int | float | np.ndarray | reno.EquationPart]:
         """Only get the free refs config from _this_ model, no submodels.
 
-        Useful for assigning dataset attrs."""
+        Useful for assigning dataset attrs.
+        """
         free_refs = self.free_refs()
 
         config = {}
@@ -751,10 +765,11 @@ class Model:
 
         return config
 
-    def load_dataset(self, ds: xr.Dataset):
+    def load_dataset(self, ds: xr.Dataset) -> None:
         """Take all the tracked ref sequence data and load them into the matching
         model's tracked refs stored values. This is useful for using ``.latex(t=...)``
-        in debug mode for diving into a specific run."""
+        in debug mode for diving into a specific run.
+        """
         unfound = []
         n = -1
         steps = -1
@@ -794,9 +809,10 @@ class Model:
 
         # TODO: collect config as well?
 
-    def dataset(self) -> xr.Dataset:
+    def dataset(self) -> xr.Dataset:  # noqa: C901
         """Turn all of the model's tracked reference values into an xarray dataset,
-        including the "configuration" of the input parameters etc."""
+        including the "configuration" of the input parameters etc.
+        """
         sub_dses = {}
         if len(self.models) > 0:
             for model in self.models:
@@ -881,13 +897,12 @@ class Model:
                 # TODO: geeeez there's got to be a better way?? np.min/max etc.
                 # will return a numpy.int even if the inputs are not numpy
                 # types (e.g. python int)
-                if isinstance(ref.value, (int, float)) or (
-                    isinstance(ref.value, np.ndarray) and len(ref.value.shape) == 0
+                if (
+                    isinstance(ref.value, (int, float))
+                    or (isinstance(ref.value, np.ndarray) and len(ref.value.shape) == 0)
+                    or (len(ref.value.shape) > 0 and ref.value.shape[0] != self.last_n)
+                    or len(ref.value.shape) == 0
                 ):
-                    val = np.broadcast_to(ref.value, (self.last_n,))
-                elif len(ref.value.shape) > 0 and ref.value.shape[0] != self.last_n:
-                    val = np.broadcast_to(ref.value, (self.last_n,))
-                elif len(ref.value.shape) == 0:
                     val = np.broadcast_to(ref.value, (self.last_n,))
                 static_refs[ref.qual_name()] = (["sample"], val)
         ds = ds.assign(static_refs)
@@ -932,13 +947,17 @@ class Model:
         return ds_merged
 
     def __call__(
-        self, n: int = None, steps: int = None, keep_config: bool = False, **free_refs
+        self, n: int = None, steps: int = None, keep_config: bool = False, **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart]
     ) -> xr.Dataset:
         """Run the model simulation, allowing specification of any free variables.
         Variables in submodels need to be defined as dictionaries.
 
         Example:
-            >>> dataset = my_model(steps=20, some_free_var=reno.Normal(5, 2), my_submodel=dict(other_free_var=4))
+            >>> dataset = my_model(
+            ...     steps=20,
+            ...     some_free_var=reno.Normal(5, 2),
+            ...     my_submodel=dict(other_free_var=4),
+            ... )
 
         Args:
             n (int): Number of simulations to run in parallel, leave ``None`` to use the default
@@ -952,7 +971,7 @@ class Model:
                 in the system.
         """
         # store previous config vals and apply any requested config from call params
-        previous = self.config()  # noqa: F841
+        previous = self.config()
         config = self.config(**free_refs)  # noqa: F841
 
         if n is None:
@@ -1135,7 +1154,7 @@ class Model:
 
         # TODO: observations, expect dict(ref, sigma, data)
         # store previous config vals
-        previous = self.config()  # noqa: F841
+        previous = self.config()
         config = self.config(**free_refs)  # noqa: F841
 
         if n is None:
@@ -1230,7 +1249,6 @@ class Model:
 
     def to_dict(self, root: bool = True) -> dict:
         """Convert the model into a JSON-serializable dictionary."""
-
         # TODO: not really any reason to separate _lists since the subsequent
         # dictionary's key lists should be equivalent? (except maybe metrics?)
         data = {
@@ -1261,7 +1279,8 @@ class Model:
     ) -> dict[str, "reno.components.TrackedReference"]:
         """An inner function for from_dict, it builds out everything structure-wise without
         populating equations and details (necessary because references between equations need
-        to exist first.)"""
+        to exist first.)
+        """
         building_refs = {}
 
         for stock_name in data["stocks_list"]:
@@ -1301,7 +1320,8 @@ class Model:
         self, data: dict, refs: dict[str, "reno.components.TrackedReference"]
     ):
         """Populate all equations and details/submodels etc. Assumes _add_skeleton
-        has already been recursively run."""
+        has already been recursively run.
+        """
         for stock_name in data["stocks"]:
             getattr(self, stock_name).from_dict(data["stocks"][stock_name], refs)
         for flow_name in data["flows"]:
@@ -1317,7 +1337,8 @@ class Model:
     @staticmethod
     def from_dict(data: dict) -> "Model":
         """Deserialize a previously saved model definition dictionary, returns
-        new Model instance."""
+        new Model instance.
+        """
         m = Model(
             name=data["name"],
             n=data["n"],
@@ -1334,7 +1355,8 @@ class Model:
 
     def save(self, path: str):
         """Save model definition at specified location. Stores as a JSON using the
-        to_dict() method"""
+        to_dict() method
+        """
         data = self.to_dict()
         with open(path, "w") as outfile:
             json.dump(data, outfile, indent=4)

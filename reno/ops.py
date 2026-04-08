@@ -1,13 +1,14 @@
 """Classes for math operations, these are used to build up symbolic equations,
-similar in principle to what something like PyTensor is doing."""
+similar in principle to what something like PyTensor is doing.
+"""
 
 import math
 import warnings
 
 import numpy as np
-import pymc as pm
 import pytensor.tensor as pt
 
+import pymc as pm
 import reno
 
 __all__ = [  # noqa: RUF022
@@ -599,7 +600,8 @@ class orient_timeseries(reno.components.Operation):
 
     def __repr__(self):
         """Explicit repr is necessary to avoid including a timeref in sub equation parts if added from
-        the pt() or pt_str() calls."""
+        the pt() or pt_str() calls.
+        """
         return f"({self.op_repr()} {self.sub_equation_parts[0].__repr__()})"
 
     # TODO: how best to get timeseries length for get_shape?
@@ -607,7 +609,9 @@ class orient_timeseries(reno.components.Operation):
     def op_eval(self, t, **kwargs):
         value = self.sub_equation_parts[0].value
         if value is None:
-            value = self.sub_equation_parts[0].eval(
+            value = self.sub_equation_parts[
+                0
+            ].eval(
                 t, **kwargs
             )  # TODO: is this right?? This isn't the same as getting .value because may not include full time series...
             # do I instead need to ensure the save is true and then get .value?
@@ -725,7 +729,7 @@ class orient_timeseries(reno.components.Operation):
 
 
 def adjust_shapes_for_n(*parts, **kwargs):
-    """for numpy calculations, while () can broadcast to (dim,)
+    """For numpy calculations, while () can broadcast to (dim,)
     but not (n,) to (n,dim), so handle converting (n,) to (n,1)
     if necessary, given the other components.
 
@@ -1921,7 +1925,8 @@ def dist_params(
     dist: reno.components.Distribution, refs: dict
 ) -> tuple[str, int, str, int]:
     """Extract any dunder variables in the refs passed from pymc.py for setting up parameters
-    for the pymc converted distribution."""
+    for the pymc converted distribution.
+    """
     name = "dist" + str(id(dist))
     if "__PTNAME__" in refs:
         name = refs["__PTNAME__"]
@@ -2205,7 +2210,8 @@ class Categorical(reno.components.Distribution):
 
 class List(reno.components.Distribution):
     """Tile passed list to the sample size so each value is hit roughly
-    equally (dependent on exact sample size) and deterministically"""
+    equally (dependent on exact sample size) and deterministically
+    """
 
     def __init__(self, values: list | np.ndarray | set):
         super().__init__()

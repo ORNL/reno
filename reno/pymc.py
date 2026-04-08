@@ -57,18 +57,18 @@ to create strings of PyMC/PyTensor code (suffixed with _str). These exist for tw
 from collections.abc import Callable
 
 import numpy as np
-import pymc as pm
 import pytensor
 import pytensor.tensor as pt
 
+import pymc as pm
 import reno
 
 
 def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
     """Returns a target function for pytensor scan, this equates to a single step in the
     system dynamics model simulation. This probably shouldn't be used anywhere
-    outside of the context of the pymc model creation function."""
-
+    outside of the context of the pymc model creation function.
+    """
     # general flow is to:
     # 1. run all stock update equations (which are based on previous values,
     #   being passed in through args)
@@ -171,7 +171,8 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
 
 def pt_sim_step_imports() -> str:
     """Get the string of code for the imports needed for ``pt_sim_step_str()`` to
-    run correctly."""
+    run correctly.
+    """
     import_strs = [
         "import pytensor.tensor as pt",
         "import pymc as pm",
@@ -588,7 +589,8 @@ def to_pymc_model(
 
 def pymc_model_imports() -> str:
     """Get the string of code for the imports needed for ``to_pymc_model_str()`` to
-    run correctly."""
+    run correctly.
+    """
     import_strs = [
         "import pytensor",
         "import pytensor.tensor as pt",
@@ -857,7 +859,7 @@ def to_pymc_model_str(
     for obj in model.all_stocks() + [
         obj
         for obj in model.all_flows() + model.all_vars()
-        if not obj.is_static() and not obj.qual_name() in per_step_dist_names
+        if not obj.is_static() and obj.qual_name() not in per_step_dist_names
     ]:
         dims = '"t"'
         if obj.shape > 1:
@@ -885,12 +887,14 @@ def find_tracked_ref_historical_ref(
     model: "reno.model.Model",
 ) -> dict[reno.components.TrackedReference, reno.components.HistoricalValue]:
     """Get the set of tracked references that have historical values with
-    non-simple index equations and the corresponding historical value components"""
-
+    non-simple index equations and the corresponding historical value components
+    """
     historical_values = []
     timeseries_values = []
     for ref in model.all_refs():
-        historical_values.extend(ref.find_parts_of_type(reno.components.HistoricalValue))
+        historical_values.extend(
+            ref.find_parts_of_type(reno.components.HistoricalValue)
+        )
         timeseries_values.extend(
             [
                 (ref, ts.sub_equation_parts[0])
@@ -928,12 +932,14 @@ def find_historical_tracked_refs(
     for previous sequence values, so you this is used for when an equation calls for
     some stock value at t-5, etc.)
 
-    This is primarily used for population of pymc scan step and scan arguments."""
-
+    This is primarily used for population of pymc scan step and scan arguments.
+    """
     historical_values = []
     timeseries_values = []
     for ref in model.all_refs():
-        historical_values.extend(ref.find_parts_of_type(reno.components.HistoricalValue))
+        historical_values.extend(
+            ref.find_parts_of_type(reno.components.HistoricalValue)
+        )
         timeseries_values.extend(
             [
                 ts.sub_equation_parts[0]
@@ -1040,7 +1046,6 @@ def expected_pt_scan_arg_names(
     with as_dict True, tap_1_only True:
         {"v1_h1": "v1", "v2_h1": "v2"}
     """
-
     # remember ordering is sequences/seq taps, output taps, non-sequence args
     names = []
     names_as_dict = {}

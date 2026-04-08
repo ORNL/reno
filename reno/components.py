@@ -2,14 +2,13 @@
 
 # make it so we don't have to quote every type annotation ever
 from __future__ import annotations
-from typing import Any
 
 import warnings
 from collections.abc import Callable
 from types import ModuleType
+from typing import Any
 
 import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pytensor.tensor as pt
 from IPython.display import Markdown, display
@@ -32,6 +31,7 @@ from reno.utils import (
 # ==================================================
 # The root of all math things, the tree of life :)
 
+
 class EquationPart:
     """The base object that represents some portion/subtree of a compute
     or equation tree.
@@ -51,7 +51,7 @@ class EquationPart:
 
     def __init__(self, sub_equation_parts: list[EquationPart] = None):
         """Create a root node of an equation tree with the provided parts as subtrees.
-        
+
         Args:
             sub_equation_parts (List[EquationPart]): The list of all **immediate**
                 child equation subtrees, e.g. for the operation ``a + b``, the
@@ -158,7 +158,9 @@ class EquationPart:
         """Returns symbolic '|' operation with the passed object."""
         return reno.bool_or(self, obj)
 
-    def __getitem__(self, obj: EquationPart | int | float | np.ndarray | slice) -> Operation:
+    def __getitem__(
+        self, obj: EquationPart | int | float | np.ndarray | slice
+    ) -> Operation:
         """Returns symbolic operation to index or slice with the provided index
         expression.
         """
@@ -240,7 +242,11 @@ class EquationPart:
         """Returns a symbolic operation for checking inequality with passed object."""
         return reno.ne(self, obj)
 
-    def clip(self, min: EquationPart | int | float | np.ndarray, max: EquationPart | int | float | np.ndarray) -> Operation:
+    def clip(
+        self,
+        min: EquationPart | int | float | np.ndarray,
+        max: EquationPart | int | float | np.ndarray,
+    ) -> Operation:
         """Returns a symbolic operation for enforcing the output is between the passed
         min and max.
         """
@@ -287,7 +293,9 @@ class EquationPart:
         """
         return str(self.value)
 
-    def seek_refs(self, include_ref_types: bool = False) -> list[Reference] | dict[Reference, list[str]]:  # noqa: C901
+    def seek_refs(
+        self, include_ref_types: bool = False
+    ) -> list[Reference] | dict[Reference, list[str]]:  # noqa: C901
         """Recursively find a list of all References immediately underneath this part.
 
         Either provides a list of references that appear underneath these equations
@@ -380,7 +388,7 @@ class EquationPart:
         Prefer using ``shape`` property over directly calling this function.
 
         Override this in any subclass to control how shape is calculated.
-        
+
         For now this is returning an integer because we only allow a single
         additional dimension. Note that this shape _does not_ incoporate time or
         batch dimensions, only the "data" dimension if applicable.
@@ -404,7 +412,9 @@ class EquationPart:
         """
         return None
 
-    def find_parts_of_type(self, search_type: type, already_checked: list[EquationPart] = None) -> list[EquationPart]:
+    def find_parts_of_type(
+        self, search_type: type, already_checked: list[EquationPart] = None
+    ) -> list[EquationPart]:
         """Recursively search for all EquationParts in the tree of the specified type.
 
         Args:
@@ -474,10 +484,10 @@ class Scalar(EquationPart):
     """A static, single value equation part, representing some simple value that
     doesn't need to be computed.
     """
-    
+
     def __init__(self, value: int | float | list | np.ndarray):
         """Create a static value node holding the provided value.
-        
+
         Args:
             value (int | float | np.ndarray): The scalar value to use.
         """
@@ -558,7 +568,7 @@ class Distribution(EquationPart):
     def __init__(self, *operands: list[EquationPart], per_timestep: bool = False):
         """Create a distribution equation part, this is likely being called from
         a subclass.
-        
+
         Args:
             operands (list[EquationPart]): Any sub equation parts to track for
                 this distribution.
@@ -819,12 +829,14 @@ class ExtendedOperation(Operation):
     Defining this as a separate type to make it easier to search for in equation trees.
     """
 
-    def __init__(self, operands: list[EquationPart], implicit_components: dict[str, EquationPart]):
+    def __init__(
+        self, operands: list[EquationPart], implicit_components: dict[str, EquationPart]
+    ):
         """Create a extended operation node with the provided and implicit components.
 
         Args:
             operands (list[EquationPart]): Any provided sub equation parts to track.
-            implicit_components (dict[str, EquationPart]): Any "private" components 
+            implicit_components (dict[str, EquationPart]): Any "private" components
                 created within this class. They shouldn't show up in diagrams, but are
                 used for computation. See :py:class:`reno.ops.delay1` for an example.
                 Names can be any representative string, and are used to label pymc
@@ -935,9 +947,9 @@ class Piecewise(EquationPart):
         self.equations = equations
         self.conditions = conditions
 
-        assert len(self.equations) == len(
-            self.conditions
-        ), "Number of equations and number of conditions must match"
+        assert len(self.equations) == len(self.conditions), (
+            "Number of equations and number of conditions must match"
+        )
 
     def eval_condition(self, i: int, *args: list, **kwargs: dict) -> bool | np.ndarray:
         """Recursively build nested np.where to handle all conditions.
@@ -963,8 +975,8 @@ class Piecewise(EquationPart):
         **kwargs: dict,
     ) -> int | float | np.ndarray:
         """Evaluate condition equations/functions until a ``True`` is returned,
-        and then evaluate and return the corresponding equation."""
-
+        and then evaluate and return the corresponding equation.
+        """
         # NOTE: leaving this here because this is a low-fruit optimization
         # to add, we'd simply need to remove condition _evaluation_ from
         # eval_condition, and just store the condition eval results for it to
@@ -1017,9 +1029,11 @@ class Piecewise(EquationPart):
         string += "\\end{cases}"
         return string
 
-    def pt_condition(self, i: int, refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    def pt_condition(
+        self, i: int, refs: dict[str, pt.TensorVariable]
+    ) -> pt.TensorVariable:
         """Get the pytensor equation starting at the ith condition (using ifelse).
-        
+
         Recursively includes all >i conditions.
         """
         condition = self.conditions[i].pt(**refs)
@@ -1037,7 +1051,7 @@ class Piecewise(EquationPart):
 
     def pt_condition_str(self, i: int, refs: dict[str, str]) -> str:
         """Get the string for the pytensor code for the ith condition (using ifelse).
-        
+
         Recursively includes all >i conditions.
         """
         condition_str = self.conditions[i].pt_str(**refs)
@@ -1176,7 +1190,7 @@ class Function(Reference):
         **kwargs: dict,
     ):
         """Create a function thunk node for an equation tree.
-        
+
         Args:
             f (Callable): The python function to run when ``.eval()`` is called.
             args (list[any]): Arguments to pass to ``f`` when ``.eval()`` is called.
@@ -1263,7 +1277,7 @@ class Function(Reference):
     def latex(self, **kwargs: dict) -> str:
         """Get a latex-suitable string representation of the function.
 
-        Uses texttt to make it look like code and distinguishable from 
+        Uses texttt to make it look like code and distinguishable from
         flows/vars/stocks/etc.
         """
         parameters = [part.latex(**kwargs) for part in self.sub_equation_parts]
@@ -1380,6 +1394,7 @@ class TimeRef(Reference):
     def __repr__(self) -> str:  # noqa: D105
         return '"t"'
 
+
 # ==================================================
 # SYSTEM DYNAMICS FANCY COMPONENTS
 # ==================================================
@@ -1448,20 +1463,20 @@ class TrackedReference(Reference):
             label (str): Visual label for the reference. In the context of a model,
                 is set to the name assigned on the model if not explicitly provided.
             doc (str): A docstring/description explaining what this component is.
-            min (EquationPart): An equation describing the minimum value of this 
+            min (EquationPart): An equation describing the minimum value of this
                 reference.
-            max (EquationPart): An equation describing the maximum value of this 
+            max (EquationPart): An equation describing the maximum value of this
                 reference.
             init (int | float | Distribution | Scalar | EquationPart): The initial value
                 for this component at ``t = 0``.
             dim (int): Size of an optional extra dimension, allowing a given reference
-                to describe a vector of values at every timestep. Default is 1 implying 
+                to describe a vector of values at every timestep. Default is 1 implying
                 no extra dimension.
             group (str): An optional string to help group related references together,
-                primarily only used for visually tightening up elements in the 
+                primarily only used for visually tightening up elements in the
                 stock/flow graphs.
             cgroup (str | list[str]): An optional string to refer to related elements and
-                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                specify colors in the stock/flow graphs or easier hiding. Can specify a
                 list to allow multiple ways of grouping.
             dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
         """
@@ -1551,7 +1566,7 @@ class TrackedReference(Reference):
 
     def max_refs(self) -> list:
         """Get any references found in the max constraint equation.
-        
+
         Currently mostly only used to aid in diagrams.
         """
         if self.max is None:
@@ -1706,9 +1721,11 @@ class TrackedReference(Reference):
         # including self._static condition for completeness, technically
         # sample dim always exists when not static
 
-    def resolve_init_array(self, obj_or_eq: int | float | np.ndarray | EquationPart) -> int | float | np.ndarray:
+    def resolve_init_array(
+        self, obj_or_eq: int | float | np.ndarray | EquationPart
+    ) -> int | float | np.ndarray:
         """Convert a number or scalar/distribution into correct starting array.
-        
+
         Can be used within initial_vals subclass definition.
         """
         if isinstance(obj_or_eq, (int, float)):
@@ -1877,16 +1894,18 @@ class TrackedReference(Reference):
             return refs[self.qual_name()]
         return f'pt.scalar("{self.qual_name()}")'
 
-    def plot(self, ax: matplotlib.axes.Axes = None, **figargs: dict) -> matplotlib.axes.Axes:
+    def plot(
+        self, ax: matplotlib.axes.Axes = None, **figargs: dict
+    ) -> matplotlib.axes.Axes:
         """Plot (or add to passed axes) this reference's values. Note that this entails a
         simulation having already run.
 
         Note that this will plot as a distribution for variables.
 
         Args:
-            ax (matplotlib.axes.Axes): Optional, add this reference's values to a 
+            ax (matplotlib.axes.Axes): Optional, add this reference's values to a
                 pre-existing plot.
-            **figargs (dict): If no axes passed, use these args in the 
+            **figargs (dict): If no axes passed, use these args in the
                 ``plt.subplots(**figargs)`` call.
         """
         if figargs is None:
@@ -1897,11 +1916,12 @@ class TrackedReference(Reference):
         # TODO: this prob doesn't work for static values?
         data = {self.qual_name(): {self.qual_name(): self.value}}
         if isinstance(self, Variable):
-            ax = reno.viz.compare_posterior(self.qual_name, traces=data, ax=ax, **figargs)
+            ax = reno.viz.compare_posterior(
+                self.qual_name, traces=data, ax=ax, **figargs
+            )
         else:
             ax = reno.viz.compare_seq(self.qual_name, traces=data, ax=ax, **figargs)
         return ax
-        
 
     def to_dict(self) -> dict:
         """Serialize class into a dictionary for saving to file."""
@@ -2136,23 +2156,23 @@ class Flow(TrackedReference):
 
         Args:
             eq (EquationPart): The equation that describes a rate of change.
-            label (str): Visual label for the Flow. In the context of a model, is set 
+            label (str): Visual label for the Flow. In the context of a model, is set
                 to the name assigned on the model if not explicitly provided.
             doc (str): A docstring/description explaining what this flow is.
-            min (EquationPart): An equation describing the minimum value of this 
+            min (EquationPart): An equation describing the minimum value of this
                 flow.
-            max (EquationPart): An equation describing the maximum value of this 
+            max (EquationPart): An equation describing the maximum value of this
                 flow.
             init (int | float | Distribution | Scalar | EquationPart): The initial value
                 for this flow at ``t = 0``.
             dim (int): Size of an optional extra dimension, allowing a given reference
-                to describe a vector of values at every timestep. Default is 1 implying 
+                to describe a vector of values at every timestep. Default is 1 implying
                 no extra dimension.
             group (str): An optional string to help group related references together,
-                primarily only used for visually tightening up elements in the 
+                primarily only used for visually tightening up elements in the
                 stock/flow graphs.
             cgroup (str | list[str]): An optional string to refer to related elements and
-                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                specify colors in the stock/flow graphs or easier hiding. Can specify a
                 list to allow multiple ways of grouping.
             dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
         """
@@ -2184,7 +2204,7 @@ class Flow(TrackedReference):
 
     def __lshift__(self, stock: Stock) -> Stock:
         """Return stock with this flow applied as an outflow.
-        
+
         (``outflow << stock``)
         """
         stock -= self
@@ -2330,25 +2350,25 @@ class Variable(TrackedReference):
 
         Args:
             eq (EquationPart): The equation that describes this variable.
-            label (str): Visual label for the Variable. In the context of a model, is 
+            label (str): Visual label for the Variable. In the context of a model, is
                 set to the name assigned on the model if not explicitly provided.
             doc (str): A docstring/description explaining what this variable is.
-            min (EquationPart): An equation describing the minimum value of this 
+            min (EquationPart): An equation describing the minimum value of this
                 variable.
-            max (EquationPart): An equation describing the maximum value of this 
+            max (EquationPart): An equation describing the maximum value of this
                 variable.
             init (int | float | Distribution | Scalar | EquationPart): The initial value
                 for this variable at ``t = 0``.
             dim (int): Size of an optional extra dimension, allowing a given reference
-                to describe a vector of values at every timestep. Default is 1 implying 
+                to describe a vector of values at every timestep. Default is 1 implying
                 no extra dimension.
             user (bool): Used by explorer, whether to include this variable as an editable
                 field in the front end.
             group (str): An optional string to help group related references together,
-                primarily only used for visually tightening up elements in the 
+                primarily only used for visually tightening up elements in the
                 stock/flow graphs.
             cgroup (str | list[str]): An optional string to refer to related elements and
-                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                specify colors in the stock/flow graphs or easier hiding. Can specify a
                 list to allow multiple ways of grouping.
             dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
         """
@@ -2439,7 +2459,7 @@ class Variable(TrackedReference):
         return f"{lhs} = {self.eq.latex(**kwargs)}" + range_eq_latex(
             self.min, self.max, **kwargs
         )
- 
+
     def debug_equation(self, t: int, sample: int = 0, **kwargs: dict) -> str:
         """Get a latex string output with the debug version of this equation."""
         return (
@@ -2495,25 +2515,25 @@ class Stock(TrackedReference):
         """Create a stock component.
 
         Args:
-            label (str): Visual label for the stock. In the context of a model, is set 
+            label (str): Visual label for the stock. In the context of a model, is set
                 to the name assigned on the model if not explicitly provided.
             doc (str): A docstring/description explaining what this stock is.
             init (int | float | EquationPart): An equation, distribution, or scalar that
-                defines initial conditions, or 
-            min (EquationPart): An equation describing the minimum value of this 
+                defines initial conditions, or
+            min (EquationPart): An equation describing the minimum value of this
                 flow.
-            max (EquationPart): An equation describing the maximum value of this 
+            max (EquationPart): An equation describing the maximum value of this
                 flow.
             init (int | float | Distribution | Scalar | EquationPart): The initial value
                 for this flow at ``t = 0``.
             dim (int): Size of an optional extra dimension, allowing a given reference
-                to describe a vector of values at every timestep. Default is 1 implying 
+                to describe a vector of values at every timestep. Default is 1 implying
                 no extra dimension.
             group (str): An optional string to help group related references together,
-                primarily only used for visually tightening up elements in the 
+                primarily only used for visually tightening up elements in the
                 stock/flow graphs.
             cgroup (str | list[str]): An optional string to refer to related elements and
-                specify colors in the stock/flow graphs or easier hiding. Can specify a 
+                specify colors in the stock/flow graphs or easier hiding. Can specify a
                 list to allow multiple ways of grouping.
             dtype (type): The underlying data type to use, e.g. ``int`` or ``float``.
         """
@@ -2564,7 +2584,9 @@ class Stock(TrackedReference):
         self -= flow
         return flow
 
-    def __rrshift__(self, flow: Flow | EquationPart | list[EquationPart | Flow]) -> Stock:
+    def __rrshift__(
+        self, flow: Flow | EquationPart | list[EquationPart | Flow]
+    ) -> Stock:
         """Return stock with flow(s) or equation(s) (implicit flow) as an inflow.
 
         (``inflow >> stock``)
@@ -2572,7 +2594,9 @@ class Stock(TrackedReference):
         self += flow
         return self
 
-    def __lshift__(self, flow: Flow | EquationPart | list[EquationPart | Flow]) -> Flow | EquationPart | list[EquationPart | Flow]:
+    def __lshift__(
+        self, flow: Flow | EquationPart | list[EquationPart | Flow]
+    ) -> Flow | EquationPart | list[EquationPart | Flow]:
         """Return flow(s), having applied as an inflow to this stock.
 
         (``stock << inflow``)
@@ -2770,9 +2794,9 @@ class Metric(Reference):
     """An equation for a measurement or observation on the overall simulation.
 
     These run in a separate after-simulation analysis.
-    
-    Generally intended to be a series aggregate type equation (e.g. using 
-    series_min/series_max/sum on slices of values across time from references computed 
+
+    Generally intended to be a series aggregate type equation (e.g. using
+    series_min/series_max/sum on slices of values across time from references computed
     during the simulation etc.
     """
 
@@ -2803,7 +2827,7 @@ class Metric(Reference):
             return f"{latex_name(self.label)} = \\texttt{{None}}"
         return f"{latex_name(self.label)} = {self.eq.latex(**kwargs)}"
 
-    def debug_equation(self, t: int, sample: int=0, **kwargs: dict) -> str:
+    def debug_equation(self, t: int, sample: int = 0, **kwargs: dict) -> str:
         """Get a latex string output with the debug version of this equation."""
         return (
             self.latex(t=t, sample=sample, **kwargs)
@@ -2947,7 +2971,7 @@ class Flag(Metric):
     @property
     def indices(self) -> Operation:
         """Get equation for the timesteps where the value changes from 0 to 1.
-        
+
         Note that this returns a "jagged" array, padded with NaN. If indexing into this
         array, you will likely need to use the nanindex op.
         """

@@ -6,6 +6,7 @@ aren't explicitly represented.
 """
 
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -39,12 +40,13 @@ STOCK_COLOR = "transparent"
 FLOW_COLOR = "transparent"
 """Default background color to use for flow nodes."""
 EDGE_COLOR = "black"
+"""Default foreground color for arrows between nodes."""
 
 # TODO: a set of light/dark colors with names that can be referenced
 # in model.group_colors
 
 
-def set_dark_mode(dark: bool = False):
+def set_dark_mode(dark: bool = False) -> None:
     """Set themeing constants for the diagrams appropriately for
     dark/light theme.
 
@@ -55,7 +57,6 @@ def set_dark_mode(dark: bool = False):
     Args:
         dark (bool): Pass ``False`` for light theme, ``True`` for dark theme.
     """
-
     global DARK_MODE, SUBGRAPH_COLORS, NODE_COLOR, EDGE_COLOR
     DARK_MODE = dark
     if not dark:
@@ -71,7 +72,7 @@ def set_dark_mode(dark: bool = False):
 
 
 def stock_flow_diagram(
-    model,
+    model: reno.Model,
     show_vars: bool = True,
     exclude_var_names: list[str] = None,
     sparklines: bool = False,
@@ -102,6 +103,7 @@ def stock_flow_diagram(
         sparkdensities (bool): Draw mini density plots/histograms next to any variables that
             sample from distributions. This assumes the model has either been run, or traces
             are passed in manually with the ``traces`` argument.
+        sparkall (bool): Include mini graphs for flows as well as stocks``.
         g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly only for
             internal use for drawing subgraphs for submodels.
         traces (list[xr.Dataset]): A list of traces or model run datasets to use for drawing
@@ -115,7 +117,7 @@ def stock_flow_diagram(
             model.default_hide_groups.
         show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
             model.default_hide_groups.
-        group_colors dict[str | tuple["reno.components.TrackedReference"], str]: Dictionary specifying
+        group_colors (dict[str | tuple["reno.components.TrackedReference"], str]): Dictionary specifying
             colors to render groups with. An ad-hoc group defined by a tuple of references can also be
             used as a key if the appropriate cgroup does not already exist on the references.
 
@@ -236,10 +238,10 @@ def stock_flow_diagram(
 
 def add_stock_io_edge(
     g: Digraph, stock: Stock, flow: Flow, dir: str = None, group_colors: dict = None
-):
+) -> None:
     """Edge with attributes for heavily highlighting in flows and
-    outflows from stocks."""
-
+    outflows from stocks.
+    """
     if flow.implicit and flow in stock.in_flows:
         for ref in flow.seek_refs():
             if isinstance(ref, Flow):
@@ -277,9 +279,10 @@ def add_stock_io_edge(
 
 def add_stock_io_like_edge(
     g: Digraph, to_flow: Flow, in_flow: Flow, group_colors: dict = None
-):
+) -> None:
     """Allow a stock-io-like edge between two flows (if one is explicitly listed
-    as an inflow to another flow)"""
+    as an inflow to another flow).
+    """
     color = EDGE_COLOR
     if (
         get_reference_color(in_flow, no_default=True, group_colors=group_colors)
@@ -296,9 +299,10 @@ def add_stock_io_like_edge(
     g.edge(name1, name2, style="bold", weight="50", color=color)
 
 
-def add_stock_limit_edge(g: Digraph, ref, stock: Stock):
+def add_stock_limit_edge(g: Digraph, ref: TrackedReference, stock: Stock) -> None:
     """De-emphasize stock variable/flow connections if they're only
-    used in min/max constraints."""
+    used in min/max constraints.
+    """
     g.edge(
         ref.qual_name(),
         stock.qual_name(),
@@ -307,9 +311,10 @@ def add_stock_limit_edge(g: Digraph, ref, stock: Stock):
     )
 
 
-def add_to_flow_edge(g: Digraph, ref, flow: Flow, deemphasize: bool = False):
+def add_to_flow_edge(g: Digraph, ref: TrackedReference, flow: Flow, deemphasize: bool = False) -> None:
     """Non-stock-inflow/outflow-related edges that point to flows
-    are slightly de-emphasized."""
+    are slightly de-emphasized.
+    """
     style = "dotted" if isinstance(ref, Variable) else "dashed"
     constraint = "false" if isinstance(ref, Stock) or deemphasize else "true"
     weight = "1" if not deemphasize else "0"
@@ -327,9 +332,10 @@ def add_to_flow_edge(g: Digraph, ref, flow: Flow, deemphasize: bool = False):
     )
 
 
-def add_to_var_edge(g: Digraph, ref, variable: Variable):
+def add_to_var_edge(g: Digraph, ref: TrackedReference, variable: Variable) -> None:
     """Edges pointing at variables are de-emphasized (usually these are
-    auxiliary variables - variables calculated based on other variables.)"""
+    auxiliary variables - variables calculated based on other variables).
+    """
     g.edge(
         ref.qual_name(),
         variable.qual_name(),
@@ -344,7 +350,7 @@ def add_to_var_edge(g: Digraph, ref, variable: Variable):
 # include out of scope variable and just gets added as default ellipse.
 def draw_appropriate_edge(
     g: Digraph, src: TrackedReference, dst: TrackedReference, group_colors: dict = None
-):
+) -> None:
     """Switch between edge types correctly based on the types of src/dst nodes."""
     if (
         isinstance(src, Flow)
@@ -385,8 +391,11 @@ def filter_variables(
 
 
 def get_reference_color(  # noqa: C901
-    ref, no_default: bool = False, group_colors: dict = None
+    ref: TrackedReference, no_default: bool = False, group_colors: dict = None
 ) -> str:
+    """Determine what background color to use for the passed reference based on defaults
+    and any requested group colors.
+    """
     # TODO: dark/light handling
     if isinstance(ref, reno.Stock):
         color = STOCK_COLOR
@@ -402,9 +411,8 @@ def get_reference_color(  # noqa: C901
 
     # manually specified group_colors take precedence
     for group in group_colors:
-        if isinstance(group, tuple):
-            if ref in group:
-                return group_colors[group]
+        if isinstance(group, tuple) and ref in group:
+            return group_colors[group]
 
     # cgroup takes next precedence
     if isinstance(ref.cgroup, list):
@@ -431,9 +439,12 @@ def get_reference_color(  # noqa: C901
     return color
 
 
-def should_render(
-    ref, universe, hide_groups: list[str] = None, show_groups: list[str] = None
+def should_render(  # noqa: C901
+    ref: TrackedReference, universe: list[TrackedReference], hide_groups: list[str] = None, show_groups: list[str] = None
 ) -> bool:
+    """Based on the various parameters, determine if the given reference should be 
+    included in the diagram or not.
+    """
     if show_groups is None:
         show_groups = []
     if hide_groups is None:
@@ -485,14 +496,8 @@ def add_stocks(  # noqa: C901
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
     group_colors: dict = None,
-):
-    """Add nodes and edges for all passed stocks to the passed graph.
-
-    Args:
-        sparklines (bool): include small little line graph of each stock in the
-            diagram. This only works if a simulation has been run.
-    """
-
+) -> tuple[Digraph, list[tuple[str, str]]]:
+    """Add nodes and edges for all passed stocks to the passed graph."""
     render_in_parent_scope = []
 
     for stock in stocks:
@@ -544,7 +549,7 @@ def add_stocks(  # noqa: C901
                         )
                     ax.xaxis.set_ticks([])
                     fig.tight_layout()
-                    os.makedirs(".plotcache", exist_ok=True)
+                    Path(".plotcache").mkdir(exist_ok=True)
                     fig.savefig(f".plotcache/{stock.qual_name()}.png")
                     plt.close(fig)
 
@@ -602,7 +607,7 @@ def add_stocks(  # noqa: C901
     return g, render_in_parent_scope
 
 
-def add_vars(
+def add_vars(  # noqa: C901
     g: Digraph,
     variables: list[Variable],
     exclude_vars: list[str],
@@ -613,7 +618,7 @@ def add_vars(
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
     group_colors: dict = None,
-):
+) -> tuple[Digraph, list[tuple[str, str]]]:
     """Add variables and edges between variables to the passed graphviz graph."""
     rendered_edges = []
     render_in_parent_scope = []
@@ -666,7 +671,7 @@ def add_vars(
 
                     ax.yaxis.set_ticks([])
                     fig.tight_layout()
-                    os.makedirs(".plotcache", exist_ok=True)
+                    Path(".plotcache").mkdir(exist_ok=True)
                     fig.savefig(f".plotcache/{variable.qual_name()}.png")
                     plt.close(fig)
 
@@ -710,7 +715,7 @@ def add_vars(
     return g, render_in_parent_scope
 
 
-def add_flows(
+def add_flows(  # noqa: C901
     g: Digraph,
     flows: list[Flow],
     variables: list[Variable],
@@ -720,7 +725,7 @@ def add_flows(
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
     group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
-):
+) -> tuple[Digraph, list[tuple[str, str]]]:
     """Add flows and edges from variables to the passed graphviz graph."""
     rendered_edges = []
 
@@ -777,7 +782,7 @@ def add_flows(
                         )
                     ax.xaxis.set_ticks([])
                     fig.tight_layout()
-                    os.makedirs(".plotcache", exist_ok=True)
+                    Path(".plotcache").mkdir(exist_ok=True)
                     fig.savefig(f".plotcache/{flow.qual_name()}.png")
                     plt.close(fig)
 

@@ -120,7 +120,8 @@ def is_ref_in_parent_scope(ref, source) -> bool:
 
 def ensure_scalar(operand: Any) -> Any:
     """Convert int/float types into a Scalar type if relevant, otherwise
-    directly return what was passed."""
+    directly return what was passed.
+    """
     if isinstance(operand, (int, float, np.ndarray)):
         return reno.components.Scalar(operand)
     if isinstance(operand, list):
@@ -160,14 +161,15 @@ def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
     (Basically any index equations not following this form are gonna be a whole lot
     harder, and I'm not going to worry about implementing them yet.)
     """
-
     if not isinstance(eq, reno.ops.sub):
         return False
     if not isinstance(eq.sub_equation_parts[0], reno.components.TimeRef):
         return False
     if (
         not is_static(eq.sub_equation_parts[1])
-        or len(eq.sub_equation_parts[1].find_parts_of_type(reno.components.Distribution))
+        or len(
+            eq.sub_equation_parts[1].find_parts_of_type(reno.components.Distribution)
+        )
         > 0
     ):
         # NOTE: currently not counting distributions as "easy" because of
@@ -407,7 +409,8 @@ def get_dependency_relevant_equation_part(
     init_eqs: bool, ref: "reno.components.Reference"
 ) -> "reno.components.EquationPart":
     """Determine what equation part should be used to run seek_refs on
-    in order to determine compute dependencies."""
+    in order to determine compute dependencies.
+    """
     if init_eqs and isinstance(ref, reno.components.TrackedReference):
         if ref.init is None:
             # if inits were requested but no explicit init equation found
@@ -450,7 +453,6 @@ def dependency_compute_order(
     Returns:
         The dependency-ordered list of reno references passed in.
     """
-
     compute_order = []
     remaining = []
     iterations = 0

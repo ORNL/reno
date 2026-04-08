@@ -1,7 +1,8 @@
 """Various visualization tools, classes, and functions.
 
 A lot of this may eventually need to be broken out into separate
-submodules for sanity."""
+submodules for sanity.
+"""
 
 import math
 from collections.abc import Callable
@@ -42,7 +43,6 @@ def _create_seq_line_collection(seq_np_values: np.ndarray, **kwargs) -> LineColl
     Returns:
         A LineCollection object that can be plotted on an axis with ``ax.add_collection()``
     """
-
     # the trick is that LineCollection needs to be a list of lines where each
     # line is a list of (x0, y0), ... coords, e.g.
     # [[[x0, y0], [x1, y1]...], ...,]
@@ -69,7 +69,8 @@ def _get_label_and_dataset(
     key_or_trace: str | az.InferenceData | xr.Dataset,
 ) -> tuple[str, xr.Dataset]:
     """Traces can be passed to the comparison functions multiple ways, so this is
-    a method to consistently get a label for a trace and the desired dataset."""
+    a method to consistently get a label for a trace and the desired dataset.
+    """
     # determine if label explicitly provided via dictionary or if we need
     # to auto-assign
     if isinstance(trace_collection, dict):
@@ -304,7 +305,8 @@ def plot_refs_single_axis(
     def label_offset(n, n_max):
         """Algorithm to vertically offset each label for a single tick so they
         don't overlap. n is the index of the current label, n_max is the total
-        number of labels that have to fit."""
+        number of labels that have to fit.
+        """
         spacing = 5
         total = (n_max - 1) * spacing * 2
         label_n = ((n_max - n) * spacing * 2) - (total / 2)
@@ -713,7 +715,8 @@ class ModelLatex:
     def find_equation_name_from_index(self, i: int) -> str:
         """Get the name of the reference/equation for the clicked index.
 
-        Returns ``None`` if not found or outside the start/stop bounds."""
+        Returns ``None`` if not found or outside the start/stop bounds.
+        """
         # NOTE: exclusive start, inclusive stop
 
         names = self._equation_lines_refname_reference()
@@ -913,7 +916,8 @@ class ReferenceEditor:
 
     def get_eq(self) -> reno.components.EquationPart:
         """Get the equation from the TrackedReference, (takes into account if
-        this is describing the init or the eq itself)."""
+        this is describing the init or the eq itself).
+        """
         ref = self.get_ref()
         if not self.is_init:
             return ref.eq
@@ -947,7 +951,8 @@ class ReferenceEditor:
 
     def assign_value_from_control(self):
         """Set the underlying reference's equation based on the current string
-        in the control."""
+        in the control.
+        """
         result = self.parse_str_to_eq()
 
         if not self.is_init:
@@ -1025,7 +1030,8 @@ class ModelViewer:
 
     def simulate_button_press(self, widget):
         """Event handler for when the button labeled "simulate" is pressed, not a
-        function simulating a button being pressed..."""
+        function simulating a button being pressed...
+        """
         self.assign_controls()
         self.rerun(self.n.value, self.steps.value)
 

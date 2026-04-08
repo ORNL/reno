@@ -1,5 +1,8 @@
 """Interactive panel interface and relevant components to allow exploring models live."""
 
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 import argparse
 import base64
 import datetime
@@ -11,6 +14,7 @@ from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import panel as pn
@@ -104,13 +108,14 @@ icon_save = """
 
 
 class Explorer(pn.custom.PyComponent):
-    """The overall wrapper for the interactive model explorer.
+    """The overall wrapper for the interactive model explorer."""
 
-    Args:
-        model (reno.model.Model): The SD model to generate a UI for.
-    """
+    def __init__(self, model: reno.Model, **params: dict):
+        """Create explorer interface.
 
-    def __init__(self, model, **params):
+        Args:
+            model (reno.model.Model): The SD model to generate a UI for.
+        """
         self.model = model
         super().__init__(**params)
 
@@ -145,18 +150,25 @@ class Explorer(pn.custom.PyComponent):
 
         self._handle_requested_controls(self.view.active_tab.controls)
 
-    def _monkey_patch_smc_progress(outer_self):
+    def _monkey_patch_smc_progress(outer_self) -> None:
+        """By default, PyMC's smc sampler has no means to get access to current status/
+        progress.
+
+        Since displaying this progress in the interface is fairly critical (large models
+        may take significant time to complete posterior sampling), we commit some minor 
+        tomfoolery and monkey business to make that happen.
+        """
         # from rich.progress import Progress
         from pymc.smc.sampling import CustomProgress
 
         class CustomSMCProgress(CustomProgress):
-            def __init__(self, *args, **kwargs):
+            def __init__(self, *args: list, **kwargs: dict):
                 super().__init__(*args, **kwargs)
                 self.total = len(self.tasks)
                 self.per_progress = {key: 0.0 for key in self.task_ids}
                 self.explorer_ref = outer_self
 
-            def update(self, status, task_id, **kwargs):
+            def update(self, status, task_id, **kwargs: dict) -> None:  # noqa: ANN001
                 # print(task_id, status)
                 self.per_progress[task_id] = float(status[status.rfind(" ") + 1 :])
                 sumtotal = sum([progress for progress in self.per_progress.values()])
@@ -167,9 +179,10 @@ class Explorer(pn.custom.PyComponent):
 
         reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
 
-    def set_running(self, running: bool):
-        """Set the status of the spinney things in various subcomponents
-        when things are happening."""
+    def set_running(self, running: bool) -> None:
+        """Set the status of the spinny things in various subcomponents
+        when things are happening.
+        """
         if running:
             self.vars_editor.run_prior_btn.loading = True
             self.observables.run_post_btn.loading = True
@@ -177,7 +190,7 @@ class Explorer(pn.custom.PyComponent):
             self.vars_editor.run_prior_btn.loading = False
             self.observables.run_post_btn.loading = False
 
-    def run_prior(self):
+    def run_prior(self) -> None:
         """Run pymc on the model for priors only."""
         self.set_running(True)
         try:
@@ -196,7 +209,7 @@ class Explorer(pn.custom.PyComponent):
             print(traceback.format_exc())
         self.set_running(False)
 
-    def run_posterior(self):
+    def run_posterior(self) -> None:
         """Run pymc on the model to get posteriors."""
         self.set_running(True)
         try:
@@ -223,11 +236,11 @@ class Explorer(pn.custom.PyComponent):
             self.runs_list.progress.bar_color = "danger"
         self.set_running(False)
 
-    def _handle_selected_rows_changed(self, runs):
+    def _handle_selected_rows_changed(self, runs: list[tuple[str, dict, xr.Dataset]]) -> None:
         traces = {run[0]: (run[1], run[2]) for run in runs}
         self.view.update_traces(traces)
 
-    def _handle_requested_controls(self, controls_layout):
+    def _handle_requested_controls(self, controls_layout: pn.layout.ListPanel) -> None:
         self.controls._layout.objects = [*controls_layout]
 
     def to_dict(self) -> dict:
@@ -240,15 +253,13 @@ class Explorer(pn.custom.PyComponent):
         return data
 
     @staticmethod
-    def from_dict(data: dict) -> "Explorer":
+    def from_dict(data: dict) -> Explorer:
         """Deserilalize data from previously saved workspace via ``to_dict()``."""
         model = reno.model.Model.from_dict(data["model"])
         explorer = Explorer(model)
         explorer.runs_list.from_dict(data["runs"])
 
         traces = {runrow.run_name: runrow.trace for runrow in explorer.runs_list.runs}
-        print("LOADED TRACES")
-        print(traces)
 
         explorer.view.from_dict(data["tabs"], traces)
         return explorer
@@ -260,7 +271,7 @@ class Explorer(pn.custom.PyComponent):
 class FreeVarsEditor(pn.viewable.Viewer):
     """Editor for distributions/values of system free variables."""
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         self.model = model
         super().__init__(**params)
 
@@ -284,25 +295,24 @@ class FreeVarsEditor(pn.viewable.Viewer):
 
         self._run_prior_clicked_callbacks: list[Callable] = []
 
-    def on_run_prior_clicked(self, callback: Callable):
+    def on_run_prior_clicked(self, callback: Callable) -> None:
         """Register a function to execute when the 'run priors' button is clicked.
 
         Callbacks for this event should take no parameters.
         """
         self._run_prior_clicked_callbacks.append(callback)
 
-    def fire_on_run_prior_clicked(self):
+    def fire_on_run_prior_clicked(self) -> None:
         """Trigger the callbacks for the run_prior_clicked event."""
         for callback in self._run_prior_clicked_callbacks:
             callback()
 
-    def _handle_pnl_run_prior_btn_clicked(self, *args):
+    def _handle_pnl_run_prior_btn_clicked(self, *args: list) -> None:
         self.fire_on_run_prior_clicked()
 
-    def create_variable_controls(self):
-        """Set up a bunch of ReferenceEditors for the free variables."""
+    def create_variable_controls(self) -> None:
+        """Set up ReferenceEditors for each of the free variables."""
         for ref_name in self.model.free_refs(recursive=True):
-            print("Getting reference ", ref_name)
             editor = ReferenceEditor(
                 self.model, ref_name, self.model._is_init_ref(ref_name)
             )
@@ -310,7 +320,6 @@ class FreeVarsEditor(pn.viewable.Viewer):
             editor.control = control
 
             ref = getattr(self.model, ref_name)
-            print(ref)
             if (
                 not self.model._is_init_ref(ref_name)
                 and ref is not None
@@ -321,7 +330,7 @@ class FreeVarsEditor(pn.viewable.Viewer):
             self.controls.append(control)
             self.reference_editors.append(editor)
 
-    def assign_from_controls(self):
+    def assign_from_controls(self) -> None:
         """Set references and configuration on the model based on values set in UI."""
         for ref_editor in self.reference_editors:
             ref_editor.assign_value_from_control()
@@ -334,10 +343,11 @@ class FreeVarsEditor(pn.viewable.Viewer):
 
 class Observable(pn.viewable.Viewer):
     """Components row for setting up an observation to include for finding posteriors.
-    Observations have to be set on metrics, so only metrics will be populated in dropdowns.
+    Observations have to be set on metrics, so only metrics will be populated in
+    dropdowns.
     """
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         self.model = model
         super().__init__(**params)
 
@@ -382,7 +392,7 @@ class Observable(pn.viewable.Viewer):
 class ObservablesList(pn.viewable.Viewer):
     """Container list to add/modify/remove observations."""
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         self.model = model
         super().__init__(**params)
 
@@ -404,25 +414,25 @@ class ObservablesList(pn.viewable.Viewer):
 
         self._refresh_layout()
 
-    def on_run_posterior_clicked(self, callback: Callable):
+    def on_run_posterior_clicked(self, callback: Callable) -> None:
         """Register a function to execute when the 'run posteriors' button is clicked.
 
         Callbacks for this event should take no parameters.
         """
         self._run_posterior_clicked_callbacks.append(callback)
 
-    def fire_on_run_posterior_clicked(self):
+    def fire_on_run_posterior_clicked(self) -> None:
         """Trigger the callbacks for the run_posterior_clicked event."""
         for callback in self._run_posterior_clicked_callbacks:
             callback()
 
-    def _handle_pnl_run_post_btn_clicked(self, *args):
+    def _handle_pnl_run_post_btn_clicked(self, *args: list) -> None:
         self.fire_on_run_posterior_clicked()
 
-    def _handle_pnl_new_obs_btn_clicked(self, *args):
+    def _handle_pnl_new_obs_btn_clicked(self, *args: list) -> None:
         self.add_observation()
 
-    def _refresh_layout(self):
+    def _refresh_layout(self) -> None:
         self._layout.objects = [
             pn.pane.HTML("<b>Observations</b>"),
             pn.Column(*self.rows, scroll=True, sizing_mode="stretch_height"),
@@ -430,15 +440,16 @@ class ObservablesList(pn.viewable.Viewer):
             self.run_post_btn,
         ]
 
-    def add_observation(self):
+    def add_observation(self) -> None:
         """Create a new observation row/set of fields for setting an Observable."""
         self.rows.append(Observable(self.model))
         self._refresh_layout()
 
-    def get_observations(self) -> list["reno.ops.Observation"]:
+    def get_observations(self) -> list[reno.Observation]:
         """Convert all the fields from the list of Observable components
         to create reno Observations ops, ultimately to pass into the
-        ``model.pymc`` call"""
+        ``model.pymc`` call.
+        """
         observations = []
         for row in self.rows:
             obs = reno.ops.Observation(
@@ -453,7 +464,8 @@ class ObservablesList(pn.viewable.Viewer):
 
 class ClickablePane(pn.custom.JSComponent):
     """Wrap any panel component with a click event handler, and
-    optionally a drag to pan handler (important for zoomed SFD diagrams.)"""
+    optionally a drag to pan handler (important for zoomed SFD diagrams).
+    """
 
     child = pn.custom.Child()
     """The panel component being wrapped. Note that since this outer component
@@ -546,37 +558,41 @@ class ClickablePane(pn.custom.JSComponent):
         }
     """
 
-    def __init__(self, **params):
+    def __init__(self, **params: dict):
         super().__init__(**params)
 
         self._clicked_callbacks: list[Callable] = []
 
-    def reset_pan(self):
+    def reset_pan(self) -> None:
         """Reset component panning to top left of 0, 0."""
         self._send_event(pn.models.esm.ESMEvent, data="reset")
 
-    def on_click(self, callback):
+    def on_click(self, callback: Callable) -> None:
         """Register a function to execute whenever a click on the wrapper is
-        detected."""
+        detected.
+
+        Callback should not take any arguments.
+        """
         self._clicked_callbacks.append(callback)
 
-    def fire_on_click(self):
+    def fire_on_click(self) -> None:
         """Trigger the callbacks for the click event."""
         for callback in self._clicked_callbacks:
             callback()
 
-    def _handle_js_clicked(self, event):
+    def _handle_js_clicked(self, event) -> None:
         if self.click_enabled:
             self.fire_on_click()
 
 
 class PanesSet(pn.viewable.Viewer):
     """Container for the modifiable GridStack of model exploration widgets, with
-    controls for configuring."""
+    controls for configuring.
+    """
 
     tab_name = param.String("Tab 1")
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         super().__init__(**params)
         self.model = model
 
@@ -634,7 +650,8 @@ class PanesSet(pn.viewable.Viewer):
         self._on_new_controls_needed_callbacks: list[Callable] = []
         self._on_name_changed_callbacks: list[Callable] = []
 
-    def remove_pane(self, *args, pane_to_remove):
+    def remove_pane(self, *args: list, pane_to_remove: DashboardPane) -> None:
+        """Remove the passed dashboard pane from the current pane grid."""
         self.panes.remove(pane_to_remove)
         new_objs = {}
         for loc, obj in self.gstack.objects.items():
@@ -645,10 +662,13 @@ class PanesSet(pn.viewable.Viewer):
         self.fire_on_new_controls_needed(None, None)
         self.invalidate_downloads()
 
-    def add_pane(self, pane_to_add):
+    def add_pane(self, pane_to_add: DashboardPane) -> None:
         """Add the passed model explorer widget and modify the gstack size. This allows
         a constantly growing interface, though this is currently a bit simplistic and
-        doesn't allow manually setting or reducing yet."""
+        doesn't allow manually setting or reducing yet.
+        """
+        pane_to_add.clicker.on_click(partial(self.fire_on_new_controls_needed, pane_to_add.controls, pane_to_add))
+        
         # each "row" gets a height of 400px, at some point we should make this
         # configurable.
         self.gstack.height = 400 * (self.cells_height + 1)
@@ -660,67 +680,53 @@ class PanesSet(pn.viewable.Viewer):
         self.panes.append(pane_to_add)
         pane_to_add.on_cache_invalidated(self.invalidate_downloads)
         self.invalidate_downloads()
-        print(self.gstack.objects)
+        
+        self.fire_on_new_controls_needed(pane_to_add.controls, pane_to_add)
 
-    def get_pane_delete_button(self, pane):
+    def get_pane_delete_button(self, pane: DashboardPane) -> pn.widgets.Button:
+        """Create a button for the passed pane that will remove said pane when clicked."""
         btn = pn.widgets.Button(
             name=f"Remove {pane.__class__.__name__}", button_type="danger"
         )
         btn.on_click(partial(self.remove_pane, pane_to_remove=pane))
         return btn
 
-    def add_text_pane(self):
+    def add_text_pane(self) -> None:
         """Create a new editable text widget and add it to the tab interface."""
         text_pane = EditableTextPane()
-        text_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, text_pane.controls, text_pane)
-        )
         self.add_pane(text_pane)
-        self.fire_on_new_controls_needed(text_pane.controls, text_pane)
 
-    def add_plots_pane(self):
+    def add_plots_pane(self) -> None:
         """Create a new plots widget and add it to the tab interface."""
         plots_pane = PlotsPane(self.model)
-        plots_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, plots_pane.controls, plots_pane)
-        )
         self.add_pane(plots_pane)
         plots_pane.render(self.active_traces)
-        self.fire_on_new_controls_needed(plots_pane.controls, plots_pane)
 
-    def add_diagram_pane(self):
+    def add_diagram_pane(self) -> None:
         """Create a new stock and flow diagram widget and add it to the tab
-        interface."""
+        interface.
+        """
         diagram_pane = DiagramPane(self.model)
-        diagram_pane.clicker.on_click(
-            partial(
-                self.fire_on_new_controls_needed, diagram_pane.controls, diagram_pane
-            )
-        )
         self.add_pane(diagram_pane)
-        self.fire_on_new_controls_needed(diagram_pane.controls, diagram_pane)
         diagram_pane.render(self.active_traces)
 
-    def add_config_pane(self):
+    def add_config_pane(self) -> NOne:
         """Create a config comparison widget and add it to the tab
-        interface."""
+        interface.
+        """
         config_pane = ConfigurationPane(self.model)
-        config_pane.clicker.on_click(
-            partial(self.fire_on_new_controls_needed, config_pane.controls, config_pane)
-        )
         self.add_pane(config_pane)
-        self.fire_on_new_controls_needed(config_pane.controls, config_pane)
         config_pane.render(self.active_configs)
 
-    def on_new_controls_needed(self, callback: Callable):
+    def on_new_controls_needed(self, callback: Callable) -> None:
         """Register a function to execute whenever a widget within the tab requests
         a new set of helper controls be displayed in the sidebar.
 
-        Callbacks should take a panel widget.
+        Callbacks should take a panel widget that can be listed (``*widget``).
         """
         self._on_new_controls_needed_callbacks.append(callback)
 
-    def fire_on_new_controls_needed(self, controls_layout, pane):
+    def fire_on_new_controls_needed(self, controls_layout: pn.layout.Panel, pane: DashboardPane) -> None:
         """Trigger the callbacks for the new_controls_needed event."""
         for callback in self._on_new_controls_needed_callbacks:
             if pane is not None:
@@ -732,31 +738,33 @@ class PanesSet(pn.viewable.Viewer):
             else:
                 callback([self.controls, "Click on a pane to modify attributes"])
 
-    def on_name_changed(self, callback: Callable):
+    def on_name_changed(self, callback: Callable) -> None:
         """Register a function to execute when the tab title is changed.
 
-        Callbacks should take the new string name."""
+        Callbacks should take the new string name.
+        """
         self._on_name_changed_callbacks.append(callback)
 
     @pn.depends("tab_name", watch=True)
-    def fire_on_name_changed(self, *args):
+    def fire_on_name_changed(self, *args: list) -> None:
         """Trigger the callbacks for the name_changed event."""
         for callback in self._on_name_changed_callbacks:
             callback(self.tab_name)
 
-    def _handle_pnl_export_clicked(self, *args):
+    def _handle_pnl_export_clicked(self, *args: list) -> None:
         self.export()
 
-    def invalidate_downloads(self):
+    def invalidate_downloads(self) -> None:
         """If something important has changed since the last time the tab was
-        exported, visually highlight on all the relevant buttons."""
+        exported, visually highlight on all the relevant buttons.
+        """
         self.btn_export.disabled = False
         for btn in self.downloads.objects:
             btn.button_style = "outline"
             if not btn.label.endswith("*"):
                 btn.label = btn.label + "*"
 
-    def export(self):
+    def export(self) -> None:
         """Save all necessary data about current tab in workspace (including a
         copy of the model and any simulation data) and use the tab_exporter
         to produce an HTML and PDF in the ``.doccache`` path.
@@ -767,7 +775,7 @@ class PanesSet(pn.viewable.Viewer):
 
         # save all the things needed to reproduce the tab in tab_exporter
         # at some point might be a good idea to make cache dir configurable.
-        os.makedirs(".doccache", exist_ok=True)
+        Path(".doccache").mkdir(exist_ok=True)
         self.model.save(".doccache/model.json")
         data = self.to_dict()
         with open(".doccache/panes.json", "w") as outfile:
@@ -791,7 +799,8 @@ class PanesSet(pn.viewable.Viewer):
 
     def to_dict(self, include_traces: bool = True) -> dict:
         """Serialize tab and all contained widgets into a dictionary so can be saved to
-        file and reproduced later."""
+        file and reproduced later.
+        """
         print("PanesSet to_dict")
         print(self.active_traces)
         traces = {key: trace.to_dict() for key, trace in self.active_traces.items()}
@@ -821,10 +830,11 @@ class PanesSet(pn.viewable.Viewer):
 
         return data
 
-    def make_new_pane_from_data(self, data):
+    def make_new_pane_from_data(self, data: dict) -> DashboardPane:
         """Create a pane based on a dictionary specifying type and coniguration.
 
-        Used both by the from_dict as well as REST API handling."""
+        Used both by the from_dict as well as REST API handling.
+        """
         pane_type = data["type"]
         pane_config = data["data"]
         if pane_type == "PlotsPane":
@@ -844,8 +854,8 @@ class PanesSet(pn.viewable.Viewer):
         )
         return pane
 
-    def from_dict(self, data: dict, traces: dict = None):
-        """Deserialize all config and widgets from data _into current instance_"""
+    def from_dict(self, data: dict, traces: dict = None) -> None:
+        """Deserialize all config and widgets from data _into current instance_."""
         self.tab_name = data["tab_name"]
 
         if traces is None:
@@ -875,11 +885,9 @@ class PanesSet(pn.viewable.Viewer):
             # reports still works, so we don't bother doing any sort of
             # wonky translation.
             obj_dict[loc] = pane
-            print("ADDING AT", loc)
 
         self.gstack.objects = obj_dict
         self.panes = list(obj_dict.values())
-        print(self.gstack.objects)
 
     def __panel__(self):
         return self._layout
@@ -888,14 +896,58 @@ class PanesSet(pn.viewable.Viewer):
 # have do do inheritance because of following linked bug, fix will
 # supposedly be out soon as of 2025-06-25
 # https://github.com/holoviz/panel/issues/7689
-# class PlotsPane(pn.custom.PyComponent):
-# TODO: there's a non-insignificant amount of copied code between the different
-# panes (esp events), might be wise to have a parent Pane class.
-class PlotsPane(
+class DashboardPane(
     pn.widgets.base.WidgetBase, pn.custom.PyComponent, pn.reactive.Reactive
 ):
+    """Parent class for any configurable display that can be added to the main
+    tab views.
+    """
+    def __init__(self, **params: dict):
+        super().__init__(**params)
+
+        self.controls = None
+        """A container of panel widgets to modify attributes of this pane."""
+
+        self._layout = None
+        """Container for the pane widget itself."""
+
+        self.to_serialize: list[str] = []  
+        """List of string attributes on class to use in default to_dict/from_dict,
+        this should be set in subclass."""
+        
+        self._on_cache_invalidated_callbacks: list[Callable] = []
+
+    def on_cache_invalidated(self, callback: Callable) -> None:
+        """Register a callback for any time a previous exported file will no longer
+        match/cached file is no longer valid or current.
+        """
+        self._on_cache_invalidated_callbacks.append(callback)
+
+    def fire_on_cache_invalidated(self) -> None:
+        """Trigger all callback functions registered for the cache_invalidated event."""
+        for callback in self._on_cache_invalidated_callbacks:
+            callback()
+
+    def to_dict(self) -> dict:
+        """Serialize this pane to a dictionary that can be saved to file."""
+        return {key: getattr(self, key) for key in self.to_serialize}
+
+    def from_dict(self, data: dict) -> None:
+        """Deserialize data into current instance from dictionary previously stored
+        from ``to_dict()``.
+        """
+        for key, value in data.items():
+            setattr(self, key, value)
+
+    def __panel__(self) -> pn.layout.Panel:
+        return self._layout
+    
+
+
+class PlotsPane(DashboardPane):
     """A model exploration widget that can be displayed within a tab, customizable
-    set of timeseries/density plots for various parts of the model."""
+    set of timeseries/density plots for various parts of the model.
+    """
 
     fig_width = param.Integer(10)
     fig_height = param.Integer(6)
@@ -917,7 +969,7 @@ class PlotsPane(
     ref_subset = param.ListSelector([])
     """Resolved list of references to show, taking into account plot_type and subset."""
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         super().__init__(**params)
         self.rendered_traces = {}
 
@@ -939,6 +991,15 @@ class PlotsPane(
             },
         )
 
+        self.to_serialize = [
+            "fig_width",
+            "fig_height",
+            "columns",
+            "plot_type",
+            "subset",
+            "ref_subset",
+        ]
+
         # TODO: (4/29/205) can't use both ipywidgets _and_ gridstack right now??
         # self.fig = pn.pane.Matplotlib()
         self.image = pn.pane.Image(sizing_mode="stretch_both")
@@ -953,23 +1014,8 @@ class PlotsPane(
 
         self._layout = self.clicker
 
-        self._on_cache_invalidated_callbacks: list[Callable] = []
-
-    def on_cache_invalidated(self, callback: Callable):
-        """Register a callback for any time a previous exported file will no longer
-        match/cached file is no longer valid or current."""
-        self._on_cache_invalidated_callbacks.append(callback)
-
-    def fire_on_cache_invalidated(self):
-        """Trigger all callback functions registered for the cache_invalidated event."""
-        if not hasattr(self, "_on_cache_invalidated_callbacks"):
-            # can happen from initial param settings before end of init?
-            return
-        for callback in self._on_cache_invalidated_callbacks:
-            callback()
-
     @param.depends("plot_type", watch=True)
-    def update_plot_type(self, *args):
+    def update_plot_type(self, *args: list) -> None:
         """Event handler for when a different preset is selected."""
         if self.plot_type == "Variables/Metrics":
             rv_names = [
@@ -996,18 +1042,20 @@ class PlotsPane(
             self.update_subset()
 
     @param.depends("subset", watch=True)
-    def update_subset(self, *args):
+    def update_subset(self, *args: list) -> None:
         """Whenever the 'preset subset' option changes, update the actual subset of
-        references being used."""
+        references being used.
+        """
         if self.subset == []:
             self.ref_subset = self.param.subset.objects
         else:
             self.ref_subset = self.subset
 
     @param.depends("fig_height", "fig_width", "columns", "ref_subset", watch=True)
-    def render(self, traces=None):
+    def render(self, traces: dict = None) -> None:
         """Update the visible components of this widget. We save a base64 representation
-        of the plot so it can be used in the ``to_html()`` call."""
+        of the plot so it can be used in the ``to_html()`` call.
+        """
         if traces is not None:
             self.rendered_traces = traces
 
@@ -1036,44 +1084,19 @@ class PlotsPane(
         used for generating exported standalone reports, see tab_exporter.
 
         For this pane, this works by creating a base64 representation of the plot
-        image and embedding that directly in the string output."""
+        image and embedding that directly in the string output.
+        """
         return f"""
         <div class='pane-plots'>
-            <img src="data:image/png;base64, {self.base64repr.decode('utf-8')}" />
+            <img src="data:image/png;base64, {self.base64repr.decode("utf-8")}" />
         </div>
         """
 
-    def to_dict(self) -> dict:
-        """Serialize this pane to a dictionary that can be saved to file."""
-        return {
-            "fig_width": self.fig_width,
-            "fig_height": self.fig_height,
-            "columns": self.columns,
-            "plot_type": self.plot_type,
-            "subset": self.subset,
-            "ref_subset": self.ref_subset,
-        }
 
-    def from_dict(self, data: dict):
-        """Deserialize data into current instance from dictionary previously stored
-        from ``to_dict()``."""
-        self.fig_width = data["fig_width"]
-        self.fig_height = data["fig_height"]
-        self.columns = data["columns"]
-        self.plot_type = data["plot_type"]
-        self.subset = data["subset"]
-        self.ref_subset = data["ref_subset"]
-
-    def __panel__(self):
-        return self._layout
-
-
-class ConfigurationPane(
-    pn.widgets.base.WidgetBase, pn.custom.PyComponent, pn.reactive.Reactive
-):
+class ConfigurationPane(DashboardPane):
     """A widget to show differences in configuration between runs."""
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         super().__init__(**params)
 
         self.controls = pn.Param(
@@ -1091,22 +1114,9 @@ class ConfigurationPane(
         self.clicker.child = pn.Column(self.df_view)
 
         self._layout = self.clicker
-        self._on_cache_invalidated_callbacks: list[Callable] = []
 
-    def on_cache_invalidated(self, callback: Callable):
-        """Register a callback for any time a previous exported file will no longer
-        match/cached file is no longer valid or current."""
-        self._on_cache_invalidated_callbacks.append(callback)
-
-    def fire_on_cache_invalidated(self):
-        """Trigger all callback functions registered for the cache_invalidated event."""
-        if not hasattr(self, "_on_cache_invalidated_callbacks"):
-            # can happen from initial param settings before end of init?
-            return
-        for callback in self._on_cache_invalidated_callbacks:
-            callback()
-
-    def render(self, configs=None):
+    def render(self, configs: dict[str, dict[str, int | float | np.ndarray | reno.EquationPart]] = None) -> None:
+        """Update the visible components of this widget."""
         if configs is not None:
             self.rendered_configs = configs
 
@@ -1115,31 +1125,16 @@ class ConfigurationPane(
 
     def to_html(self) -> str:
         """Get an HTML-compatible string for the contents of this pane. This is
-        used for generating exported standalone reports, see tab_exporter."""
+        used for generating exported standalone reports, see tab_exporter.
+        """
         return self.df.to_html()
 
-    def to_dict(self) -> dict:
-        """Serialize this pane to a dictionary that can be saved to file."""
-        return {}
 
-    def from_dict(self, data: dict):
-        """Deserialize data into current instance from dictionary previously stored
-        from ``to_dict()``."""
-        return
-
-    def __panel__(self):
-        return self._layout
-
-
-# see comment above PlotsPane
-# https://github.com/holoviz/panel/issues/7689
-# class DiagramPane(pn.custom.PyComponent):
-class DiagramPane(
-    pn.widgets.base.WidgetBase, pn.custom.PyComponent, pn.reactive.Reactive
-):
+class DiagramPane(DashboardPane):
     """A model exploration widget that can be displayed within a tab, a
     stock and flow diagram to visually display how model equations/components
-    are connected."""
+    are connected.
+    """
 
     show_vars = param.Boolean(True, doc="Include variables in the diagram")
     sparklines = param.Boolean(True, doc="Show timeseries plots next to each stock")
@@ -1158,7 +1153,7 @@ class DiagramPane(
 
     fit = param.Boolean(True, doc="Scale image to pane size.")
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         super().__init__(**params)
 
         self.rendered_traces = None
@@ -1214,20 +1209,17 @@ class DiagramPane(
 
         self._layout = self.clicker
 
-        self._on_cache_invalidated_callbacks: list[Callable] = []
-
-    def on_cache_invalidated(self, callback: Callable):
-        """Register a callback for any time a previous exported file will no longer
-        match/cached file is no longer valid or current."""
-        self._on_cache_invalidated_callbacks.append(callback)
-
-    def fire_on_cache_invalidated(self):
-        """Trigger all callback functions registered for the cache_invalidated event."""
-        for callback in self._on_cache_invalidated_callbacks:
-            callback()
+        self.to_serialize = [
+            "show_vars",
+            "sparklines",
+            "sparkdensities",
+            "universe",
+            "include_dependencies",
+            "fit",
+        ]
 
     @param.depends("fit", watch=True)
-    def _update_fit(self, *args):
+    def _update_fit(self, *args: list) -> None:
         if self.fit:
             self.image.sizing_mode = "stretch_both"
             self.clicker.reset_pan()
@@ -1244,9 +1236,10 @@ class DiagramPane(
         "include_dependencies",
         watch=True,
     )
-    def render(self, traces=None):
+    def render(self, traces: dict = None) -> None:
         """Update the visible components of this widget. We save a base64 representation
-        of the diagram so it can be used in the ``to_html()`` call."""
+        of the diagram so it can be used in the ``to_html()`` call.
+        """
         if traces is not None:
             self.rendered_traces = traces
 
@@ -1273,49 +1266,22 @@ class DiagramPane(
         used for generating exported standalone reports, see tab_exporter.
 
         For this pane, this works by creating a base64 representation of the diagram
-        and embedding that directly in the string output."""
+        and embedding that directly in the string output.
+        """
         return f"""
         <div class='pane-diagram'>
-            <img src="data:image/png;base64, {self.base64repr.decode('utf-8')}" />
+            <img src="data:image/png;base64, {self.base64repr.decode("utf-8")}" />
         </div>
         """
 
-    def to_dict(self) -> dict:
-        """Serialize this pane to a dictionary that can be saved to file."""
-        return {
-            "show_vars": self.show_vars,
-            "sparklines": self.sparklines,
-            "sparkdensities": self.sparkdensities,
-            "universe": self.universe,
-            "include_dependencies": self.include_dependencies,
-            "fit": self.fit,
-        }
 
-    def from_dict(self, data: dict):
-        """Deserialize data into current instance from dictionary previously stored
-        from ``to_dict()``."""
-        self.show_vars = data["show_vars"]
-        self.sparklines = data["sparklines"]
-        self.sparkdensities = data["sparkdensities"]
-        self.universe = data["universe"]
-        self.include_dependencies = data["include_dependencies"]
-        self.fit = data["fit"]
-
-    def __panel__(self):
-        return self._layout
-
-
-# see comment above PlotsPane
-# class EditableTextPane(pn.custom.PyComponent):
-# https://github.com/holoviz/panel/issues/7689
-class EditableTextPane(
-    pn.widgets.base.WidgetBase, pn.custom.PyComponent, pn.reactive.Reactive
-):
+class EditableTextPane(DashboardPane):
     """A model exploration widget that can be displayed within a tab, a user-editable
     text field meant for including surrounding descriptions or "storyboarding" in a
-    model exploration/analysis."""
+    model exploration/analysis.
+    """
 
-    def __init__(self, **params):
+    def __init__(self, **params: dict):
         self.editor = pn.widgets.TextEditor(max_width=320)
         super().__init__(**params)
 
@@ -1338,50 +1304,32 @@ class EditableTextPane(
         self.controls = pn.Column(self.editor)
 
         self._layout = self.clicker
-        self._on_cache_invalidated_callbacks: list[Callable] = []
 
-    def on_cache_invalidated(self, callback: Callable):
-        """Register a callback for any time a previous exported file will no longer
-        match/cached file is no longer valid or current."""
-        self._on_cache_invalidated_callbacks.append(callback)
-
-    def fire_on_cache_invalidated(self):
-        """Trigger all callback functions registered for the cache_invalidated event."""
-        for callback in self._on_cache_invalidated_callbacks:
-            callback()
+        self.to_serialize = ["text"]
 
     @pn.depends("editor.value", watch=True)
-    def _update_text(self, *args):
+    def _update_text(self, *args: list) -> None:
         self.text = self.editor.value
         self.view.object = self.text
         self.fire_on_cache_invalidated()
 
     def to_html(self) -> str:
         """Get an HTML-compatible string for the contents of this pane. This is
-        used for generating exported standalone reports, see tab_exporter."""
+        used for generating exported standalone reports, see tab_exporter.
+        """
         return f"""
         <div class='pane-text'>
             {self.text}
         </div>
         """
 
-    def to_dict(self) -> dict:
-        """Serialize this pane to a dictionary that can be saved to file."""
-        return {"text": self.text}
-
-    def from_dict(self, data: dict):
-        """Deserialize data from passed dictionary to populate this widget."""
-        self.editor.value = data["text"]
-
-    def __panel__(self):
-        return self._layout
-
 
 class MainView(pn.viewable.Viewer):
     """The exploration tab container, central view of graphs/plots etc.,
-    between the two sidebars."""
+    between the two sidebars.
+    """
 
-    def __init__(self, model, **params):
+    def __init__(self, model: reno.Model, **params: dict):
         self.editing_layout = pn.widgets.Toggle(
             name="Edit layout", value=False, button_type="light", button_style="outline"
         )
@@ -1434,7 +1382,7 @@ class MainView(pn.viewable.Viewer):
 
         self._on_new_controls_needed_callbacks: list[Callable] = []
 
-    def on_new_controls_needed(self, callback: Callable):
+    def on_new_controls_needed(self, callback: Callable) -> None:
         """Register a function to execute whenever a widget within the tab requests
         a new set of helper controls be displayed in the sidebar.
 
@@ -1442,19 +1390,19 @@ class MainView(pn.viewable.Viewer):
         """
         self._on_new_controls_needed_callbacks.append(callback)
 
-    def fire_on_new_controls_needed(self, controls_layout):
+    def fire_on_new_controls_needed(self, controls_layout: pn.layout.Panel) -> None:
         """Trigger the callbacks for the new_controls_needed event."""
         for callback in self._on_new_controls_needed_callbacks:
             callback(controls_layout)
 
-    def create_tab(self):
+    def create_tab(self) -> PanesSet:
         """Make a new tab/gridstack contents and hook up all relevant event handlers for it."""
         new_tab = PanesSet(self.model)
         new_tab.on_new_controls_needed(self.fire_on_new_controls_needed)
         new_tab.on_name_changed(partial(self._handle_tab_name_changed, tab_obj=new_tab))
         return new_tab
 
-    def _wrap_tab_obj(self, tab_obj, title: str):
+    def _wrap_tab_obj(self, tab_obj: PanesSet, title: str) -> pn.Column:
         """The inner contents of a tab (the gridstack) needs to be scrollable,
         couldn't get this to work right applying directly to the gridstack object itself.
         """
@@ -1465,7 +1413,10 @@ class MainView(pn.viewable.Viewer):
             sizing_mode="stretch_both",
         )
 
-    def _handle_tab_name_changed(self, new_name, tab_obj):
+    def _handle_tab_name_changed(self, new_name: str, tab_obj: PanesSet) -> None:
+        """There's no way to directly modify the name of a Panel tab, so simply reset
+        the tuple contents.
+        """
         index = -1
         for i, tab in enumerate(self.tab_contents):
             if tab[1] == tab_obj:
@@ -1480,7 +1431,7 @@ class MainView(pn.viewable.Viewer):
         self.refresh_tab_contents()
 
     @pn.depends("tabs.active", watch=True)
-    def _handle_pnl_tab_switched(self, *args):
+    def _handle_pnl_tab_switched(self, *args: list) -> None:
         # clicking on the last tab is the "+", so add new tab
         if self.tabs.active == len(self.tabs) - 1:
             new_tab = self.create_tab()
@@ -1492,23 +1443,23 @@ class MainView(pn.viewable.Viewer):
             self.tab_contents[self.tabs.active][1].controls
         )
 
-    def refresh_tab_contents(self):
+    def refresh_tab_contents(self) -> None:
         """Refresh tabs and panels inside of them/re-send to frontend."""
         self.tabs[:] = [self._wrap_tab_obj(tab[1], tab[0]) for tab in self.tab_contents]
 
-    def _handle_pnl_add_text_clicked(self, *args):
+    def _handle_pnl_add_text_clicked(self, *args: list) -> None:
         self.active_tab.add_text_pane()
 
-    def _handle_pnl_add_diagram_clicked(self, *args):
+    def _handle_pnl_add_diagram_clicked(self, *args: list) -> None:
         self.active_tab.add_diagram_pane()
 
-    def _handle_pnl_add_plots_clicked(self, *args):
+    def _handle_pnl_add_plots_clicked(self, *args: list) -> None:
         self.active_tab.add_plots_pane()
 
-    def _handle_pnl_add_config_clicked(self, *args):
+    def _handle_pnl_add_config_clicked(self, *args: list) -> None:
         self.active_tab.add_config_pane()
 
-    def update_traces(self, traces):
+    def update_traces(self, traces: dict[str, tuple]) -> None:
         """Change the traces being used in the current tab with those passed in."""
         self.active_tab.active_traces = {key: val[1] for key, val in traces.items()}
         self.active_tab.active_configs = {key: val[0] for key, val in traces.items()}
@@ -1520,7 +1471,7 @@ class MainView(pn.viewable.Viewer):
                 pane.render(self.active_tab.active_configs)
 
     @pn.depends("editing_layout.value", watch=True)
-    def _handle_edit_layout_changed(self, *args):
+    def _handle_edit_layout_changed(self, *args: list) -> None:
         if self.editing_layout.value:
             self.active_tab.gstack.allow_drag = True
             self.active_tab.gstack.allow_resize = True
@@ -1538,9 +1489,10 @@ class MainView(pn.viewable.Viewer):
 
         return data
 
-    def from_dict(self, data: dict, traces: dict):
+    def from_dict(self, data: dict, traces: dict) -> None:
         """Deserialize all tabs and simulation runs from passed data and insert them
-        into this instance."""
+        into this instance.
+        """
         # clear existing tabs
         self.tab_contents = []
 
@@ -1561,10 +1513,11 @@ class MainView(pn.viewable.Viewer):
 class ViewControls(pn.viewable.Viewer):
     """Any settings and config for the current main view, this shows up in
     the right sidebar and is populated when widgets in a tab are clicked/
-    new control widgets are requested. (see new_controls_needed event
-    scattered throughout other components)"""
+    new control widgets are requested. (See new_controls_needed event
+    scattered throughout other components).
+    """
 
-    def __init__(self, **params):
+    def __init__(self, **params: dict):
         super().__init__(**params)
         self._layout = pn.Column(pn.pane.HTML("Controls!"))
 
@@ -1574,12 +1527,13 @@ class ViewControls(pn.viewable.Viewer):
 
 class RunRow(pn.viewable.Viewer):
     """Selector row for a specific simulation run, allowing deletion, inclusion/
-    exclusion from visualizations in current tab, etc."""
+    exclusion from visualizations in current tab, etc.
+    """
 
     visible = param.Boolean(True)
     run_name = param.String("")
 
-    def __init__(self, trace, config, observations, **params):
+    def __init__(self, trace: xr.Dataset, config: dict[str, int | float | np.ndarray | reno.EquationPart], observations: list[reno.Observable], **params: dict):
         if config is not None:
             # self.config = {key: str(val) for key, val in config.items()}
             self.config = {}
@@ -1636,7 +1590,7 @@ class RunRow(pn.viewable.Viewer):
         self._selected_callbacks: list[Callable] = []
         self._removed_callbacks: list[Callable] = []
 
-    def reset_view(self):
+    def reset_view(self) -> None:
         self._layout.objects = [
             self.select_btn,
             self.edit_btn,
@@ -1645,7 +1599,7 @@ class RunRow(pn.viewable.Viewer):
             self.remove_btn,
         ]
 
-    def edit_view(self):
+    def edit_view(self) -> None:
         self._layout.objects = [
             pn.Param(
                 self,
@@ -1657,26 +1611,26 @@ class RunRow(pn.viewable.Viewer):
             self.done_btn,
         ]
 
-    def on_selected(self, callback: callable):
+    def on_selected(self, callback: callable) -> None:
         """Register a function for when a run is selected or deselected.
 
         Callbacks should take a single boolean, ``True`` if it's selected.
         """
         self._selected_callbacks.append(callback)
 
-    def fire_on_selected(self, selected: bool):
+    def fire_on_selected(self, selected: bool) -> None:
         """Trigger all callback functions registered for selected event."""
         for callback in self._selected_callbacks:
             callback(selected)
 
-    def on_removed(self, callback: callable):
+    def on_removed(self, callback: callable) -> None:
         """Register a function for when a simulation run is removed.
 
         Callbacks should take no parameters.
         """
         self._removed_callbacks.append(callback)
 
-    def fire_on_removed(self):
+    def fire_on_removed(self) -> None:
         """Trigger all callback functions registered for removed event."""
         for callback in self._removed_callbacks:
             callback(self)
@@ -1738,7 +1692,8 @@ class RunsList(pn.viewable.Viewer):
     """Collection of RunRows, tracks and allows choosing which previous runs to include in
     main view for current tab.
 
-    Includes optional run progress bar for showing status of in-progress run."""
+    Includes optional run progress bar for showing status of in-progress run.
+    """
 
     # TODO: the goal is to make selection apply per tab, but this isn't actually
     # implemented yet.
@@ -1782,14 +1737,15 @@ class RunsList(pn.viewable.Viewer):
     def get_selected_runs(self) -> list[tuple[str, dict, xr.Dataset]]:
         """Collect all runrows that are set to display, returns a tuple with
         the name of the run, dictionary config for it, and the xarray dataset
-        with the simulation data."""
+        with the simulation data.
+        """
         selected_runs = []
         for run in self.runs:
             if run.visible:
                 selected_runs.append((run.run_name, run.config, run.trace))
         return selected_runs
 
-    def add_run(self, config, trace: xr.Dataset, observations, name=""):
+    def add_run(self, config: dict[str, int | float | np.ndarray | reno.EquationPart], trace: xr.Dataset, observations: list[reno.Observation], name:str = ""):
         """Create a new RunRow with the passed configuration and data."""
         run = RunRow(
             run_name=name,
@@ -1954,7 +1910,7 @@ def create_explorer():  # noqa: C901
             data = json.load(infile)
             name = model[: model.rfind(".")]
             if data["name"] is not None:
-                name += f' ({data["name"]})'
+                name += f" ({data['name']})"
             models[name] = f"{WORKSPACE_FOLDER}/models/{model}"
 
     # ----------------------------------------------------------------------
@@ -2092,7 +2048,8 @@ def create_explorer():  # noqa: C901
 
     def refresh_loadable_workspaces():
         """Entry point for the get_recursive_workspaces function, populates
-        the load_workspace_controls widget."""
+        the load_workspace_controls widget.
+        """
         nonlocal load_session_controls
 
         load_session_controls.objects = [
@@ -2102,7 +2059,8 @@ def create_explorer():  # noqa: C901
 
     def get_active_workspace_switchers() -> list[pn.widgets.base.Widget]:
         """Create a styled set of buttons corresponding to each active workspace in the cache,
-        where clicking one changes the displayed explorer to that cached one."""
+        where clicking one changes the displayed explorer to that cached one.
+        """
         controls = []
         if len(pn.state.cache["active_workspaces"]) == 0:
             controls.append(
@@ -2151,7 +2109,8 @@ def create_explorer():  # noqa: C901
 
     def save_workspace(self, *args):
         """Save the current system exploration workspace to whatever path is set in the
-        workspace_name widget."""
+        workspace_name widget.
+        """
         nonlocal active_session_name
 
         try:
@@ -2178,7 +2137,8 @@ def create_explorer():  # noqa: C901
 
     def server_ready():
         """This gets called every refresh or page change, and flipping the theme
-        toggle technically makes the page refresh with a new get argument"""
+        toggle technically makes the page refresh with a new get argument
+        """
         if b"dark" in pn.state.session_args.get("theme", [b"dark"]):
             print("DARK MODE ACTIVATED.")
             reno.diagrams.set_dark_mode(True)
