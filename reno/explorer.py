@@ -1,4 +1,4 @@
-"""Interactive panel interface and relevant components to allow exploring models live."""
+"""Interactive panel interface and components to allow exploring models live."""
 
 # make it so we don't have to quote every type annotation ever
 from __future__ import annotations
@@ -13,9 +13,10 @@ import traceback
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+from typing import ClassVar
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import panel as pn
 import param
@@ -128,12 +129,6 @@ class Explorer(pn.custom.PyComponent):
         self.run_index = 0
         """Running count of runs for default run name"""
 
-        # NOTE: can't get terminal to live update with progress output from pymc
-        # runs, haven't sufficiently explored why.
-        # self.terminal = pn.widgets.Terminal(write_to_console=True)
-        # sys.stdout = self.terminal
-        # sys.stderr = self.terminal
-
         self._layout = pn.Row(
             pn.Column(self.vars_editor, self.observables, styles=dict(height="100%")),
             self.view,
@@ -155,7 +150,7 @@ class Explorer(pn.custom.PyComponent):
         progress.
 
         Since displaying this progress in the interface is fairly critical (large models
-        may take significant time to complete posterior sampling), we commit some minor 
+        may take significant time to complete posterior sampling), we commit some minor
         tomfoolery and monkey business to make that happen.
         """
         # from rich.progress import Progress
@@ -236,11 +231,15 @@ class Explorer(pn.custom.PyComponent):
             self.runs_list.progress.bar_color = "danger"
         self.set_running(False)
 
-    def _handle_selected_rows_changed(self, runs: list[tuple[str, dict, xr.Dataset]]) -> None:
+    def _handle_selected_rows_changed(
+        self, runs: list[tuple[str, dict, xr.Dataset]]
+    ) -> None:
         traces = {run[0]: (run[1], run[2]) for run in runs}
         self.view.update_traces(traces)
 
-    def _handle_requested_controls(self, controls_layout: pn.layout.ListPanel) -> None:
+    def _handle_requested_controls(
+        self, controls_layout: list[pn.viewable.Viewable]
+    ) -> None:
         self.controls._layout.objects = [*controls_layout]
 
     def to_dict(self) -> dict:
@@ -264,7 +263,8 @@ class Explorer(pn.custom.PyComponent):
         explorer.view.from_dict(data["tabs"], traces)
         return explorer
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -337,7 +337,8 @@ class FreeVarsEditor(pn.viewable.Viewer):
         self.model.n = self.n.value
         self.model.steps = self.steps.value
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -385,7 +386,8 @@ class Observable(pn.viewable.Viewer):
             width=320,
         )
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -458,7 +460,8 @@ class ObservablesList(pn.viewable.Viewer):
             observations.append(obs)
         return observations
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -480,7 +483,7 @@ class ClickablePane(pn.custom.JSComponent):
     drag_scroll_enabled = param.Boolean(False)
     """Whether to enable scrolling the wrapped component by clicking and dragging."""
 
-    _stylesheets = [
+    _stylesheets: ClassVar[list[str]] = [
         """
         :root {
             overflow: hidden;
@@ -667,8 +670,10 @@ class PanesSet(pn.viewable.Viewer):
         a constantly growing interface, though this is currently a bit simplistic and
         doesn't allow manually setting or reducing yet.
         """
-        pane_to_add.clicker.on_click(partial(self.fire_on_new_controls_needed, pane_to_add.controls, pane_to_add))
-        
+        pane_to_add.clicker.on_click(
+            partial(self.fire_on_new_controls_needed, pane_to_add.controls, pane_to_add)
+        )
+
         # each "row" gets a height of 400px, at some point we should make this
         # configurable.
         self.gstack.height = 400 * (self.cells_height + 1)
@@ -680,7 +685,7 @@ class PanesSet(pn.viewable.Viewer):
         self.panes.append(pane_to_add)
         pane_to_add.on_cache_invalidated(self.invalidate_downloads)
         self.invalidate_downloads()
-        
+
         self.fire_on_new_controls_needed(pane_to_add.controls, pane_to_add)
 
     def get_pane_delete_button(self, pane: DashboardPane) -> pn.widgets.Button:
@@ -710,7 +715,7 @@ class PanesSet(pn.viewable.Viewer):
         self.add_pane(diagram_pane)
         diagram_pane.render(self.active_traces)
 
-    def add_config_pane(self) -> NOne:
+    def add_config_pane(self) -> None:
         """Create a config comparison widget and add it to the tab
         interface.
         """
@@ -722,11 +727,13 @@ class PanesSet(pn.viewable.Viewer):
         """Register a function to execute whenever a widget within the tab requests
         a new set of helper controls be displayed in the sidebar.
 
-        Callbacks should take a panel widget that can be listed (``*widget``).
+        Callbacks should take a list of panel viewables.
         """
         self._on_new_controls_needed_callbacks.append(callback)
 
-    def fire_on_new_controls_needed(self, controls_layout: pn.layout.Panel, pane: DashboardPane) -> None:
+    def fire_on_new_controls_needed(
+        self, controls_layout: pn.viewable.Viewable, pane: DashboardPane
+    ) -> None:
         """Trigger the callbacks for the new_controls_needed event."""
         for callback in self._on_new_controls_needed_callbacks:
             if pane is not None:
@@ -889,7 +896,8 @@ class PanesSet(pn.viewable.Viewer):
         self.gstack.objects = obj_dict
         self.panes = list(obj_dict.values())
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -902,6 +910,7 @@ class DashboardPane(
     """Parent class for any configurable display that can be added to the main
     tab views.
     """
+
     def __init__(self, **params: dict):
         super().__init__(**params)
 
@@ -911,10 +920,10 @@ class DashboardPane(
         self._layout = None
         """Container for the pane widget itself."""
 
-        self.to_serialize: list[str] = []  
+        self.to_serialize: list[str] = []
         """List of string attributes on class to use in default to_dict/from_dict,
         this should be set in subclass."""
-        
+
         self._on_cache_invalidated_callbacks: list[Callable] = []
 
     def on_cache_invalidated(self, callback: Callable) -> None:
@@ -939,9 +948,9 @@ class DashboardPane(
         for key, value in data.items():
             setattr(self, key, value)
 
-    def __panel__(self) -> pn.layout.Panel:
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
-    
 
 
 class PlotsPane(DashboardPane):
@@ -1000,7 +1009,7 @@ class PlotsPane(DashboardPane):
             "ref_subset",
         ]
 
-        # TODO: (4/29/205) can't use both ipywidgets _and_ gridstack right now??
+        # TODO: (4/29/2025) can't use both ipywidgets _and_ gridstack right now??
         # self.fig = pn.pane.Matplotlib()
         self.image = pn.pane.Image(sizing_mode="stretch_both")
         self.clicker = ClickablePane(sizing_mode="stretch_both")
@@ -1115,7 +1124,12 @@ class ConfigurationPane(DashboardPane):
 
         self._layout = self.clicker
 
-    def render(self, configs: dict[str, dict[str, int | float | np.ndarray | reno.EquationPart]] = None) -> None:
+    def render(
+        self,
+        configs: dict[
+            str, dict[str, int | float | np.ndarray | reno.EquationPart]
+        ] = None,
+    ) -> None:
         """Update the visible components of this widget."""
         if configs is not None:
             self.rendered_configs = configs
@@ -1357,7 +1371,7 @@ class MainView(pn.viewable.Viewer):
         self.btn_add_plots.on_click(self._handle_pnl_add_plots_clicked)
         self.btn_add_config.on_click(self._handle_pnl_add_config_clicked)
 
-        self.controls = pn.Row(
+        self.dashboard_pane_btns = pn.Row(
             self.btn_add_diagram,
             self.btn_add_text,
             self.btn_add_plots,
@@ -1366,17 +1380,21 @@ class MainView(pn.viewable.Viewer):
             self.editing_layout,
             sizing_mode="stretch_width",
         )
+        """The row along the bottom of the main view with the add dashboard pane
+        buttons."""
 
         initial_tab = self.create_tab()
         self.active_tab = initial_tab
 
         self.tab_contents = [(initial_tab.tab_name, initial_tab), ("+", None)]
+        """The list of panel tab tuples, this is what gets applied to the panel tabs
+        layout."""
 
         self.refresh_tab_contents()
 
         self._layout = pn.Column(
             self.tabs,
-            self.controls,
+            self.dashboard_pane_btns,
             styles=dict(height="calc(100% - 50px)"),
         )
 
@@ -1386,17 +1404,21 @@ class MainView(pn.viewable.Viewer):
         """Register a function to execute whenever a widget within the tab requests
         a new set of helper controls be displayed in the sidebar.
 
-        Callbacks should take a panel widget.
+        Callbacks should take a list of panel viewables.
         """
         self._on_new_controls_needed_callbacks.append(callback)
 
-    def fire_on_new_controls_needed(self, controls_layout: pn.layout.Panel) -> None:
+    def fire_on_new_controls_needed(
+        self, controls_layout: list[pn.viewable.Viewable]
+    ) -> None:
         """Trigger the callbacks for the new_controls_needed event."""
         for callback in self._on_new_controls_needed_callbacks:
             callback(controls_layout)
 
     def create_tab(self) -> PanesSet:
-        """Make a new tab/gridstack contents and hook up all relevant event handlers for it."""
+        """Make a new tab/gridstack contents and hook up all relevant event handlers for
+        it.
+        """
         new_tab = PanesSet(self.model)
         new_tab.on_new_controls_needed(self.fire_on_new_controls_needed)
         new_tab.on_name_changed(partial(self._handle_tab_name_changed, tab_obj=new_tab))
@@ -1404,7 +1426,8 @@ class MainView(pn.viewable.Viewer):
 
     def _wrap_tab_obj(self, tab_obj: PanesSet, title: str) -> pn.Column:
         """The inner contents of a tab (the gridstack) needs to be scrollable,
-        couldn't get this to work right applying directly to the gridstack object itself.
+        couldn't get this to work right applying directly to the gridstack object
+        itself.
         """
         return pn.Column(
             tab_obj,
@@ -1506,7 +1529,8 @@ class MainView(pn.viewable.Viewer):
         self.tabs.active = 0
         self._handle_pnl_tab_switched()
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -1521,7 +1545,8 @@ class ViewControls(pn.viewable.Viewer):
         super().__init__(**params)
         self._layout = pn.Column(pn.pane.HTML("Controls!"))
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
@@ -1533,7 +1558,13 @@ class RunRow(pn.viewable.Viewer):
     visible = param.Boolean(True)
     run_name = param.String("")
 
-    def __init__(self, trace: xr.Dataset, config: dict[str, int | float | np.ndarray | reno.EquationPart], observations: list[reno.Observable], **params: dict):
+    def __init__(
+        self,
+        trace: xr.Dataset,
+        config: dict[str, int | float | np.ndarray | reno.EquationPart],
+        observations: list[reno.Observable],
+        **params: dict,
+    ):
         if config is not None:
             # self.config = {key: str(val) for key, val in config.items()}
             self.config = {}
@@ -1591,6 +1622,7 @@ class RunRow(pn.viewable.Viewer):
         self._removed_callbacks: list[Callable] = []
 
     def reset_view(self) -> None:
+        """Change the frontend view for this row back to the default visual display."""
         self._layout.objects = [
             self.select_btn,
             self.edit_btn,
@@ -1600,6 +1632,9 @@ class RunRow(pn.viewable.Viewer):
         ]
 
     def edit_view(self) -> None:
+        """Change the frontend view for this row to an editable textbox to allow changing
+        the name.
+        """
         self._layout.objects = [
             pn.Param(
                 self,
@@ -1635,28 +1670,28 @@ class RunRow(pn.viewable.Viewer):
         for callback in self._removed_callbacks:
             callback(self)
 
-    def _handle_pnl_select_btn_clicked(self, *args):
+    def _handle_pnl_select_btn_clicked(self, *args: list) -> None:
         self.visible = not self.visible
         self.fire_on_selected(self.visible)
 
     @param.depends("run_name", watch=True)
-    def _handle_run_name_changed(self, *args):
+    def _handle_run_name_changed(self, *args: list) -> None:
         self.label.object = f"{self.run_name}"
         # technically should make separate event handler for name changed, but
         # it's fine.
         self.fire_on_selected(self.visible)
 
-    def _handle_pnl_remove_btn_clicked(self, *args):
+    def _handle_pnl_remove_btn_clicked(self, *args: list) -> None:
         self.fire_on_removed()
 
-    def _handle_pnl_edit_btn_clicked(self, *args):
+    def _handle_pnl_edit_btn_clicked(self, *args: list) -> None:
         self.edit_view()
 
-    def _handle_pnl_done_btn_clicked(self, *args):
+    def _handle_pnl_done_btn_clicked(self, *args: list) -> None:
         self.reset_view()
 
     @param.depends("visible", watch=True)
-    def _update_selected_btn(self):
+    def _update_selected_btn(self) -> None:
         if self.visible:
             self.select_btn.icon = icon_filled_check
         else:
@@ -1664,7 +1699,8 @@ class RunRow(pn.viewable.Viewer):
 
     def to_dict(self) -> dict:
         """Serialize run row to a dictionary that can be saved to file. Note that
-        currently this can get quite large as the raw trace dictionary is dumped as well.
+        currently this can get quite large as the raw trace dictionary is dumped as
+        well.
         """
         # TODO: figure out a more efficient way of separately saving the trace
         # in something like a pickle
@@ -1675,7 +1711,7 @@ class RunRow(pn.viewable.Viewer):
             # TODO: observations
         }
 
-    def from_dict(self, data: dict):
+    def from_dict(self, data: dict) -> None:
         """Deserialize a run into the current instance from the passed data."""
         print("Loading run/trace ", data["run_name"])
         self.run_name = data["run_name"]
@@ -1684,13 +1720,14 @@ class RunRow(pn.viewable.Viewer):
         self.config = data["config"]
         # TODO: observations
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
 class RunsList(pn.viewable.Viewer):
-    """Collection of RunRows, tracks and allows choosing which previous runs to include in
-    main view for current tab.
+    """Collection of RunRows, tracks and allows choosing which previous runs to include
+    in main view for current tab.
 
     Includes optional run progress bar for showing status of in-progress run.
     """
@@ -1698,19 +1735,18 @@ class RunsList(pn.viewable.Viewer):
     # TODO: the goal is to make selection apply per tab, but this isn't actually
     # implemented yet.
 
-    def __init__(self, **params):
+    def __init__(self, **params: dict):
         super().__init__(**params)
         self.runs = []
         self._layout = pn.Column(width=330)
 
-        # self.progress = pn.indicators.Progress(sizing_mode="stretch_width", visible=False, max=100)
         self.progress = pn.indicators.Progress(visible=False, max=100)
 
         self._selected_runs_changed_callbacks: list[Callable] = []
 
         self.refresh_rows()
 
-    def on_selected_runs_changed(self, callback: Callable):
+    def on_selected_runs_changed(self, callback: Callable) -> None:
         """Register a function to execute when the set of simulation runs selected to
         display is changed.
 
@@ -1721,15 +1757,22 @@ class RunsList(pn.viewable.Viewer):
         """
         self._selected_runs_changed_callbacks.append(callback)
 
-    def fire_on_selected_runs_changed(self, runs: list[tuple[str, dict, xr.Dataset]]):
+    def fire_on_selected_runs_changed(
+        self,
+        runs: list[
+            tuple[
+                str, dict[str, int | float | np.ndarray | reno.EquationPart], xr.Dataset
+            ]
+        ],
+    ) -> None:
         """Trigger all registered callbacks for the selected_runs_changed event."""
         for callback in self._selected_runs_changed_callbacks:
             callback(runs)
 
-    def _handle_row_changed(self, *args):
+    def _handle_row_changed(self, *args: list) -> None:
         self.fire_on_selected_runs_changed(self.get_selected_runs())
 
-    def _handle_row_deleted(self, row_instance):
+    def _handle_row_deleted(self, row_instance: RunRow) -> None:
         self.runs.remove(row_instance)
         self.refresh_rows()
         self._handle_row_changed()
@@ -1745,7 +1788,13 @@ class RunsList(pn.viewable.Viewer):
                 selected_runs.append((run.run_name, run.config, run.trace))
         return selected_runs
 
-    def add_run(self, config: dict[str, int | float | np.ndarray | reno.EquationPart], trace: xr.Dataset, observations: list[reno.Observation], name:str = ""):
+    def add_run(
+        self,
+        config: dict[str, int | float | np.ndarray | reno.EquationPart],
+        trace: xr.Dataset,
+        observations: list[reno.Observation],
+        name: str = "",
+    ) -> None:
         """Create a new RunRow with the passed configuration and data."""
         run = RunRow(
             run_name=name,
@@ -1759,7 +1808,7 @@ class RunsList(pn.viewable.Viewer):
         self.refresh_rows()
         self._handle_row_changed()
 
-    def refresh_rows(self):
+    def refresh_rows(self) -> None:
         """Update the layout to show all runrows."""
         obj_list = [pn.pane.HTML("<b>Model runs</b>"), *self.runs, self.progress]
         self._layout.objects = obj_list
@@ -1772,8 +1821,10 @@ class RunsList(pn.viewable.Viewer):
 
         return data
 
-    def from_dict(self, data: dict):
-        """Deserialize into this instance every run found in the passed data dictionary."""
+    def from_dict(self, data: dict) -> None:
+        """Deserialize into this instance every run found in the passed data
+        dictionary.
+        """
         for run in data["runs"]:
             self.add_run(None, None, None)
             runrow = self.runs[-1]
@@ -1781,18 +1832,19 @@ class RunsList(pn.viewable.Viewer):
 
         self.fire_on_selected_runs_changed(self.get_selected_runs())
 
-    def __panel__(self):
+    def __panel__(self) -> pn.viewable.Viewable:
+        """Required function to return the actual frontend component."""
         return self._layout
 
 
 class BetterAccordion(pn.custom.JSComponent):
-    """Simple collapsible accordion, for use in left meta sidebar 'file explorer'"""
+    """Simple collapsible accordion, for use in left meta sidebar 'file explorer'."""
 
     # Made this because panel's accordion has very limited styling capabilities.
     child = pn.custom.Child()
     label = param.String()
 
-    _stylesheets = [
+    _stylesheets: ClassVar[list[str]] = [
         """
         :host {
             font-family: var(--body-font);
@@ -1874,8 +1926,10 @@ class BetterAccordion(pn.custom.JSComponent):
     """
 
 
-def create_explorer():  # noqa: C901
-    """Set up and return full servable interactive explorer app UI inside a pretty template."""
+def create_explorer() -> pn.template.Template:  # noqa: C901
+    """Set up and return full servable interactive explorer app UI inside a pretty
+    template.
+    """
     # NOTE: this is effectively a class with all the local functions etc,
     # leaving as a function because of how pn.serve works - it expects a
     # dictionary with values that are functions that return servable things.
@@ -1885,7 +1939,6 @@ def create_explorer():  # noqa: C901
     pn.extension(
         "gridstack",
         "texteditor",
-        "terminal",
         notifications=True,
         nthreads=4,
         theme="dark",
@@ -1896,36 +1949,38 @@ def create_explorer():  # noqa: C901
     if "active_workspaces" not in pn.state.cache:
         pn.state.cache["active_workspaces"] = {}
 
-    # find and load any models from pre-defined model list
+    # Get a list of pre-defined model names/model paths
     # (the /models folder wherever workspaces are being stored)
-    if not os.path.exists(f"{WORKSPACE_FOLDER}/models"):
-        os.makedirs(f"{WORKSPACE_FOLDER}/models", exist_ok=True)
-    model_list = os.listdir(f"{WORKSPACE_FOLDER}/models")
-
-    models = {}
-    for model in model_list:
-        if not model.endswith(".json"):
+    models_path = Path(f"{WORKSPACE_FOLDER}/models")
+    if not models_path.exists():
+        models_path.mkdir(parents=True)
+    models: dict[str, Path] = {}
+    for model_path in models_path.iterdir():
+        if model_path.suffix != ".json":
             continue
-        with open(f"{WORKSPACE_FOLDER}/models/{model}") as infile:
+        name = model_path.stem
+        # include the model name found within the model file
+        with model_path.open() as infile:
             data = json.load(infile)
-            name = model[: model.rfind(".")]
             if data["name"] is not None:
                 name += f" ({data['name']})"
-            models[name] = f"{WORKSPACE_FOLDER}/models/{model}"
+        models[name] = model_path
 
     # ----------------------------------------------------------------------
     # ---- functions and event handlers for use by the overall template ----
     # ----------------------------------------------------------------------
 
-    def load_workspace(*args, path: str):
-        """Load all workspace data for a particular exploration from the specified path."""
+    def load_workspace(*args: list, path: str) -> None:
+        """Load all workspace data for a particular exploration from the specified
+        path.
+        """
         # (path is after *args because this is the target of an event handler
         # and is populated via a partial)
         nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
 
         main_ui_container.loading = True
         try:
-            with open(path) as infile:
+            with Path(path).open() as infile:
                 data = json.load(infile)
             ex = Explorer.from_dict(data)
             main_ui_container.objects = [ex._layout]
@@ -1945,19 +2000,18 @@ def create_explorer():  # noqa: C901
         active_session_name = path_workspace_name
         refresh_active_workspaces()
 
-    def new_model_workspace(*args, model_path: str):
-        """Start a blank exploration workspace using a model loaded from the specified path."""
+    def new_model_workspace(*args: list, model_path: Path) -> None:
+        """Start a blank exploration workspace using a model loaded from the specified
+        path.
+        """
         nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
 
         try:
-            model_path_name = model_path[
-                model_path.rfind("/") + 1 : model_path.rfind(".")
-            ]
-            model = reno.model.Model.load(model_path)
+            model = reno.model.Model.load(str(model_path))
             ex = Explorer(model)
             main_ui_container.objects = [ex._layout]
             session_date = datetime.datetime.now().date().isoformat()
-            name = f"{model_path_name}/Session-{session_date}"
+            name = f"{model_path.stem}/Session-{session_date}"
 
             # make sure we don't conflict with an existing active session
             name_check = name
@@ -1980,8 +2034,8 @@ def create_explorer():  # noqa: C901
             )
             print(traceback.format_exc())
 
-    def switch_active_workspace(*args, name: str):
-        """Change to a different explorer UI (different active workspace)"""
+    def switch_active_workspace(*args: list, name: str) -> None:
+        """Change to a different explorer UI (different active workspace)."""
         nonlocal active_explorer, workspace_name, main_ui_container, active_session_name
         try:
             ex = pn.state.cache["active_workspaces"][name]
@@ -1994,7 +2048,7 @@ def create_explorer():  # noqa: C901
             print(traceback.format_exc())
         refresh_active_workspaces()
 
-    def close_workspace(*args, name: str):
+    def close_workspace(*args: list, name: str) -> None:
         """Remove explorer from cache."""
         nonlocal active_explorer, active_session_name, workspace_name
 
@@ -2009,18 +2063,20 @@ def create_explorer():  # noqa: C901
 
         refresh_active_workspaces()
 
-    def get_recursive_workspaces(starting_path: str) -> list[pn.widgets.base.Widget]:
-        """Find all previously saved exploration workspaces by recursing through the folders
-        starting at the root workspaces folder.
+    def get_recursive_workspaces(
+        starting_path: Path,
+    ) -> list[pn.widgets.Button | BetterAccordion]:
+        """Find all previously saved exploration workspaces by recursing through the
+        folders starting at the root workspaces folder.
 
-        This creates a set of nested BetterAccordion components with buttons for each found
-        workspaces that roughly aligns with the actual folder structure, essentially a "workspaces
-        file browser".
+        This creates a set of nested BetterAccordion components with buttons for each
+        found workspaces that roughly aligns with the actual folder structure,
+        essentially a "workspaces file browser".
         """
         controls = []
-        for subpath in os.listdir(starting_path):
-            if subpath.endswith(".json"):
-                workspace_name = subpath[: subpath.rfind(".")]
+        for subpath in starting_path.iterdir():
+            if subpath.suffix == ".json":
+                workspace_name = str(subpath.with_suffix(""))
                 button = pn.widgets.Button(
                     name=workspace_name,
                     button_type="primary",
@@ -2032,11 +2088,11 @@ def create_explorer():  # noqa: C901
                 )
                 controls.append(button)
             # recurse into any subdirectories
-            if os.path.isdir(f"{starting_path}/{subpath}") and subpath != "models":
+            if subpath.isdir() and subpath.name != "models":
                 accordion = BetterAccordion(
                     label=f"{subpath}/",
                     child=pn.Column(
-                        *get_recursive_workspaces(f"{starting_path}/{subpath}"),
+                        *get_recursive_workspaces(subpath),
                         sizing_mode="stretch_width",
                     ),
                     sizing_mode="stretch_width",
@@ -2046,7 +2102,7 @@ def create_explorer():  # noqa: C901
 
         return controls
 
-    def refresh_loadable_workspaces():
+    def refresh_loadable_workspaces() -> None:
         """Entry point for the get_recursive_workspaces function, populates
         the load_workspace_controls widget.
         """
@@ -2057,9 +2113,9 @@ def create_explorer():  # noqa: C901
             *get_recursive_workspaces(WORKSPACE_FOLDER),
         ]
 
-    def get_active_workspace_switchers() -> list[pn.widgets.base.Widget]:
-        """Create a styled set of buttons corresponding to each active workspace in the cache,
-        where clicking one changes the displayed explorer to that cached one.
+    def get_active_workspace_switchers() -> list[pn.widgets.Button]:
+        """Create a styled set of buttons corresponding to each active workspace in the
+        cache, where clicking one changes the displayed explorer to that cached one.
         """
         controls = []
         if len(pn.state.cache["active_workspaces"]) == 0:
@@ -2082,7 +2138,6 @@ def create_explorer():  # noqa: C901
                     sizing_mode="stretch_width",
                     stylesheets=[session_btn_css],
                 )
-                # button.css_classes.append("highlighted")
             button.on_click(partial(switch_active_workspace, name=name))
 
             del_btn = pn.widgets.ButtonIcon(
@@ -2096,7 +2151,7 @@ def create_explorer():  # noqa: C901
             controls.append(pn.Row(button, del_btn))
         return controls
 
-    def refresh_active_workspaces():
+    def refresh_active_workspaces() -> None:
         """Create an button to switch to each explorer that's been opened."""
         nonlocal active_session_controls
 
@@ -2107,7 +2162,8 @@ def create_explorer():  # noqa: C901
             *get_active_workspace_switchers(),
         ]
 
-    def save_workspace(self, *args):
+    # NOTE: this previously had an unused self arg??
+    def save_workspace(*args: list) -> None:
         """Save the current system exploration workspace to whatever path is set in the
         workspace_name widget.
         """
@@ -2124,10 +2180,9 @@ def create_explorer():  # noqa: C901
                 active_session_name = filename
                 refresh_active_workspaces()
 
-            output_path = f"{WORKSPACE_FOLDER}/{filename}.json"
-            output_folder = output_path[: output_path.rfind("/")]
-            os.makedirs(output_folder, exist_ok=True)
-            with open(output_path, "w") as outfile:
+            output_path = Path(WORKSPACE_FOLDER) / f"{filename}.json"
+            output_path.parent.mkdir(exist_ok=True, parents=True)
+            with output_path.open("w") as outfile:
                 json.dump(data, outfile)
         except Exception as e:
             pn.state.notifications.error(f"Failed to save session: {e}", 0)
@@ -2135,9 +2190,9 @@ def create_explorer():  # noqa: C901
 
         refresh_loadable_workspaces()
 
-    def server_ready():
+    def server_ready() -> None:
         """This gets called every refresh or page change, and flipping the theme
-        toggle technically makes the page refresh with a new get argument
+        toggle technically makes the page refresh with a new get argument.
         """
         if b"dark" in pn.state.session_args.get("theme", [b"dark"]):
             print("DARK MODE ACTIVATED.")
@@ -2255,15 +2310,6 @@ def create_explorer():  # noqa: C901
     # currently open explorer UIs (active sessions)
     active_session_controls = pn.Column()
 
-    # terminal = pn.widgets.Terminal(write_to_console=True)
-    # terminal = pn.widgets.Terminal()
-    # floating_terminal = pn.layout.FloatPanel(terminal, contained=False, position='left-center')
-    # # floating_terminal = pn.layout.FloatPanel("hello?", contained=False, position='center')
-    # # floating_terminal = "hello?"
-    # sys.stdout = terminal
-    # sys.stderr = terminal
-    # main_ui_container.objects = [floating_terminal]
-
     # --- HEADER CONTROLS ---
     # -- save session button (goes in the header next to session name textbox) --
     # SVG for a floppy disk, kids these days don't understand having to fight
@@ -2374,7 +2420,7 @@ def create_explorer():  # noqa: C901
     return template
 
 
-def main():
+def main() -> None:
     global WORKSPACE_FOLDER
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -2393,7 +2439,7 @@ def main():
         "--url-root-path",
         dest="root_path",
         default=None,
-        help="Root path the application is being served on when behind a reverse proxy.",
+        help="Root path the application is served on when behind a reverse proxy.",
     )
     parser.add_argument(
         "--port", dest="port", default=5006, help="What port to run the server on."

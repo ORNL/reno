@@ -5,7 +5,9 @@ exact format typically used with SFDs, namely sources and sinks
 aren't explicitly represented.
 """
 
-import os
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -84,7 +86,7 @@ def stock_flow_diagram(
     lr: bool = False,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
-    group_colors: dict[str | tuple["reno.components.TrackedReference"], str] = None,
+    group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None,
     _level: int = 0,
 ) -> tuple[Digraph, list[tuple[str, str]]]:
     """Generate a graphviz dot graph for all the stocks and flows of the passed model,
@@ -311,7 +313,9 @@ def add_stock_limit_edge(g: Digraph, ref: TrackedReference, stock: Stock) -> Non
     )
 
 
-def add_to_flow_edge(g: Digraph, ref: TrackedReference, flow: Flow, deemphasize: bool = False) -> None:
+def add_to_flow_edge(
+    g: Digraph, ref: TrackedReference, flow: Flow, deemphasize: bool = False
+) -> None:
     """Non-stock-inflow/outflow-related edges that point to flows
     are slightly de-emphasized.
     """
@@ -440,9 +444,12 @@ def get_reference_color(  # noqa: C901
 
 
 def should_render(  # noqa: C901
-    ref: TrackedReference, universe: list[TrackedReference], hide_groups: list[str] = None, show_groups: list[str] = None
+    ref: TrackedReference,
+    universe: list[TrackedReference],
+    hide_groups: list[str] = None,
+    show_groups: list[str] = None,
 ) -> bool:
-    """Based on the various parameters, determine if the given reference should be 
+    """Based on the various parameters, determine if the given reference should be
     included in the diagram or not.
     """
     if show_groups is None:
@@ -724,7 +731,7 @@ def add_flows(  # noqa: C901
     universe: list[TrackedReference] = None,
     hide_groups: list[str] = None,
     show_groups: list[str] = None,
-    group_colors: dict[str | list["reno.components.TrackedReference"], str] = None,
+    group_colors: dict[str | list[reno.components.TrackedReference], str] = None,
 ) -> tuple[Digraph, list[tuple[str, str]]]:
     """Add flows and edges from variables to the passed graphviz graph."""
     rendered_edges = []
