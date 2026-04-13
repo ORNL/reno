@@ -2,14 +2,20 @@
 stock and flow equations to run simulation(s).
 """
 
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 import json
 import math
 import threading
 import warnings
+from collections.abc import Iterator
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 import arviz as az
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from graphviz import Digraph, set_jupyter_format
@@ -31,7 +37,7 @@ class _ModelContexts(threading.local):
         self.current_models: list[Model] = []
 
     @property
-    def current_model(self):
+    def current_model(self) -> Model | None:
         if len(self.current_models) > 0:
             return self.current_models[-1]
         return None
@@ -49,16 +55,6 @@ class Model:
 
     The expectation is to create a model instance, and then assign stocks,
     flows, variables, and submodels as attributes on that instance.
-
-    Args:
-        name (str): Optional name to give the model, should be used when
-            submodels are in play, as the model name is used to help
-            visually distinguish which model things belong to.
-        n (int): The number of samples to simulate at once (by default).
-        steps (int): How many time steps to run the simulation for (by default).
-        label (str): Optional visual label to use when printing model things if
-            cleaner than using the name.
-        doc (str): Optional docstring to explain/describe the model.
 
     Example:
         >>> import reno
@@ -82,26 +78,37 @@ class Model:
         label: str = None,
         doc: str = None,
     ):
+        """Create an instance of a model.
+
+        Args:
+            name (str): Optional name to give the model, should be used when
+                submodels are in play, as the model name is used to help
+                visually distinguish which model things belong to.
+            n (int): The number of samples to simulate at once (by default).
+            steps (int): How many time steps to run the simulation for (by default).
+            label (str): Optional visual label to use when printing model things if
+                cleaner than using the name.
+            doc (str): Optional docstring to explain/describe the model.
+        """
         self.stocks: list[reno.Stock] = []
         """List of all stocks associated with this model - don't modify directly,
-        assign stocks as attributes directly on model (e.g. ``model.my_stock = reno.Stock()``)
-        """
+        assign stocks as attributes directly on model.
+        (e.g. ``model.my_stock = reno.Stock()``)"""
         self.flows: list[reno.Flow] = []
         """List of all flows associated with this model - don't modify directly,
-        assign flows as attributes directly on model (e.g. ``model.my_flow = reno.Flow()``)
-        """
+        assign flows as attributes directly on model.
+        (e.g. ``model.my_flow = reno.Flow()``)"""
         self.vars: list[reno.Variable] = []
         """List of all variables associated with this model - don't modify directly,
-        assign vars as attributes directly on model (e.g. ``model.my_var = reno.Variable()``)
-        """
+        assign vars as attributes directly on model.
+        (e.g. ``model.my_var = reno.Variable()``)"""
         self.metrics: list[reno.components.Metric] = []
         """List of all metrics associated with this model - don't modify directly,
-        assign metrics as attributes directly on model (e.g. ``model.my_metric = reno.Metric()``)
-        """
+        assign metrics as attributes directly on model.
+        (e.g. ``model.my_metric = reno.Metric()``)"""
         self.models: list[reno.Model] = []
         """List of submodels of this model - don't modify directly, assign submodels as
-        attributes directly on model (e.g. ``model.my_submodel = reno.Model()``
-        """
+        attributes directly on model (e.g. ``model.my_submodel = reno.Model()``"""
 
         self.parent: reno.Model = None
         """Parent model if applicable. This gets set in the __setattr__ when a submodel
@@ -111,8 +118,8 @@ class Model:
         if label is None:
             label = name
         self.label: str = label
-        """String label to use in any visualizations/outputs to refer to this model. defaults
-        to name if not used."""
+        """String label to use in any visualizations/outputs to refer to this model.
+        defaults to name if not used."""
 
         # not sure if I need these separately or not? Just thinking it
         # might make it easier to be able to set than to have to always pass in
@@ -153,11 +160,11 @@ class Model:
             Model.get_context()._unnamed_references.append(self)
 
     @property
-    def groups(self) -> dict[str, "reno.components.TrackedReference"]:
+    def groups(self) -> dict[str, reno.components.TrackedReference]:
         """Get the list of groups and cgroups in the model. These can
         be used to control colors of components in stock/flow diagrams
         (see ``model.group_color``) and default show/hide behavior (see
-        ``model.default_hide_groups``)
+        ``model.default_hide_groups``).
         """
         group_list = {}
         for ref in self.all_refs():
@@ -178,13 +185,20 @@ class Model:
         return group_list
 
     @classmethod
-    def get_context(cls):
+    def get_context(cls) -> Model:
+        """Get the current context manager model, this is used for assigning
+        components created inside of a model's with block.
+        """
         return MODEL_CONTEXTS.current_model
 
-    def __enter__(self):
+    def __enter__(self) -> None:
+        """Allow models to be used as context managers, where any components created
+        within the context automatically get added to the model assigned with the
+        variable name.
+        """
         MODEL_CONTEXTS.current_models.append(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         MODEL_CONTEXTS.current_models.pop()
         for index, ref in enumerate(self._unnamed_references):
             # make sure adding this ref wasn't already handled
@@ -209,24 +223,21 @@ class Model:
         """Is the name of the stock/flow/variable reference an initial value reference?
         This allows referring to a reference's init with ``my_model.my_reference_0``.
         """
-        if name.endswith("_0") and hasattr(self, name.removesuffix("_0")):
-            return True
-        return False
+        return name.endswith("_0") and hasattr(self, name.removesuffix("_0"))
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any) -> None:
         # It's easy to accidentally overwrite a reference with its equation (if
         # you forget to do `ref.eq`). Check for this behavior by checking to see
         # if the name being set _already exists_ and is a Flow/Variable, and
         # if so throw a warning
-        if hasattr(self, name):
-            if isinstance(
-                getattr(self, name),
-                (reno.components.Flow, reno.components.Variable),
-            ):
-                warnings.warn(
-                    f"Reassigning entire model reference `{name}` with an equation, did you mean to instead assign the reference's equation, e.g. `{name}.eq = ...`?",
-                    RuntimeWarning,
-                )
+        if hasattr(self, name) and isinstance(
+            getattr(self, name),
+            (reno.components.Flow, reno.components.Variable),
+        ):
+            warnings.warn(
+                f"Reassigning entire model reference `{name}` with an equation, did you mean to instead assign the reference's equation, e.g. `{name}.eq = ...`?",
+                RuntimeWarning,
+            )
 
         # Any refs/metrics/models assigned as an attribute should also be added
         # to the appropriate tracking lists
@@ -242,7 +253,7 @@ class Model:
         elif isinstance(value, reno.components.Metric) and value not in self.metrics:
             value.model = self
             self.metrics.append(value)
-        elif isinstance(value, Model) and not name == "parent" and not name == "model":
+        elif isinstance(value, Model) and name != "parent" and name != "model":
             # TODO: do we need to make a copy?
             value.parent = self
             self.models.append(value)
@@ -275,7 +286,7 @@ class Model:
 
         object.__setattr__(self, name, value)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         # allow more ""organic"" retrieval of init values, e.g. `my_model.my_stock_0`
         if name.endswith("_0"):
             if hasattr(self, name.removesuffix("_0")):
@@ -291,10 +302,11 @@ class Model:
             # https://python-list.python.narkive.com/pxEGTJtL/folks-what-s-wrong-with-this
             raise AttributeError(name + " not found")
 
-    def add(self, name: str, value: "reno.components.Reference | reno.Model"):
-        """Add the passed tracked reference to the model with the provided name. This is used for
-        programmatically adding stocks/flows in a context where the name is dynamically created and
-        you can't simply ``model.my_name = ``.
+    def add(self, name: str, value: reno.components.Reference | Model) -> None:
+        """Add the passed tracked reference to the model with the provided name.
+
+        This is used for programmatically adding stocks/flows in a context where the
+        name is dynamically created and you can't simply ``model.my_name = ``
         """
         # this is effectively just an alias for __setattr__ but I don't want
         # people to have to manually call model.__setattr__
@@ -323,23 +335,26 @@ class Model:
 
     def all_refs(self) -> list:
         """Get all stocks, flows, and vars, from this and all submodels in one giant
-        ordered list (does not include metrics, use ``all_metrics()`` separately.)
+        ordered list (does not include metrics, use ``all_metrics()`` separately).
         """
         return self.all_stocks() + self.all_flows() + self.all_vars()
 
     def all_metrics(self) -> list:
-        """Get all metrics recursively"""
+        """Get all metrics recursively."""
         full_list = [*self.metrics]
         for submodel in self.models:
             full_list.extend(submodel.all_metrics())
         return full_list
 
-    def _reset_type_and_shape_info(self):
+    def _reset_type_and_shape_info(self) -> None:
+        """Reference dtype and shape are cached, this goes through every reference
+        and resets it to None to force recompute.
+        """
         for ref in self.all_refs():
             ref._shape = None
             ref._dtype = None
 
-    def _recursive_sub_populate_n_steps(self, n: int, steps: int):
+    def _recursive_sub_populate_n_steps(self, n: int, steps: int) -> None:
         """Recursively populate all submodel's n/steps settings."""
         # TODO: this feels like it shouldn't be necessary and also doesn't
         # handle if a ref is in another model that wasn't explicitly set as a
@@ -349,7 +364,7 @@ class Model:
         for model in self.models:
             model._recursive_sub_populate_n_steps(n, steps)
 
-    def _populate(self, n: int, steps: int):
+    def _populate(self, n: int, steps: int) -> None:
         """Initialize all tracked references with appropriately sized numpy
         matrices.
         """
@@ -362,7 +377,7 @@ class Model:
         for ref in ref_compute_order:
             ref.populate(n, steps)
 
-    def _find_all_extended_op_implicit_components(self):
+    def _find_all_extended_op_implicit_components(self) -> None:
         """Go through every equation and assign any implicit components from
         extended operations.
         """
@@ -396,9 +411,9 @@ class Model:
 
     def simulator(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
-    ):
+    ) -> Iterator:
         """An iterator to use for running the simulation step by step. Leaving n and/or
-        steps None will use the model's default (as defined in constructor.)
+        steps None will use the model's default (as defined in constructor).
         """
         if n is None:
             n = self.n
@@ -425,14 +440,14 @@ class Model:
 
     def simulate(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
-    ):
+    ) -> None:
         """Run each step of the the full simulation. Leaving n and/or
-        steps None will use the model's default (as defined in constructor.)
+        steps None will use the model's default (as defined in constructor).
         """
         for step in self.simulator(n, steps, quiet, debug):
             pass
 
-    def run_metrics(self, n: int = None, steps: int = None):
+    def run_metrics(self, n: int = None, steps: int = None) -> None:
         """Run all metric equations on a completed simulation. Calling this
         function assumes the full simulation has already run.
         """
@@ -473,43 +488,50 @@ class Model:
         lr: bool = False,
         hide_groups: list[str] = None,
         show_groups: list[str] = None,
-        group_colors: dict[str | tuple["reno.components.TrackedReference"], str] = None,
+        group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None,
     ) -> Digraph:
-        """Generate a graphviz dot graph for all the stocks and flows of the passed model,
-        optionally including sparklines if a simulation has been run.
+        """Generate a graphviz dot graph for all the stocks and flows of the passed
+        model, optionally including sparklines if a simulation has been run.
 
         Args:
             model (reno.model.Model): The model to collect stocks/flows/variables from.
-            show_vars (bool): Whether to render variables in the diagram, or just stocks and flows
-                (for very complex models, hiding variables can make it a bit easier to visually
-                parse.)
-            exclude_var_names (list[str]): Specific variables to hide in the diagram, can be used
-                with ``show_vars=True`` to just show specific variables of interest.
-            sparklines (bool): Draw mini graphs to the right of each stock showing plotting their
-                values through time. This assumes the model has either been run, or traces are passed
-                in manually with the ``traces`` argument.
-            sparkdensities (bool): Draw mini density plots/histograms next to any variables that
-                sample from distributions. This assumes the model has either been run, or traces
-                are passed in manually with the ``traces`` argument.
-            g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly only for
+            show_vars (bool): Whether to render variables in the diagram, or just stocks
+                and flows (for very complex models, hiding variables can make it a bit
+                easier to visually parse.)
+            exclude_vars (list[str]): Specific variables to hide in the diagram, can be
+                used with ``show_vars=True`` to just show specific variables of
+                interest.
+            sparklines (bool): Draw mini graphs to the right of each stock showing
+                plotting their values through time. This assumes the model has either
+                been run, or traces are passed in manually with the ``traces`` argument.
+            sparkdensities (bool): Draw mini density plots/histograms next to any
+                variables that sample from distributions. This assumes the model has
+                either been run, or traces are passed in manually with the ``traces``
+                argument.
+            sparkall (bool): Include mini graphs for flows as well as stocks``.
+            g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly
+            only for
                 internal use for drawing subgraphs for submodels.
-            traces (list[xr.Dataset]): A list of traces or model run datasets to use for drawing
-                spark plots. Each dataset will be rendered in a different color.
-            universe (list[TrackedReference]): Limit rendered nodes to only those listed here, this
-                includes all of stocks/flows/variables. (This acts as an initial filter, ``show_vars``
-                and ``exclude_var_names`` still applies after this.)
-            lr (bool): By default the graphviz plot tries to orient top-down. Specify ``True`` to
-                try to orient it left-right.
-            hide_groups (list[str]): A list of group/cgroup names to hide during diagramming, overriding
-                model.default_hide_groups.
-            show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
-                model.default_hide_groups.
-            group_colors dict[str | tuple["reno.components.TrackedReference"], str]: Dictionary specifying
-                colors to render groups with. An ad-hoc group defined by a tuple of references can also be
-                used as a key if the appropriate cgroup does not already exist on the references.
+            traces (list[xr.Dataset]): A list of traces or model run datasets to use for
+                drawing spark plots. Each dataset will be rendered in a different color.
+            universe (list[TrackedReference]): Limit rendered nodes to only those listed
+                here, this includes all of stocks/flows/variables. (This acts as an
+                initial filter, ``show_vars`` and ``exclude_var_names`` still applies
+                after this.)
+            lr (bool): By default the graphviz plot tries to orient top-down. Specify
+                ``True`` to try to orient it left-right.
+            hide_groups (list[str]): A list of group/cgroup names to hide during
+                diagramming, overriding model.default_hide_groups.
+            show_groups (list[str]): A list of group/cgroup names to show during
+                diagramming, overriding model.default_hide_groups.
+            group_colors (dict[str | tuple[reno.components.TrackedReference], str]):
+                Dictionary specifying colors to render groups with. An ad-hoc group
+                defined by a tuple of references can also be used as a key if the
+                appropriate cgroup does not already exist on the references.
 
         Returns:
-            The populated Digraph instance (Jupyter can natively render this in a cell output.)
+            The populated Digraph instance (Jupyter can natively render this in a cell
+            output.)
         """
         if exclude_vars is None:
             exclude_vars = []
@@ -539,21 +561,24 @@ class Model:
         raw_str: bool = False,
         ref_list: list[str | reno.components.Reference] = None,
         debug_ops: bool = False,
-    ):
-        """Get an interactive latex ipywidget listing all of the equations in system. Each equation
-        line is clickable, clicking will highlight where else in the system that equation's result
-        is being used.
+    ) -> str | reno.interactive_latex.InteractiveLatex:
+        """Get an interactive latex ipywidget listing all of the equations in system.
+        Each equation line is clickable, clicking will highlight where else in the
+        system that equation's result is being used.
 
         Args:
-            docs (bool): Whether to include the documentation string beneath each equation or not.
-            t (int): If specified, show the values of every reference at the specified timestep (note
-                that stock values will be from the previous timestep)
-            sample (int): Which sample (row) to show the values from if ``t`` was specified.
+            docs (bool): Whether to include the documentation string beneath each
+                equation or not.
+            t (int): If specified, show the values of every reference at the specified
+                timestep (note that stock values will be from the previous timestep)
+            sample (int): Which sample (row) to show the values from if ``t`` was
+                specified.
             raw_str (bool): Set this to True to just get the string of latex instead of
                 the interactive widget.
             ref_list (list): The set of component references/reference names to show the
                 equations for. If left None, will show all of them.
-            debug_ops (bool): If True, display the calculated value after every operation.
+            debug_ops (bool): If True, display the calculated value after every
+                operation.
         """
         debug = False
         if t is not None:
@@ -572,11 +597,13 @@ class Model:
             return latex_obj.latex.data
         return latex_obj.widget
 
-    def plot_stocks(self, cols: int = None, rows: int = None, **figargs):
+    def plot_stocks(
+        self, cols: int = None, rows: int = None, **figargs: dict
+    ) -> plt.Figure:
         """Shortcut function to quickly get a set of graphs for each stock."""
         return reno.viz.plot_refs(self.stocks, cols=cols, rows=rows, **figargs)
 
-    def copy(self, name: str = None) -> "Model":
+    def copy(self, name: str = None) -> Model:
         """Make a separate copy of this model with the desired name.
 
         This is useful for making a separate model instance that you can modify the
@@ -587,11 +614,12 @@ class Model:
             new_model.name = name
         return new_model
 
-    def free_refs(self, recursive: bool = False):
-        """Get all free "variables" (not component variables) for this model, or things that
-        aren't defined in terms of anything else.
+    def free_refs(self, recursive: bool = False) -> list[str]:
+        """Get all free "variables" (not component variables) for this model, or things
+        that aren't defined in terms of anything else.
 
-        A free variable is a variable with no references to other variables, stocks or flows.
+        A free variable is a variable with no references to other variables, stocks or
+        flows.
         """
         free = []
         inits = []
@@ -618,8 +646,8 @@ class Model:
                     ]
                 )
 
-        # a variable is free if its equation is directly a scalar or distribution, or hasn't
-        # been assigned an equation. Flows use same logic as variables here.
+        # a variable is free if its equation is directly a scalar or distribution, or
+        # hasn't been assigned an equation. Flows use same logic as variables here.
         for ref in self.vars + self.flows:
             if ref.implicit:
                 continue
@@ -627,7 +655,8 @@ class Model:
             if reno.utils.is_free_var(ref.eq):
                 free.append(ref)
 
-            # if a variable/flow is a function defined in terms of itself, needs an init.
+            # if a variable/flow is a function defined in terms of itself, needs an
+            # init.
             if ref in ref.seek_refs():
                 inits.append(ref)
 
@@ -682,7 +711,9 @@ class Model:
 
     # TODO: free_refs can also have sub dictionaries right? for submodels?
     # Include in typing info
-    def config(self, **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart]) -> dict[str, int | float | np.ndarray]:
+    def config(
+        self, **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart]
+    ) -> dict[str, int | float | np.ndarray]:
         """Get/set model configuration. This function allows specifying one or more
         free variables - anything not set uses the default.
 
@@ -745,7 +776,9 @@ class Model:
 
         return config
 
-    def get_nonrecursive_config(self) -> dict[str, int | float | np.ndarray | reno.EquationPart]:
+    def get_nonrecursive_config(
+        self,
+    ) -> dict[str, int | float | np.ndarray | reno.EquationPart]:
         """Only get the free refs config from _this_ model, no submodels.
 
         Useful for assigning dataset attrs.
@@ -911,12 +944,7 @@ class Model:
         # be 1 per step
         new_vars = {}
         for metric in self.metrics:
-            if len(metric.value.shape) == 1:
-                # 1 per sample
-                coords = ["sample"]
-            else:
-                # 1 per step (e.g. flags)
-                coords = ["sample", "step"]
+            coords = ["sample"] if len(metric.value.shape) == 1 else ["sample", "step"]
             new_vars[metric.qual_name()] = (coords, metric.value)
         ds = ds.assign(new_vars)
 
@@ -947,7 +975,11 @@ class Model:
         return ds_merged
 
     def __call__(
-        self, n: int = None, steps: int = None, keep_config: bool = False, **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart]
+        self,
+        n: int = None,
+        steps: int = None,
+        keep_config: bool = False,
+        **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
     ) -> xr.Dataset:
         """Run the model simulation, allowing specification of any free variables.
         Variables in submodels need to be defined as dictionaries.
@@ -960,15 +992,15 @@ class Model:
             ... )
 
         Args:
-            n (int): Number of simulations to run in parallel, leave ``None`` to use the default
-                set on the model.
-            steps (int): Number of timesteps to run the simulation for, leave ``None`` to use the
+            n (int): Number of simulations to run in parallel, leave ``None`` to use the
                 default set on the model.
-            keep_config (bool): Whether to keep any changes made via free ref configurations passed
-                in for subsequent simulations. The default is to not do this, keeping the original
-                model unchanged.
-            **free_refs: Definitions for equations or values for any variables or initial conditions
-                in the system.
+            steps (int): Number of timesteps to run the simulation for, leave ``None``
+                to use the default set on the model.
+            keep_config (bool): Whether to keep any changes made via free ref
+                configurations passed in for subsequent simulations. The default is to
+                not do this, keeping the original model unchanged.
+            **free_refs: Definitions for equations or values for any variables or
+                initial conditions in the system.
         """
         # store previous config vals and apply any requested config from call params
         previous = self.config()
@@ -1012,6 +1044,7 @@ class Model:
         return None
 
     def get_timeref(self) -> reno.components.TimeRef:
+        """Find the first referenced TimeRef intstance in the model."""
         all_refs = []
         for flow in self.all_flows():
             # all_refs.extend(flow.eq.seek_refs())
@@ -1031,14 +1064,16 @@ class Model:
         and each time adding the first reference that doesn't depend on any references
         not yet added.
 
-        This function will detect circular references (equations that depend on eachother)
-        and throw an error. Primary use for this function is to correctly set order of
-        equations in the pymc model/step function, but this is used in normal Reno math too.
+        This function will detect circular references (equations that depend on
+        eachother) and throw an error. Primary use for this function is to correctly set
+        order of equations in the pymc model/step function, but this is used in normal
+        Reno math too.
 
         Args:
-            inits_order (bool): Include stock init equations in the ordering. (When False,
-                stocks will always be listed first since they always depend on a previous
-                timestep's values. This is not the case for inital equations.)
+            inits_order (bool): Include stock init equations in the ordering. (When
+                False, stocks will always be listed first since they always depend on a
+                previous timestep's values. This is not the case for inital equations.)
+            debug (bool): Print out dependency analysis at each iteration.
 
         Returns:
             The dependency-ordered list of reno TrackedReferences for this model.
@@ -1066,17 +1101,18 @@ class Model:
         return compute_order
 
     def pymc_model(
-        self, observations: list["reno.ops.Observation"] = None, steps: int = None
+        self, observations: list[reno.ops.Observation] = None, steps: int = None
     ) -> pm.model.core.Model:
-        """Generate a pymc model for bayesian analysis of this system dynamics model. The general
-        idea is that this creates corresponding pymc variables (or distributions as relevant) for
-        each stock/flow/var in the model, and sets up the full simulation sequence computations
-        based on the generated step function from ``_pt_step()``.
+        """Generate a pymc model for bayesian analysis of this system dynamics model.
+        The general idea is that this creates corresponding pymc variables (or
+        distributions as relevant) for each stock/flow/var in the model, and sets up the
+        full simulation sequence computations based on the generated step function from
+        ``_pt_step()``.
 
-        Sampling with priors should be equivalent to running the system dynamics model normally
-        (this is essentially "forward simulation mode".) Add observations to the pymc model
-        variables and sample from posterior predictive to run bayesian analysis/determine how
-        distributions of any other variables may be affected.
+        Sampling with priors should be equivalent to running the system dynamics model
+        normally (this is essentially "forward simulation mode".) Add observations to
+        the pymc model variables and sample from posterior predictive to run bayesian
+        analysis/determine how distributions of any other variables may be affected.
         """
         return reno.pymc.to_pymc_model(self, observations, steps)
 
@@ -1084,11 +1120,12 @@ class Model:
     # TODO: option to add in necessary imports
     # TODO: can you run black formatting programmatically on a string?
     def pymc_str(
-        self, observations: list["reno.ops.Observation"] = None, steps: int = None
+        self, observations: list[reno.ops.Observation] = None, steps: int = None
     ) -> str:
-        """Construct a string of python code to create a pymc model wrapping this system dynamics
-        model. Should be a functional (string) equivalent of the ``pymc_model()`` function. Includes
-        the output from ``pymc.pt_sim_step_str(self)``.
+        """Construct a string of python code to create a pymc model wrapping this system
+        dynamics model. Should be a functional (string) equivalent of the
+        ``pymc_model()`` function. Includes the output from
+        ``pymc.pt_sim_step_str(self)``.
 
         Expected imports for the resulting code to run:
             >>> import pytensor
@@ -1106,49 +1143,53 @@ class Model:
         sampling_kwargs: dict[str, Any] = None,
         compile_kwargs: dict[str, Any] = None,
         compile_faster: bool = False,
-        observations: list["reno.ops.Observation"] = None,
+        observations: list[reno.ops.Observation] = None,
         smc: bool = True,
         trace_prior: az.InferenceData = None,
         compute_prior_only: bool = False,
         keep_config: bool = False,
-        **free_refs,
+        **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
     ) -> az.InferenceData:
-        """A PyMC equivalent version of a model's __call__, convert the model to PyMC and run the
-        simulation/Bayesian analysis.
+        """A PyMC equivalent version of a model's __call__, convert the model to PyMC
+        and run the simulation/Bayesian analysis.
 
         Args:
-            n (int): Number of simulations to run in parallel, leave ``None`` to use the default
-                set on the model.
-            steps (int): Number of timesteps to run the simulation for, leave ``None`` to use the
+            n (int): Number of simulations to run in parallel, leave ``None`` to use the
                 default set on the model.
-            sampling_kwargs (dict): Arguments to pass to the PyMC sampler. Uses ``sample_smc`` by
-                default unless the ``smc`` argument is ``False``, in which case it lets PyMC choose
-                sampler (NUTS for continuous variables, some variant of Metropolis for discrete.)
-            compile_kwargs (dict): Arguments to pass along to the compiler through PyMC. E.g. ``mode``,
-                which, if function compilation is taking forever, can for instance be set to
-                ``FAST_COMPILE``.
-            compile_faster (bool): For some large/complex models, the PyMC/pytensor compilation step can
-                take excessively long as it tries to apply a high level of optimizations. Set this to
-                ``True`` to bump down the optimization level by one, which should dramatically speed this
-                step up. Alternatively you can have more granular control over this by passing a ``mode``
-                key to the ``compile_kwargs`` dictionary parameter, see pytensor's documentation for more
-                details: https://pytensor.readthedocs.io/en/latest/tutorial/modes.html
-            observations (list[reno.Observation]): Observed values (data/evidence) to use for computing
-                posteriors, at least one should be specified if not exclusively running priors.
-            smc (bool): Whether to use the sequential monte carlo sampler or not, the default is to
-                do so - the regular samplers in PyMC tend not to do well if posterior distributions
-                might have multiple peaks, see:
+            steps (int): Number of timesteps to run the simulation for, leave ``None``
+                to use the default set on the model.
+            sampling_kwargs (dict): Arguments to pass to the PyMC sampler. Uses
+                ``sample_smc`` by default unless the ``smc`` argument is ``False``, in
+                which case it lets PyMC choose sampler (NUTS for continuous variables,
+                some variant of Metropolis for discrete.)
+            compile_kwargs (dict): Arguments to pass along to the compiler through PyMC.
+                E.g. ``mode``, which, if function compilation is taking forever, can for
+                instance be set to ``FAST_COMPILE``.
+            compile_faster (bool): For some large/complex models, the PyMC/pytensor
+                compilation step can take excessively long as it tries to apply a high
+                level of optimizations. Set this to ``True`` to bump down the
+                optimization level by one, which should dramatically speed this step up.
+                Alternatively you can have more granular control over this by passing a
+                ``mode`` key to the ``compile_kwargs`` dictionary parameter, see
+                pytensor's documentation for more details:
+                https://pytensor.readthedocs.io/en/latest/tutorial/modes.html
+            observations (list[reno.Observation]): Observed values (data/evidence) to
+                use for computing posteriors, at least one should be specified if not
+                exclusively running priors.
+            smc (bool): Whether to use the sequential monte carlo sampler or not, the
+                default is to do so - the regular samplers in PyMC tend not to do well
+                if posterior distributions might have multiple peaks, see:
                 https://www.pymc.io/projects/examples/en/latest/samplers/SMC2_gaussians.html
-            trace_prior [az.InferenceData]: If priors for this model have already been run, pass in
-                that arviz inference object here, and the prior xarray dataset will be used in the
-                output arviz object from this pymc run.
-            compute_prior_only (bool): If set to ``True``, don't run the Bayesian inference, only run
-                the priors ("forward simulation mode").
-            keep_config (bool): Whether to keep any changes made via free ref configurations passed
-                in for subsequent simulations. The default is to not do this, keeping the original
-                model unchanged.
-            **free_refs: Definitions for equations or values for any variables or initial conditions
-                in the system.
+            trace_prior (az.InferenceData): If priors for this model have already been
+                run, pass in that arviz inference object here, and the prior xarray
+                dataset will be used in the output arviz object from this pymc run.
+            compute_prior_only (bool): If set to ``True``, don't run the Bayesian
+                inference, only run the priors ("forward simulation mode").
+            keep_config (bool): Whether to keep any changes made via free ref
+                configurations passed in for subsequent simulations. The default is to
+                not do this, keeping the original model unchanged.
+            **free_refs: Definitions for equations or values for any variables or
+                initial conditions in the system.
         """
         self._reset_type_and_shape_info()
 
@@ -1179,7 +1220,8 @@ class Model:
                 linker="cvm_nogc", optimizer="o3"
             )
 
-        # add any implicit metrics if needed
+        # add any implicit metrics if needed, e.g. if someone passed
+        # ``my_variable.timeseries[-1]``
         implicit_metric_refs = []
         if observations is not None:
             for index, obs in enumerate(observations):
@@ -1274,12 +1316,10 @@ class Model:
             data["steps"] = self.steps
         return data
 
-    def _add_skeleton(
-        self, data: dict
-    ) -> dict[str, "reno.components.TrackedReference"]:
-        """An inner function for from_dict, it builds out everything structure-wise without
-        populating equations and details (necessary because references between equations need
-        to exist first.)
+    def _add_skeleton(self, data: dict) -> dict[str, reno.components.TrackedReference]:
+        """An inner function for from_dict, it builds out everything structure-wise
+        without populating equations and details (necessary because references between
+        equations need to exist first).
         """
         building_refs = {}
 
@@ -1317,8 +1357,8 @@ class Model:
         return building_refs
 
     def _load_refs(
-        self, data: dict, refs: dict[str, "reno.components.TrackedReference"]
-    ):
+        self, data: dict, refs: dict[str, reno.components.TrackedReference]
+    ) -> None:
         """Populate all equations and details/submodels etc. Assumes _add_skeleton
         has already been recursively run.
         """
@@ -1335,7 +1375,7 @@ class Model:
             submodel._load_refs(data["models"][model_name], refs)
 
     @staticmethod
-    def from_dict(data: dict) -> "Model":
+    def from_dict(data: dict) -> Model:
         """Deserialize a previously saved model definition dictionary, returns
         new Model instance.
         """
@@ -1353,18 +1393,18 @@ class Model:
 
         return m
 
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         """Save model definition at specified location. Stores as a JSON using the
-        to_dict() method
+        to_dict() method.
         """
         data = self.to_dict()
-        with open(path, "w") as outfile:
+        with Path(path).open("w") as outfile:
             json.dump(data, outfile, indent=4)
 
     @staticmethod
-    def load(path: str) -> "Model":
+    def load(path: str) -> Model:
         """Initalize model from model definition file (JSON)."""
-        with open(path) as infile:
+        with Path(path).open() as infile:
             data = json.load(infile)
 
         return Model.from_dict(data)

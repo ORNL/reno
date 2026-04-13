@@ -28,7 +28,8 @@ format.docstring-code-format = true
 line-length = 88
 flake8-annotations.mypy-init-return = true  # don't require return type annotation on init
 
-
+[tool.ruf.lint.per-file-ignores]
+"reno/explorer_rest_api.py" = ["D415"]
 
 
 # [tool.isort]

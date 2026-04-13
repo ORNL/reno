@@ -94,40 +94,42 @@ def stock_flow_diagram(
 
     Args:
         model (reno.model.Model): The model to collect stocks/flows/variables from.
-        show_vars (bool): Whether to render variables in the diagram, or just stocks and flows
-            (for very complex models, hiding variables can make it a bit easier to visually
-            parse.)
-        exclude_var_names (list[str]): Specific variables to hide in the diagram, can be used
-            with ``show_vars=True`` to just show specific variables of interest.
-        sparklines (bool): Draw mini graphs to the right of each stock showing plotting their
-            values through time. This assumes the model has either been run, or traces are passed
-            in manually with the ``traces`` argument.
-        sparkdensities (bool): Draw mini density plots/histograms next to any variables that
-            sample from distributions. This assumes the model has either been run, or traces
-            are passed in manually with the ``traces`` argument.
+        show_vars (bool): Whether to render variables in the diagram, or just stocks and
+            flows (for very complex models, hiding variables can make it a bit easier to
+            visually parse.)
+        exclude_var_names (list[str]): Specific variables to hide in the diagram, can be
+            used with ``show_vars=True`` to just show specific variables of interest.
+        sparklines (bool): Draw mini graphs to the right of each stock showing plotting
+            their values through time. This assumes the model has either been run, or
+            traces are passed in manually with the ``traces`` argument.
+        sparkdensities (bool): Draw mini density plots/histograms next to any variables
+            that sample from distributions. This assumes the model has either been run,
+            or traces are passed in manually with the ``traces`` argument.
         sparkall (bool): Include mini graphs for flows as well as stocks``.
-        g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly only for
-            internal use for drawing subgraphs for submodels.
-        traces (list[xr.Dataset]): A list of traces or model run datasets to use for drawing
-            spark plots. Each dataset will be rendered in a different color.
-        universe (list[TrackedReference]): Limit rendered nodes to only those listed here, this
-            includes all of stocks/flows/variables. (This acts as an initial filter, ``show_vars``
-            and ``exclude_var_names`` still applies after this.)
-        lr (bool): By default the graphviz plot tries to orient top-down. Specify ``True`` to
-            try to orient it left-right.
-        hide_groups (list[str]): A list of group/cgroup names to hide during diagramming, overriding
-            model.default_hide_groups.
-        show_groups (list[str]): A list of group/cgroup names to show during diagramming, overriding
-            model.default_hide_groups.
-        group_colors (dict[str | tuple["reno.components.TrackedReference"], str]): Dictionary specifying
-            colors to render groups with. An ad-hoc group defined by a tuple of references can also be
-            used as a key if the appropriate cgroup does not already exist on the references.
+        g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly only
+            for internal use for drawing subgraphs for submodels.
+        traces (list[xr.Dataset]): A list of traces or model run datasets to use for
+            drawing spark plots. Each dataset will be rendered in a different color.
+        universe (list[TrackedReference]): Limit rendered nodes to only those listed
+            here, this includes all of stocks/flows/variables. (This acts as an initial
+            filter, ``show_vars`` and ``exclude_var_names`` still applies after this.)
+        lr (bool): By default the graphviz plot tries to orient top-down. Specify
+            ``True`` to try to orient it left-right.
+        hide_groups (list[str]): A list of group/cgroup names to hide during
+            diagramming, overriding model.default_hide_groups.
+        show_groups (list[str]): A list of group/cgroup names to show during
+            diagramming, overriding model.default_hide_groups.
+        group_colors (dict[str | tuple[reno.components.TrackedReference], str]):
+            Dictionary specifying colors to render groups with. An ad-hoc group defined
+            by a tuple of references can also be used as a key if the appropriate cgroup
+            does not already exist on the references.
 
     Returns:
-        The populated Digraph instance (Jupyter can natively render this in a cell output.) and
-        a list of tuples of reference connections that weren't added (usually because one of the
-        references was "out of scope" part of a parent model not rendered in this one. This is
-        primarily for internal use for correctly recursively plotting submodels in subgraphs.
+        The populated Digraph instance (Jupyter can natively render this in a cell
+        output.) and a list of tuples of reference connections that weren't added
+        (usually because one of the references was "out of scope" part of a parent model
+        not rendered in this one. This is primarily for internal use for correctly
+        recursively plotting submodels in subgraphs.
     """
     if g is None:
         rankdir = "TB" if not lr else "LR"
