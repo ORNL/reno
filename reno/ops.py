@@ -2,8 +2,12 @@
 similar in principle to what something like PyTensor is doing.
 """
 
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 import math
 import warnings
+from typing import TypeAlias
 
 import numpy as np
 import pytensor.tensor as pt
@@ -11,6 +15,11 @@ import pytensor.tensor as pt
 import pymc as pm
 import reno
 
+EquationOrValue: TypeAlias = (
+    reno.components.EquationPart | int | float | bool | np.ndarray
+)
+
+# NOTE: remember to add anything added here into __init__.py
 __all__ = [  # noqa: RUF022
     # -- series math operations --
     "series_max",
@@ -82,8 +91,8 @@ __all__ = [  # noqa: RUF022
 # NOTE: can't use 'proper' name of max because TrackedReferences already have a
 # max (equation max) which I don't want to rename.
 class series_max(reno.components.Operation):
-    """Maximum value in an array. Effectively a row-wise np.max. This can either be applied
-    to a timeseries or a value with a data dimension.
+    """Maximum value in an array. Effectively a row-wise np.max. This can either be
+    applied to a timeseries or a value with a data dimension.
 
     String notation: ``(max A)``
 
@@ -109,16 +118,16 @@ class series_max(reno.components.Operation):
 
     OP_REPR = "max"
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
         return 1
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
@@ -137,8 +146,8 @@ class series_max(reno.components.Operation):
 # NOTE: can't use 'proper' name of min because TrackedReferences already have a
 # min (equation min) which I don't want to rename.
 class series_min(reno.components.Operation):
-    """Minimum value in an array. Effectively a row-wise np.min. This can either be applied
-    to a timeseries or a value with a data dimension.
+    """Minimum value in an array. Effectively a row-wise np.min. This can either be
+    applied to a timeseries or a value with a data dimension.
 
     String notation: ``(min A)``
 
@@ -164,16 +173,16 @@ class series_min(reno.components.Operation):
 
     OP_REPR = "min"
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
         return 1
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].value
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
@@ -190,7 +199,7 @@ class series_min(reno.components.Operation):
 
 
 class mean(reno.components.Operation):
-    """Average across the values of a vector (either timeseries or data dim.)
+    """Average across the values of a vector (either timeseries or data dim).
 
     String notation: ``(mean A)``
 
@@ -214,11 +223,11 @@ class mean(reno.components.Operation):
             array([[nan, 1. , 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]])
     """
 
-    def __init__(self, a, axis=0):
+    def __init__(self, a: EquationOrValue, axis: int = 0):
         self.axis = axis
         super().__init__(a)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{mean}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_shape(self) -> int:
@@ -227,7 +236,7 @@ class mean(reno.components.Operation):
     def get_type(self) -> type:
         return float
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         # value = self.sub_equation_parts[0].value
         # if value is None:
         value = self.sub_equation_parts[0].eval(**kwargs)
@@ -249,30 +258,27 @@ class sum(reno.components.Operation):
     String notation: ``(sum A)``
     """
 
-    # NOTE: sums of static values won't give you a multiple by timesteps by default, e.g.
-    # if you have a static variable with value 5, the variable.sum() will return 5. In order
-    # to expand a static value based on the timeseries, access a slice of the variable. For
-    # instance, to get the full series of static values, use variable[:].sum()
+    # NOTE: sums of static values won't give you a multiple by timesteps by default,
+    # e.g. if you have a static variable with value 5, the variable.sum() will return 5.
+    # In order to expand a static value based on the timeseries, access a slice of the
+    # variable. For instance, to get the full series of static values, use
+    # variable[:].sum()
 
-    # NOTE: NOTE: nope, since changed to make operand automatically a slice if it's static.
-    # Remember that this operation is really only meant for metrics, use history components
-    # for equations within the stocks/flows
+    # NOTE: NOTE: nope, since changed to make operand automatically a slice if it's
+    # static. Remember that this operation is really only meant for metrics, use history
+    # components for equations within the stocks/flows
 
-    def __init__(self, a, axis=0):
+    def __init__(self, a: EquationOrValue, axis: int = 0):
         self.axis = axis
         super().__init__(a)
-        # if a.is_static() and not isinstance(a, reno.ops.time_slice):
-        #     super().__init__(reno.ops.time_slice(a))
-        # else:
-        #     super().__init__(a)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\Sigma {self.sub_equation_parts[0].latex(**kwargs)}"
 
     def get_shape(self) -> int:
         return 1
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         # value = self.sub_equation_parts[0].value
         # if value is None:
         value = self.sub_equation_parts[0].eval(**kwargs)
@@ -289,10 +295,12 @@ class sum(reno.components.Operation):
 
 
 class nonzero(reno.components.Operation):
-    """Similar to the numpy nonzero or the numpy ``where`` specified with only a condition.
+    """Similar to the numpy nonzero or the numpy ``where`` specified with only a
+    condition.
 
-    Note that in numpy evaluation this returns a "jagged" array, padded at the end by np.NaN values.
-    Also note that since np.NaN is a float value, the resulting array is converted to floats.
+    Note that in numpy evaluation this returns a "jagged" array, padded at the end by
+    np.NaN values. Also note that since np.NaN is a float value, the resulting array is
+    converted to floats.
 
     String notation: ``(nonzero A)``
 
@@ -305,13 +313,13 @@ class nonzero(reno.components.Operation):
             array([2., 6., nan, nan, nan, nan, nan])
     """
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
     def get_type(self) -> type:
         return int
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
 
         value = self.sub_equation_parts[0].eval(**kwargs)
         indices = np.nonzero(value)
@@ -381,15 +389,18 @@ class nonzero(reno.components.Operation):
 
 
 class diff(reno.components.Operation):
-    """Returns the difference between every value in the list and the value before it. Note that the size of the output list is one less than the input, so likely need to process in some other way instead of directly including in e.g. a metric.
+    """Returns the difference between every value in the list and the value before it.
+
+    Note that the size of the output list is one less than the input, so likely need to
+    process in some other way instead of directly including in e.g. a metric.
 
     String notation: ``(diff A)``
     """
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].eval(**kwargs)
         return np.diff(value)
 
@@ -401,22 +412,23 @@ class diff(reno.components.Operation):
 
 
 class nanindex(reno.components.Operation):
-    """Special index op for jagged arrays that come from the nonzero op. These convert any negative indices to
-    ignore any nans at the end of each row. Is equivalent to normal index for pymc math.
+    """Special index op for jagged arrays that come from the nonzero op. These convert
+    any negative indices to ignore any nans at the end of each row. Is equivalent to
+    normal index for pymc math.
 
     String notation: ``(nanindex A INDEX)``
     """
 
-    def __init__(self, a, ind):
+    def __init__(self, a: EquationOrValue, ind: EquationOrValue):
         super().__init__(a, ind)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
     def get_shape(self) -> int:
         return 1
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         # TODO: support for static?
         value = self.sub_equation_parts[0].eval(**kwargs)
         indices = self.sub_equation_parts[1].eval(**kwargs)
@@ -437,22 +449,22 @@ class nanindex(reno.components.Operation):
 
 
 class index(reno.components.Operation):
-    """Get a previous value in the time series at specified index, only works for tracked references
-    inside of equations for metrics.
+    """Get a previous value in the time series at specified index, only works for
+    tracked references inside of equations for metrics.
 
     String notation: ``(index A INDEX)``
     """
 
-    def __init__(self, a, ind):
+    def __init__(self, a: EquationOrValue, ind: EquationOrValue):
         super().__init__(a, ind)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
     def get_shape(self) -> int:
         return 1
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> list | np.ndarray:
         # TODO: support for static?
         value = self.sub_equation_parts[0].eval(**kwargs)
         # if len(value.shape) > 1:
@@ -478,15 +490,20 @@ class index(reno.components.Operation):
 
 
 class slice(reno.components.Operation):
-    """Can be applied along with timeseries op in metrics for getting specific time segments, or
-    can be applied generally in equations when dealing with vector data.
+    """Can be applied along with timeseries op in metrics for getting specific time
+    segments, or can be applied generally in equations when dealing with vector data.
 
     Similar to normal python slices, top is exclusive
 
     String notation: ``(slice A [START] [STOP])``
     """
 
-    def __init__(self, a, start=None, stop=None):
+    def __init__(
+        self,
+        a: EquationOrValue,
+        start: EquationOrValue = None,
+        stop: EquationOrValue = None,
+    ):
         self.start = start
         self.stop = stop
 
@@ -506,7 +523,7 @@ class slice(reno.components.Operation):
             operands.append(self.stop)
         super().__init__(*operands)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         start = "" if self.start is None else self.start.latex(**kwargs)
         stop = "" if self.stop is None else self.stop.latex(**kwargs)
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{start}:{stop}]"
@@ -514,7 +531,7 @@ class slice(reno.components.Operation):
     # TODO: (2025.09.22) will need to think about how best to implement a
     # get_shape for this
 
-    def op_eval(self, t, **kwargs):
+    def op_eval(self, t, **kwargs: dict) -> list | np.ndarray:
         start = self.start.eval(t, **kwargs) if self.start is not None else None
         stop = self.stop.eval(t, **kwargs) if self.stop is not None else None
 
@@ -573,18 +590,20 @@ class slice(reno.components.Operation):
 
 
 class orient_timeseries(reno.components.Operation):
-    """Get the full data of a component/equation as an array over time, allowing aggregate
-    operations to operate across the full timeseries, e.g. for metric equations. This is
-    in essence "reorienting" the underlying data to include the time dimension.
+    """Get the full data of a component/equation as an array over time, allowing
+    aggregate operations to operate across the full timeseries, e.g. for metric
+    equations. This is in essence "reorienting" the underlying data to include the time
+    dimension.
 
-    NOTE: for pytensor I suspect this will only work in metric equations. pt/pt_str are dependent
-    on whether the refs are populated with the full series or not, which will only occur
-    within the metrics section?
-    TODO: we can _eventually_ make this work within pytensor by the approach to solving general
-    history time equations - if a timeseries op detected within non-metric context, include the full
-    stops of the relevant variables
+    NOTE: for pytensor I suspect this will only work in metric equations. pt/pt_str are
+    dependent on whether the refs are populated with the full series or not, which will
+    only occur within the metrics section?
+    TODO: we can _eventually_ make this work within pytensor by the approach to solving
+    general history time equations - if a timeseries op detected within non-metric
+    context, include the full stops of the relevant variables
 
-    NOTE: only use this in a non-metric equation if a _range_ of timeseries values are needed. Otherwise use `.history()` for single values
+    NOTE: only use this in a non-metric equation if a _range_ of timeseries values are
+    needed. Otherwise use `.history()` for single values
 
     String notation: ``(orient_timeseries A)``
     """
@@ -592,28 +611,26 @@ class orient_timeseries(reno.components.Operation):
     # TODO: it probably doesn't make sense to call this on anything except a trackedreference,
     # may want to add checks for this.
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{timeseries}}"
 
-    def __repr__(self):
-        """Explicit repr is necessary to avoid including a timeref in sub equation parts if added from
-        the pt() or pt_str() calls.
+    def __repr__(self) -> str:
+        """Explicit repr is necessary to avoid including a timeref in sub equation parts
+        if added from the pt() or pt_str() calls.
         """
         return f"({self.op_repr()} {self.sub_equation_parts[0].__repr__()})"
 
     # TODO: how best to get timeseries length for get_shape?
 
-    def op_eval(self, t, **kwargs):
+    def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].value
         if value is None:
-            value = self.sub_equation_parts[
-                0
-            ].eval(
-                t, **kwargs
-            )  # TODO: is this right?? This isn't the same as getting .value because may not include full time series...
+            value = self.sub_equation_parts[0].eval(t, **kwargs)
+            # TODO: is this right?? This isn't the same as getting .value because may
+            # not include full time series...
             # do I instead need to ensure the save is true and then get .value?
             # this will only be relevant to solve when the pytensor general
             # history approach is solved
@@ -621,9 +638,11 @@ class orient_timeseries(reno.components.Operation):
         count = t + 1
         if self.sub_equation_parts[0].is_static():
             remaining = 0
-            if hasattr(self.sub_equation_parts[0], "model"):
-                if self.sub_equation_parts[0].model is not None:
-                    remaining = self.sub_equation_parts[0].model.steps - count
+            if (
+                hasattr(self.sub_equation_parts[0], "model")
+                and self.sub_equation_parts[0].model is not None
+            ):
+                remaining = self.sub_equation_parts[0].model.steps - count
             if isinstance(value, (float, int)):
                 return np.concatenate(
                     [
@@ -728,7 +747,7 @@ class orient_timeseries(reno.components.Operation):
 # ==================================================
 
 
-def adjust_shapes_for_n(*parts, **kwargs):
+def adjust_shapes_for_n(*parts, **kwargs: dict):
     """For numpy calculations, while () can broadcast to (dim,)
     but not (n,) to (n,dim), so handle converting (n,) to (n,1)
     if necessary, given the other components.
@@ -746,7 +765,7 @@ def adjust_shapes_for_n(*parts, **kwargs):
 
 
 class add(reno.components.Operation):
-    """a + b
+    """a + b.
 
     String notation: ``(+ A B)``
 
@@ -768,13 +787,13 @@ class add(reno.components.Operation):
 
     OP_REPR = "+"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} + {self.sub_equation_parts[1].latex(**kwargs)}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a + b
 
@@ -788,7 +807,7 @@ class add(reno.components.Operation):
 
 
 class sub(reno.components.Operation):
-    """a - b
+    """a - b.
 
     String notation: ``(- A B)``
 
@@ -810,13 +829,13 @@ class sub(reno.components.Operation):
 
     OP_REPR = "-"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} - {self.sub_equation_parts[1].latex(**kwargs)}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a - b
 
@@ -830,7 +849,7 @@ class sub(reno.components.Operation):
 
 
 class mul(reno.components.Operation):
-    """a * b
+    """a * b.
 
     String notation: ``(* A B)``
 
@@ -852,13 +871,13 @@ class mul(reno.components.Operation):
 
     OP_REPR = "*"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} * {self.sub_equation_parts[1].latex(**kwargs)}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a * b
 
@@ -872,7 +891,7 @@ class mul(reno.components.Operation):
 
 
 class div(reno.components.Operation):
-    """a / b
+    """a / b.
 
     String notation: ``(/ A B)``
 
@@ -894,13 +913,13 @@ class div(reno.components.Operation):
 
     OP_REPR = "/"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\frac{{{self.sub_equation_parts[0].latex(**kwargs)}}}{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a / b
 
@@ -914,20 +933,20 @@ class div(reno.components.Operation):
 
 
 class mod(reno.components.Operation):
-    """a % b
+    """a % b.
 
     String notation: ``(% A B)``
     """
 
     OP_REPR = "%"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\% {self.sub_equation_parts[1].latex(**kwargs)}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a % b
 
@@ -941,18 +960,18 @@ class mod(reno.components.Operation):
 
 
 class abs(reno.components.Operation):
-    """|a| (absolute value)
+    """|a| (absolute value).
 
     String notation: ``(abs A B)``
     """
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__("abs", a)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"|{self.sub_equation_parts[0].latex(**kwargs)}|"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         return np.abs(self.sub_equation_parts[0].eval(**kwargs))
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -963,23 +982,23 @@ class abs(reno.components.Operation):
 
 
 class lt(reno.components.Operation):
-    """a < b
+    """a < b.
 
     String notation: ``(< A B)``
     """
 
     OP_REPR = "<"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} < {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a < b
 
@@ -993,23 +1012,23 @@ class lt(reno.components.Operation):
 
 
 class lte(reno.components.Operation):
-    """a <= b
+    """a <= b.
 
     String notation: ``(<= A B)``
     """
 
     OP_REPR = "<="
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\leq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a <= b
 
@@ -1023,23 +1042,23 @@ class lte(reno.components.Operation):
 
 
 class gt(reno.components.Operation):
-    """a > b
+    """a > b.
 
     String notation: ``(> A B)``
     """
 
     OP_REPR = ">"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} > {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a > b
 
@@ -1053,23 +1072,23 @@ class gt(reno.components.Operation):
 
 
 class gte(reno.components.Operation):
-    """a >= b
+    """a >= b.
 
     String notation: ``(>= A B)``
     """
 
     OP_REPR = ">="
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\geq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a >= b
 
@@ -1083,23 +1102,23 @@ class gte(reno.components.Operation):
 
 
 class eq(reno.components.Operation):
-    """a == b
+    """a == b.
 
     String notation: ``(== A B)``
     """
 
     OP_REPR = "=="
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} = {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a == b
 
@@ -1114,23 +1133,23 @@ class eq(reno.components.Operation):
 
 
 class ne(reno.components.Operation):
-    """a != b
+    """a != b.
 
     String notation: ``(!= A B)``
     """
 
     OP_REPR = "!="
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\neq {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a != b
 
@@ -1146,23 +1165,23 @@ class ne(reno.components.Operation):
 
 # TODO: rename to just and?
 class bool_and(reno.components.Operation):
-    """a and b
+    """a and b.
 
     String notation: ``(and A B)``
     """
 
     OP_REPR = "and"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ and }} {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a & b
 
@@ -1177,23 +1196,23 @@ class bool_and(reno.components.Operation):
 
 # TODO: rename to just or?
 class bool_or(reno.components.Operation):
-    """a or b
+    """a or b.
 
     String notation: ``(or A B)``
     """
 
     OP_REPR = "or"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)} \\text{{ or }} {self.sub_equation_parts[1].latex(**kwargs)}"
 
     def get_type(self) -> type:
         return bool
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> bool | np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return a | b
 
@@ -1207,18 +1226,19 @@ class bool_or(reno.components.Operation):
 
 
 class minimum(reno.components.Operation):
-    """Element-wise minimum of array elements between two arrays or values, same as np.minimum.
+    """Element-wise minimum of array elements between two arrays or values, same as
+    np.minimum.
 
     String notation: ``(minimum A B)``
     """
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{min}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return np.minimum(a, b)
 
@@ -1233,18 +1253,19 @@ class minimum(reno.components.Operation):
 
 
 class maximum(reno.components.Operation):
-    """Element-wise maximum of array elements between two arrays or values, same as np.maximum.
+    """Element-wise maximum of array elements between two arrays or values, same as
+    np.maximum.
 
     String notation: ``(maximum A B)``
     """
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{max}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         a, b = adjust_shapes_for_n(*self.sub_equation_parts[0:2], **kwargs)
         return np.maximum(a, b)
 
@@ -1264,13 +1285,13 @@ class clip(reno.components.Operation):
     String notation: ``(clip A B C)``
     """
 
-    def __init__(self, a, b, c):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue, c: EquationOrValue):
         super().__init__(a, b, c)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{clip}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         return np.clip(
             self.sub_equation_parts[0].eval(**kwargs),
             self.sub_equation_parts[1].eval(**kwargs),
@@ -1311,13 +1332,13 @@ class pow(reno.components.Operation):
 
     OP_REPR = "^"
 
-    def __init__(self, a, b):
+    def __init__(self, a: EquationOrValue, b: EquationOrValue):
         super().__init__(a, b)
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}^{{{self.sub_equation_parts[1].latex(**kwargs)}}}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.sub_equation_parts[0].eval(**kwargs) ** self.sub_equation_parts[
             1
         ].eval(**kwargs)
@@ -1332,21 +1353,22 @@ class pow(reno.components.Operation):
 
 
 class log(reno.components.Operation):
-    """ln(a) (natural log, naming it log because this is pytensor's and numpy's default)
+    """ln(a) (natural log, naming it log because this is pytensor's and numpy's
+    default).
 
     String notation: ``(log A B C)``
     """
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
     def get_type(self) -> type:
         return float
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{ln}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         return np.log(self.sub_equation_parts[0].eval(**kwargs))
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1357,21 +1379,21 @@ class log(reno.components.Operation):
 
 
 class sin(reno.components.Operation):
-    """sin(a)
+    """sin(a).
 
     String notation: ``(sin A)``
     """
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
     def get_type(self) -> type:
         return float
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{sin}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         return np.sin(self.sub_equation_parts[0].eval(**kwargs))
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1385,8 +1407,8 @@ class sin(reno.components.Operation):
 
 
 class interpolate(reno.components.Operation):
-    """Given a dataset of x -> y datapoints, interpolate any new data along the line formed by the points.
-    Equivalent to numpy's interp function.
+    """Given a dataset of x -> y datapoints, interpolate any new data along the line
+    formed by the points. Equivalent to numpy's interp function.
 
     String notation: ``(interpolate X X_DATA Y_DATA)``
 
@@ -1396,17 +1418,19 @@ class interpolate(reno.components.Operation):
         y_data: the y-coordinate data to base interpolation on.
     """
 
-    def __init__(self, x, x_data: list | np.ndarray, y_data: list | np.ndarray):
+    def __init__(
+        self, x: EquationOrValue, x_data: list | np.ndarray, y_data: list | np.ndarray
+    ):
         super().__init__(x, x_data, y_data)
 
     def get_shape(self) -> int:
         """The shapes of x_data and y_data don't matter, should be same as input."""
         return self.sub_equation_parts[0].shape
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{interpolate}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         return np.interp(
             self.sub_equation_parts[0].eval(**kwargs),
             self.sub_equation_parts[1].eval(**kwargs),
@@ -1434,7 +1458,7 @@ class assign(reno.components.Operation):
 
     OP_REPR = "="
 
-    def __init__(self, a):
+    def __init__(self, a: EquationOrValue):
         super().__init__(a)
 
     def get_shape(self) -> int:
@@ -1443,10 +1467,10 @@ class assign(reno.components.Operation):
     def get_type(self) -> type:
         return self.sub_equation_parts[0].dtype
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return self.sub_equation_parts[0].latex(**kwargs)
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | bool | np.ndarray:
         return self.sub_equation_parts[0].eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1462,17 +1486,17 @@ class astype(reno.components.Operation):
     String notation: ``(astype A DTYPE)``
     """
 
-    def __init__(self, a, dtype: type):
+    def __init__(self, a: EquationOrValue, dtype: type):
         self.__dtype = dtype
         super().__init__(a)
 
     def get_type(self) -> type:
         return self.__dtype
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return self.sub_equation_parts[0].latex(**kwargs)
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | bool | np.ndarray:
         sub_val = self.sub_equation_parts[0].eval(**kwargs)
         if isinstance(sub_val, np.ndarray):
             sub_val = sub_val.astype(self.__dtype)
@@ -1501,7 +1525,7 @@ class astype(reno.components.Operation):
             dtype = bool
         return astype(ref, dtype)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"(astype {self.sub_equation_parts[0].__repr__()} {self.__dtype.__name__})"
         )
@@ -1516,7 +1540,7 @@ class stack(reno.components.Operation):
     String notation: ``(stack A ...)``
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: list[EquationOrValue]):
         super().__init__(*args)
 
     def get_shape(self) -> int:
@@ -1529,13 +1553,13 @@ class stack(reno.components.Operation):
             return float
         return types[0]
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         building_str = (
             f"[{','.join(part.latex(**kwargs) for part in self.sub_equation_parts)}]"
         )
         return building_str
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> np.ndarray:
         to_stack = [part.eval(**kwargs) for part in self.sub_equation_parts]
 
         # have to find the actual n-shape to correctly handle
@@ -1578,7 +1602,12 @@ class ifelse(reno.components.Operation):
 
     OP_REPR = "if"
 
-    def __init__(self, condition, val_if_true, val_if_false=0):
+    def __init__(
+        self,
+        condition: EquationOrValue,
+        val_if_true: EquationOrValue,
+        val_if_false: EquationOrValue = 0,
+    ):
         self.sub_eq = reno.components.Piecewise(
             [val_if_true, val_if_false],
             [condition.equal(True), condition.not_equal(True)],
@@ -1586,10 +1615,10 @@ class ifelse(reno.components.Operation):
         super().__init__(val_if_true, val_if_false, condition, self.sub_eq)
         self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return self.sub_eq.latex(**kwargs)
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | bool | np.ndarray:
         return self.sub_eq.eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1606,7 +1635,7 @@ class pulse(reno.components.Operation):
     String notation: ``(pulse START [WIDTH=1])``
     """
 
-    def __init__(self, start, width=1):
+    def __init__(self, start: EquationOrValue, width: EquationOrValue = 1):
         t = reno.components.TimeRef()
         self.sub_eq = reno.components.Piecewise(
             [0, 1],
@@ -1618,10 +1647,10 @@ class pulse(reno.components.Operation):
         super().__init__(start, width, self.sub_eq)
         self.non_repr_part_indices.append(2)  # ignore sub_eq in parsing/str
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.sub_equation_parts[2].eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1654,7 +1683,12 @@ class repeated_pulse(reno.components.Operation):
             array([[1, 0, 0, 1, 0, 0, 1, 0, 0, 1]])
     """
 
-    def __init__(self, start, interval, width=1):
+    def __init__(
+        self,
+        start: EquationOrValue,
+        interval: EquationOrValue,
+        width: EquationOrValue = 1,
+    ):
         t = reno.components.TimeRef()
         self.sub_eq = reno.components.Piecewise(
             [0, 1],
@@ -1664,13 +1698,12 @@ class repeated_pulse(reno.components.Operation):
             ],
         )
         super().__init__(start, interval, width, self.sub_eq)
-        # super().__init__(start, interval, width)
         self.non_repr_part_indices.append(3)  # ignore sub_eq in parsing/str
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{repeated\\_pulse}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         # return self.sub_equation_parts[3].eval(**kwargs)
         return self.sub_eq.eval(**kwargs)
 
@@ -1689,17 +1722,17 @@ class step(reno.components.Operation):
     String notation: ``(step VALUE TIMESTEPS)``
     """
 
-    def __init__(self, value, timesteps):
+    def __init__(self, value: EquationOrValue, timesteps: EquationOrValue):
         t = reno.components.TimeRef()
         self.sub_eq = reno.components.Piecewise(
             [0, value], [t < timesteps, t >= timesteps]
         )
         super().__init__(value, timesteps, self.sub_eq)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{step}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.sub_equation_parts[2].eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1715,7 +1748,7 @@ class delay1(reno.components.ExtendedOperation):
     String notation: ``(delay1 INPUT DELAY_TIME)``
     """
 
-    def __init__(self, input, delay_time):
+    def __init__(self, input: EquationOrValue, delay_time: EquationOrValue):
         self.inflow = reno.Flow(input)
         self.delay_stock = reno.Stock()
         self.outflow = reno.Flow(self.delay_stock / delay_time)
@@ -1730,10 +1763,10 @@ class delay1(reno.components.ExtendedOperation):
             },
         )
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{delay1}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.outflow.eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1750,7 +1783,7 @@ class delay3(reno.components.ExtendedOperation):
     String notation: ``(delay3 INPUT DELAY_TIME)``
     """
 
-    def __init__(self, input, delay_time):
+    def __init__(self, input: EquationOrValue, delay_time: EquationOrValue):
         self.delay1 = delay1(input, delay_time / 3)
         self.delay2 = delay1(self.delay1, delay_time / 3)
         self.delay3 = delay1(self.delay2, delay_time / 3)
@@ -1758,12 +1791,12 @@ class delay3(reno.components.ExtendedOperation):
         # don't need to pass any implicit components up because the individual
         # delays should handle that.
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{delay3}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     # TODO: does this work just as delay3 or do we need to explicitly reference
     # outflow?
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.delay3.eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1779,7 +1812,12 @@ class smooth(reno.components.ExtendedOperation):
     String notation: ``(smooth INPUT ADJUSTMENT_TIME [INITIAL_VALUE=0])``
     """
 
-    def __init__(self, input, adjustment_time, initial_value=0):
+    def __init__(
+        self,
+        input: EquationOrValue,
+        adjustment_time: EquationOrValue,
+        initial_value: EquationOrValue = 0,
+    ):
         self.actual_value = reno.Variable(input, dtype=float)
         self.output = reno.Stock(init=initial_value, dtype=float)  # "perceived" value
         self.gap = reno.Variable(self.actual_value - self.output, dtype=float)
@@ -1795,10 +1833,10 @@ class smooth(reno.components.ExtendedOperation):
             },
         )
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{smooth}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.output.eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1825,7 +1863,7 @@ class inflow(reno.components.Operation):
     String notation: ``(inflow FLOW)``
     """
 
-    def __init__(self, flow):
+    def __init__(self, flow: reno.components.Flow):
         super().__init__(flow)
         if not isinstance(flow, reno.components.Flow):
             raise TypeError(f"The inflow op must be on a Flow, not a {type(flow)}")
@@ -1841,10 +1879,10 @@ class inflow(reno.components.Operation):
     def get_type(self) -> type:
         return self.sub_equation_parts[0].dtype
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return self.sub_equation_parts[0].latex(**kwargs)
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return self.sub_equation_parts[0].eval(**kwargs)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -1860,7 +1898,7 @@ class outflows(reno.components.Operation):
     String notation: ``(outflows STOCK)``
     """
 
-    def __init__(self, stock):
+    def __init__(self, stock: reno.components.Stock):
         # WAIT: optionally include a list of flows to exclude??
         super().__init__(stock)
         if not isinstance(stock, reno.components.Stock):
@@ -1874,10 +1912,10 @@ class outflows(reno.components.Operation):
         else:
             return {flow: ["outflows"] for flow in self.sub_equation_parts[0].out_flows}
 
-    def op_latex(self, **kwargs) -> str:
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.sub_equation_parts[0].latex(**kwargs)}.\\text{{outflows}}"
 
-    def op_eval(self, **kwargs):
+    def op_eval(self, **kwargs: dict) -> int | float | np.ndarray:
         return (
             self.sub_equation_parts[0]
             .combine_eqs(self.sub_equation_parts[0].out_flows)
@@ -1969,18 +2007,17 @@ def dist_dim_shape_args_str(
 
 
 class Normal(reno.components.Distribution):
-    """Normal/Gaussian distribution
+    """Normal/Gaussian distribution.
 
     String notation: ``Normal(mean, std=1.0, per_timestep=False)``
     """
 
-    def __init__(self, mean, std=1.0, per_timestep: bool = False):
-        # super().__init__()
-        # self.mean = mean
-        # self.std = std
+    def __init__(
+        self, mean: int | float, std: int | float = 1.0, per_timestep: bool = False
+    ):
         super().__init__(mean, std, per_timestep=per_timestep)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
@@ -1994,7 +2031,7 @@ class Normal(reno.components.Distribution):
     def get_type(self) -> type:
         return float
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.per_timestep:
             return f"Normal({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
         return f"Normal({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
@@ -2019,10 +2056,10 @@ class Uniform(reno.components.Distribution):
     String notation: ``Uniform(low=0.0, high=1.0, per_timestep=False)``
     """
 
-    def __init__(self, low=0.0, high=1.0, per_timestep: bool = False):
+    def __init__(self, low: float = 0.0, high: float = 1.0, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{U}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2036,7 +2073,7 @@ class Uniform(reno.components.Distribution):
             size=dims,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.per_timestep:
             return f"Uniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
         return f"Uniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
@@ -2066,7 +2103,7 @@ class DiscreteUniform(reno.components.Distribution):
     def __init__(self, low: int = 0, high: int = 2, per_timestep: bool = False):
         super().__init__(low, high, per_timestep=per_timestep)
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{DiscreteUniform}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2080,7 +2117,7 @@ class DiscreteUniform(reno.components.Distribution):
             size=dims,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.per_timestep:
             return (
                 f"DiscreteUniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)})"
@@ -2114,7 +2151,7 @@ class Bernoulli(reno.components.Distribution):
         super().__init__(p, per_timestep=per_timestep)
         self.use_p_dist = use_p_dist
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{Bernoulli}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def populate(self, n: int, steps: int = 0, dim: int = 1):
@@ -2124,7 +2161,7 @@ class Bernoulli(reno.components.Distribution):
     def get_type(self) -> type:
         return int
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.use_p_dist and not self.per_timestep:
             return f"Bernoulli({self.clean_part_repr(0)})"
         return f"Bernoulli({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
@@ -2174,7 +2211,7 @@ class Categorical(reno.components.Distribution):
         self.use_p_dist = use_p_dist
         self.expected_arg_num_dims[0] = 1
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{Categorical}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
     def get_type(self) -> type:
@@ -2187,7 +2224,7 @@ class Categorical(reno.components.Distribution):
             np.random.multinomial(1, self.sub_equation_parts[0].eval(), dims), axis=-1
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Categorical({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -2217,7 +2254,7 @@ class List(reno.components.Distribution):
         super().__init__()
         self.values = values
 
-    def op_latex(self, **kwargs):
+    def op_latex(self, **kwargs: dict) -> str:
         return f"{self.values}"
 
     def get_shape(self):
@@ -2263,7 +2300,7 @@ class List(reno.components.Distribution):
             ) or not isinstance(self.values[0], (list, set)):
                 self.value = np.repeat(np.expand_dims(self.value, axis=1), dim, axis=1)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"List({self.values})"
 
 
