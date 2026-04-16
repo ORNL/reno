@@ -42,17 +42,21 @@ function that every EquationPart has, which returns the PyTensor equivalent of
 that operation/thing.
 
 Note that there are functions to directly create pymc models/operations and functions
-to create strings of PyMC/PyTensor code (suffixed with _str). These exist for two reasons:
+to create strings of PyMC/PyTensor code (suffixed with _str). These exist for two
+reasons:
 
 1. Debugging - figuring out errors or issues with PyMC models can be an adventure,
-    and doubly so if you can't directly see or modify the model code. ``to_pymc_model_str()``
-    should _in theory_ generate a string of code equivalent to what's used in
-    ``to_pymc_model()``, but can be edited and run separately as needed to test
-    changes.
+    and doubly so if you can't directly see or modify the model code.
+    ``to_pymc_model_str()`` should _in theory_ generate a string of code equivalent to
+    what's used in ``to_pymc_model()``, but can be edited and run separately as needed
+    to test changes.
 2. Flexibility - if trying to do something beyond what Reno's PyMC naive translation
     can support, the string code output gives a starting point that can be directly
     incorporated or modified to do more advanced things.
 """
+
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
 
 from collections.abc import Callable
 
@@ -64,7 +68,7 @@ import pymc as pm
 import reno
 
 
-def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
+def pt_sim_step(model: reno.Model, steps: int) -> Callable:
     """Returns a target function for pytensor scan, this equates to a single step in the
     system dynamics model simulation. This probably shouldn't be used anywhere
     outside of the context of the pymc model creation function.
@@ -76,7 +80,7 @@ def pt_sim_step(model: "reno.model.Model", steps: int) -> Callable:
     #   (which are based on current values, hence the need for dependency
     #   ordering)
 
-    def step(*args):
+    def step(*args: list) -> tuple[list[pt.TensorVariable], dict]:  # noqa: C901
         original_refs = resolve_pt_scan_args(model, args, steps)
         # keeping a non-modified version of refs to help with typechecking
         # at the end of this function
@@ -180,7 +184,7 @@ def pt_sim_step_imports() -> str:
     return "\n".join(import_strs)
 
 
-def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
+def pt_sim_step_str(model: reno.Model, steps: int) -> str:  # noqa: C901
     """Construct a string of python code for the step function for this model that could
     be used by a pytensor scan operation. Should be a functional (string) equivalent of
     the ``pt_sim_step()`` function.
@@ -191,8 +195,8 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
 
     (use ``pt_sim_step_imports()`` to get these programatically)
 
-    Note that this code is in no way PEP8 formatted, for complex models some of the lines
-    will be exceptionally long.
+    Note that this code is in no way PEP8 formatted, for complex models some of the
+    lines will be exceptionally long.
     """
     name = "step" if model.name is None else f"{model.name}_step"
     code = f"def {name}(*args):\n"
@@ -231,7 +235,6 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
         # ensure a full history correctly has the new value at the end
         if stock in historical_refs_from_tracked:
             code += f"\t{stock.qual_name()}_h = pt.concatenate([{stock.qual_name()}_h[1:], pt.as_tensor([{stock.qual_name()}_next])])\n"
-            # refs_dict[f"{stock.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{stock.qual_name()}_h']}, pt.as_tensor([{f'{stock.qual_name()}_next'}])"
 
     # dependency ordering for non-static flow/var eqs
     ref_compute_order = model.dependency_compute_order(inits_order=False)
@@ -258,7 +261,6 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
             # ensure a full history correctly has the new value at the end
             if obj in historical_refs_from_tracked:
                 code += f"\t{obj.qual_name()}_h = pt.concatenate([{obj.qual_name()}_h[1:], pt.as_tensor([{obj.qual_name()}_next])])\n"
-                # refs_dict[f"{obj.qual_name()}_h"] = f"pt.concatenate([{refs_dict[f'{obj.qual_name()}_h']}, pt.as_tensor([{pt_eq}])"
 
     # type checking
     code += "\n\t# Type checks\n"
@@ -280,20 +282,20 @@ def pt_sim_step_str(model: "reno.model.Model", steps: int) -> str:
     return code.replace("\t", "    ")
 
 
-def to_pymc_model(
-    model: "reno.model.Model",
-    observations: list["reno.ops.Observation"] = None,
+def to_pymc_model(  # noqa: C901
+    model: reno.Model,
+    observations: list[reno.Observation] = None,
     steps: int = None,
-) -> pm.model.core.Model:
-    """Generate a pymc model for bayesian analysis of this system dynamics model. The general
-    idea is that this creates corresponding pymc variables (or distributions as relevant) for
-    each stock/flow/var in the model, and sets up the full simulation sequence computations
-    based on the generated step function from ``pt_sim_step()``.
+) -> pm.Model:
+    """Generate a pymc model for bayesian analysis of this system dynamics model. The
+    general idea is that this creates corresponding pymc variables (or distributions as
+    relevant) for each stock/flow/var in the model, and sets up the full simulation
+    sequence computations based on the generated step function from ``pt_sim_step()``.
 
-    Sampling with priors should be equivalent to running the system dynamics model normally
-    (this is essentially "forward simulation mode".) Add observations to the pymc model
-    variables and sample from posterior to run bayesian analysis/determine how distributions
-    of any other variables may be affected.
+    Sampling with priors should be equivalent to running the system dynamics model
+    normally (this is essentially "forward simulation mode".) Add observations to the
+    pymc model variables and sample from posterior to run bayesian analysis/determine
+    how distributions of any other variables may be affected.
     """
     model._find_all_extended_op_implicit_components()
 
@@ -320,8 +322,9 @@ def to_pymc_model(
 
         refs = {}
         inits_by_obj = {}
-        # same logic as pt_sim_step for these being dictionaries, ordering is tricky with these,
-        # we always assume arg/return orders are in default stocks + flows + vars order
+        # same logic as pt_sim_step for these being dictionaries, ordering is tricky
+        # with these, we always assume arg/return orders are in default stocks + flows
+        # + vars order
         statics_by_obj = {}
         # note that we separate "statics" because the pytensor scan
         # equivalent is to pass them as "non-sequences" (they're passed in a
@@ -505,8 +508,8 @@ def to_pymc_model(
                 e.add_note(f"\tShape: {obj.shape}")
                 raise
 
-        # set up a timestep sequence to pass to scan if any equations are using a TimeRef
-        # e.g. t = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        # set up a timestep sequence to pass to scan if any equations are using a
+        # TimeRef e.g. t = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         sequences = []
         if model.find_timeref_name() is not None:
             timestep_seq = pt.as_tensor(np.arange(1, steps))
@@ -533,7 +536,7 @@ def to_pymc_model(
             if obj in statics_by_obj:
                 statics.append(statics_by_obj[obj])
 
-        seqs, updates = pytensor.scan(
+        seqs, _ = pytensor.scan(
             fn=pt_sim_step(model, steps),
             sequences=sequences,
             non_sequences=statics,
@@ -603,14 +606,14 @@ def pymc_model_imports() -> str:
 # TODO: wrap in function option (string function would return model)
 # TODO: option to add in necessary imports
 # TODO: can you run black formatting programmatically on a string?
-def to_pymc_model_str(
-    model: "reno.model.Model",
-    observations: list[reno.ops.Observation] = None,
+def to_pymc_model_str(  # noqa: C901
+    model: reno.Model,
+    observations: list[reno.Observation] = None,
     steps: int = None,
 ) -> str:
-    """Construct a string of python code to create a pymc model wrapping this system dynamics
-    model. Should be a functional (string) equivalent of the ``to_pymc_model()`` function. Includes
-    the output from ``pt_sim_step_str()``.
+    """Construct a string of python code to create a pymc model wrapping this system
+    dynamics model. Should be a functional (string) equivalent of the
+    ``to_pymc_model()`` function. Includes the output from ``pt_sim_step_str()``.
 
     Expected imports for the resulting code to run:
         >>> import pytensor
@@ -884,10 +887,10 @@ def to_pymc_model_str(
 
 
 def find_tracked_ref_historical_ref(
-    model: "reno.model.Model",
+    model: reno.Model,
 ) -> dict[reno.components.TrackedReference, reno.components.HistoricalValue]:
-    """Get the set of tracked references that have historical values with
-    non-simple index equations and the corresponding historical value components
+    """Get the set of tracked references that have historical values with non-simple
+    index equations and the corresponding historical value components.
     """
     historical_values = []
     timeseries_values = []
@@ -924,13 +927,13 @@ def find_tracked_ref_historical_ref(
     return tracked_to_historical
 
 
-def find_historical_tracked_refs(
-    model: "reno.model.Model",
+def find_historical_tracked_refs(  # noqa: C901
+    model: reno.Model,
 ) -> dict[reno.components.TrackedReference, list[int]]:
-    """Get a dictionary of all tracked references in the model used in historical values,
-    and get the associated tap list for each. (Taps is what PyTensor calls indices
-    for previous sequence values, so you this is used for when an equation calls for
-    some stock value at t-5, etc.)
+    """Get a dictionary of all tracked references in the model used in historical
+    values, and get the associated tap list for each. (Taps is what PyTensor calls
+    indices for previous sequence values, so you this is used for when an equation calls
+    for some stock value at t-5, etc.).
 
     This is primarily used for population of pymc scan step and scan arguments.
     """
@@ -1005,7 +1008,7 @@ def find_historical_tracked_refs(
 
     # remove duplicate taps, ensure -1 is in there (we always want last val
     # of every ref in case it's used in a stock eq)
-    ref_taps = {ref: list(set(taps + [-1])) for ref, taps in ref_taps.items()}
+    ref_taps = {ref: list(set([*taps, -1])) for ref, taps in ref_taps.items()}
 
     # sort each taps list (order of taps is order they're passed to scan target
     # function, so we should keep consistent sorted ordering for the sanity of everyone)
@@ -1022,22 +1025,24 @@ def find_historical_tracked_refs(
     return ref_taps
 
 
-def expected_pt_scan_arg_names(
-    model: "reno.model.Model",
+def expected_pt_scan_arg_names(  # noqa: C901
+    model: reno.Model,
     as_dict: bool = False,
     tap_1_only: bool = False,
-    max_taps=None,
+    max_taps: int = None,
 ) -> list[str] | dict[str, str]:
-    """Pytensor scan target functions are called with a very specific ordering of function
-    arguments (see https://pytensor.readthedocs.io/en/latest/library/scan.html).
+    """Pytensor scan target functions are called with a very specific ordering of
+    function arguments.
 
-    Assuming a scan function signature of ``def scan(*args):``, this function
-    returns a list of the appropriate reference names to put on the left side of
-    a ``refname1, refname2, ... = args`` line.
+    (See https://pytensor.readthedocs.io/en/latest/library/scan.html).
 
-    Note that with as_dict, it returns a dictionary of reference strings. This is used directly
-    by pt_sim_step_str, but also includes refs for tap -1 references (to avoid being updated to
-    the "current" timestep) so this is useful for pt_sim_step too
+    Assuming a scan function signature of ``def scan(*args):``, this function returns a
+    list of the appropriate reference names to put on the left side of a ``refname1,
+    refname2, ... = args`` line.
+
+    Note that with as_dict, it returns a dictionary of reference strings. This is used
+    directly by pt_sim_step_str, but also includes refs for tap -1 references (to avoid
+    being updated to the "current" timestep) so this is useful for pt_sim_step too.
 
     so with as_dict False:
         [t, v0, v1, v2_h2, v2, ...]
@@ -1187,7 +1192,7 @@ def expected_pt_scan_arg_names(
 
 
 def resolve_pt_scan_args(
-    model: "reno.model.Model", args: list[pt.TensorVariable], max_taps: int = None
+    model: reno.Model, args: list[pt.TensorVariable], max_taps: int = None
 ) -> dict[str, pt.TensorVariable]:
     """Take the set of arguments passed by pytensor to a target scan function,
     and turn it into a dictionary for passing into reno math components' `pt()`
