@@ -1,5 +1,8 @@
 """Utility functions that are potentially needed in multiple modules."""
 
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 import importlib.resources
 import inspect
 from typing import Any
@@ -15,13 +18,13 @@ EQ_HIGHLIGHT_COLOR = "cyan"
 VAL_COLOR = "lime"
 
 
-def _get_assigned_var_name(var: Any) -> str:
-    """In a model context manager we don't have the direct ability to get the name of the variable
-    we're assigning to the model (to avoid the PyMC requirement of specifying the name separately
-    as a string.)
+def _get_assigned_var_name(var: Any) -> str | None:  # noqa: ANN401
+    """Inspect the current frame (e.g. within a context manager) and find the variable
+    name of the passed variable.
 
-    To address that, this function pulls from the local frame to find the variable matching the
-    one passed.
+    In a model context manager we don't have the direct ability to get the name of the
+    variable we're assigning to the model (to avoid the PyMC requirement of specifying
+    the name separately as a string.)
 
     https://stackoverflow.com/questions/18425225/getting-the-name-of-a-variable-as-a-string
     """
@@ -37,7 +40,7 @@ def _get_assigned_var_name(var: Any) -> str:
     return None
 
 
-def find_ref_root_model(ref):
+def find_ref_root_model(ref: reno.components.TrackedReference) -> reno.Model:
     """Find the top most parent model in the submodel tree."""
     model = ref.model
     while model.parent is not None:
@@ -46,8 +49,8 @@ def find_ref_root_model(ref):
 
 
 def ref_universe(
-    refs: list["reno.components.TrackedReference"], depth=1
-) -> list["reno.components.TrackedReference"]:
+    refs: list[reno.components.TrackedReference], depth: int = 1
+) -> list[reno.components.TrackedReference]:
     """Fancier recursive seek_refs, useful for collecting the full set of
     references to and from any in the given set of passed refs.
 
@@ -55,8 +58,10 @@ def ref_universe(
     references used.
 
     Args:
-        refs (list[reno.components.TrackedReference]): The references to start expanding outwards from.
-        depth (int): How many steps outward to take finding dependencies from the initial references list.
+        refs (list[reno.components.TrackedReference]): The references to start expanding
+            outwards from.
+        depth (int): How many steps outward to take finding dependencies from the
+            initial references list.
 
     Returns:
         A list (including the initial references) of expanded dependencies/dependents.
@@ -87,8 +92,11 @@ def ref_universe(
     return universe
 
 
-def is_ref_in_parent_scope(ref, source) -> bool:
+def is_ref_in_parent_scope(
+    ref: reno.components.TrackedReference, source: reno.components.TrackedReference
+) -> bool:
     """Check if a reference is in the scope _above_ some source reference.
+
     (In other words, in the source model's parent, or parent of that parent,
     up the chain, anything except the same model as source)
 
@@ -118,7 +126,7 @@ def is_ref_in_parent_scope(ref, source) -> bool:
     return False
 
 
-def ensure_scalar(operand: Any) -> Any:
+def ensure_scalar(operand: Any) -> Any:  # noqa: ANN401
     """Convert int/float types into a Scalar type if relevant, otherwise
     directly return what was passed.
     """
@@ -129,14 +137,14 @@ def ensure_scalar(operand: Any) -> Any:
     return operand
 
 
-def is_free_var(eq: "reno.components.EquationPart") -> bool:
+def is_free_var(eq: reno.components.EquationPart) -> bool:
     """A reference is a "free reference/free variable" if its equation
     has no references to _other_ references.
 
     Expects an EquationPart rather than only the ref itself because this applies
     both to stock .init as well as flow/var .eq
     """
-    if (
+    return (
         isinstance(
             eq,
             (
@@ -149,12 +157,10 @@ def is_free_var(eq: "reno.components.EquationPart") -> bool:
         )
         or eq is None
         or (isinstance(eq, reno.ops.assign) and is_free_var(eq.sub_equation_parts[0]))
-    ):
-        return True
-    return False
+    )
 
 
-def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
+def check_for_easy_static_time_eq(eq: reno.components.EquationPart) -> bool:
     """Determine whether an equation is `t - STATIC_EQ`.
 
     This is necessary for basic pymc optimizations on accessing historical values.
@@ -165,7 +171,7 @@ def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
         return False
     if not isinstance(eq.sub_equation_parts[0], reno.components.TimeRef):
         return False
-    if (
+    if (  # noqa: SIM103
         not is_static(eq.sub_equation_parts[1])
         or len(
             eq.sub_equation_parts[1].find_parts_of_type(reno.components.Distribution)
@@ -179,23 +185,21 @@ def check_for_easy_static_time_eq(eq: "reno.components.EquationPart") -> bool:
     return True
 
 
-def is_static(
-    eq: "reno.components.EquationPart",
-    checked: list["reno.components.Reference"] = None,
+def is_static(  # noqa: C901
+    eq: reno.components.EquationPart,
+    checked: list[reno.components.Reference] = None,
 ) -> bool:
-    """An equation is "static" if it only contains values that won't change, e.g. scalars,
-    distributions, or other static variables. Specifically stock and time references are
-    what make an equation _not_ static.
+    """An equation is "static" if it only contains values that won't change, e.g.
+    scalars, distributions, or other static variables. Specifically stock and time
+    references are what make an equation _not_ static.
 
     Args:
         eq (EquationPart): The equation to determine static status of.
-        checked (list[Reference]): Used internally to avoid infinite recursion in checking,
-            don't manually pass.
+        checked (list[Reference]): Used internally to avoid infinite recursion in
+            checking, don't manually pass.
     """
-    # print("Called is_static on", eq)
     if eq is None:
         # really?? I guess this makes sense, none isn't going to change if it even runs.
-        # print("No eq, so not static")
         return True
     if checked is None:
         checked = []
@@ -203,15 +207,12 @@ def is_static(
     # isinstance type is because you could theoretically have an eq of
     # e.g. Scalar(4) + Scalar(5) which is obviously still static
     for ref in eq.seek_refs():
-        # print("Checking", ref)
         # the hasattr is to check for already non-tracked references (e.g. TimeRef)
         if not hasattr(ref, "_static"):
-            # print("No _static, so not static")
             return False
 
         # TODO: TODO: TODO: WHAT A MESS. CLEAN THIS UP.
 
-        # if ref.eq is not None:
         if ref not in checked or ref._static is None:
             checked.append(ref)
             if not is_static(ref, checked):
@@ -245,14 +246,12 @@ def is_static(
         # if ref.eq is not None and not is_static(ref.eq):
         #     return False
     if isinstance(eq, reno.components.Distribution) and eq.per_timestep:
-        # print("Is distribution with per_timestep, not static")
         return False
     if isinstance(
         eq,
         (reno.components.Scalar, int, float, np.ndarray),
     ):
         # keeping this explicitly to make it obvious
-        # print("Equation is a scalar, int, float, or array, is static!")
         return True
     if isinstance(
         eq,
@@ -264,7 +263,6 @@ def is_static(
     ):
         # anything dealing with a stock (inherently updated every timestep) or
         # is time itself, is obv not static
-        # print("Explicit time-based thing included, not static")
         return False
     if isinstance(eq, reno.ops.slice):
         # slices can potentially index time-based things (if stop is None or explicitly a
@@ -276,7 +274,6 @@ def is_static(
             or (eq.stop is not None and not eq.stop.is_static())
             or (eq.start is not None and not eq.start.is_static())
         ):
-            # print("Slice with non-static start/stop, not static")
             return False
 
     if isinstance(eq, reno.ops.orient_timeseries):
@@ -288,24 +285,24 @@ def is_static(
 
     # UGH. I'm just playing whackamole (wow that word looks like guacamole) with
     # weird edgecases I keep accidentally adding.
-    if (
+    if (  # noqa: SIM103
         hasattr(eq, "eq")
         and isinstance(eq.eq, reno.components.Distribution)
         and eq.eq.per_timestep
     ):
-        # print("Sub equation is a per_timestep distribution, not static")
         return False
     # this was really only created for one specific use-case, a technically
     # non-static distribution (with per_timestep specified) doesn't trigger any
     # of the above when you're calling is_static on _the containing reference_.
     # if isinstance(eq, (reno.components.Variable, reno.components.Flow)):
     #     return is_static(eq.eq, checked)
-    # print("Nothing else triggered, is static")
     return True
 
 
 def latex_name(name: str, cmd: str = "text") -> str:
-    """Wrap a reference name in a latex string, correctly escaping anything as necessary.
+    """Wrap a reference name in a latex string, correctly escaping anything as
+    necessary.
+
     It will _not_ escape if there's a '$', indicating 'yes use mathmode' like in latex.
     This allows reference labels like `"$x_3$"`
 
@@ -315,15 +312,21 @@ def latex_name(name: str, cmd: str = "text") -> str:
 
         >>> latex_name("x_3", "texttt")
         "\\texttt{x\\_3}"
-    """
+    """  # noqa: D301
     if "$" in name:
         return f"\\{cmd}{{{name}}}"
     escaped_name = name.replace("_", "\\_")
     return f"\\{cmd}{{{escaped_name}}}"
 
 
-def latex_debug_output(eq_part, latex_str, color=None, style="underset", **kwargs):
-    """Show the evaluated output of the equation part in brackets after the name
+def latex_debug_output(
+    eq_part: reno.components.EquationPart,
+    latex_str: str,
+    color: str = None,
+    style: str = "underset",
+    **kwargs: dict,
+) -> str:
+    """Show the evaluated output of the equation part in brackets after the name.
 
     Style: "beside", "underset", "underbrace"
     """
@@ -385,19 +388,23 @@ def latex_eqline_wrap(eq_text: str, highlight: bool = False) -> str:
     return string
 
 
-def range_eq_latex(min_eq, max_eq, **kwargs) -> str:
+def range_eq_latex(
+    min_eq: reno.components.EquationPart,
+    max_eq: reno.components.EquationPart,
+    **kwargs: dict,
+) -> str:
     """Get the latex string for displaying the combined min/max range of a reference."""
     if min_eq is None and max_eq is None:
         return ""
 
     range_eq = "\\mkern18mu \\in"
 
-    if min_eq is None:
+    if min_eq is None:  # noqa: SIM108
         min_text = "(-\\infty,"
     else:
         min_text = "[" + min_eq.latex(**kwargs) + ","
 
-    if max_eq is None:
+    if max_eq is None:  # noqa: SIM108
         max_text = "\\infty)"
     else:
         max_text = max_eq.latex(**kwargs) + "]"
@@ -406,8 +413,8 @@ def range_eq_latex(min_eq, max_eq, **kwargs) -> str:
 
 
 def get_dependency_relevant_equation_part(
-    init_eqs: bool, ref: "reno.components.Reference"
-) -> "reno.components.EquationPart":
+    init_eqs: bool, ref: reno.components.Reference
+) -> reno.components.EquationPart:
     """Determine what equation part should be used to run seek_refs on
     in order to determine compute dependencies.
     """
@@ -433,9 +440,9 @@ def get_dependency_relevant_equation_part(
         return ref
 
 
-def dependency_compute_order(
-    refs: list["reno.components.Reference"], init_eqs: bool = False, debug: bool = False
-) -> list["reno.components.Reference"]:
+def dependency_compute_order(  # noqa: C901
+    refs: list[reno.components.Reference], init_eqs: bool = False, debug: bool = False
+) -> list[reno.components.Reference]:
     """Find a dependency-safe ordering for reference equations by iterating through
     and each time adding the first reference that doesn't depend on any references
     not yet added.
