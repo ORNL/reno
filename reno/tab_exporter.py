@@ -1,9 +1,11 @@
 """Script to export clean copies of interactive explorer visualizations/session tabs."""
 
+from __future__ import annotations
+
 import base64
 import json
-import os
 import sys
+from pathlib import Path
 
 import panel as pn
 from bokeh.resources import INLINE
@@ -24,10 +26,10 @@ def load_pn_panes(model_file: str, panesset_file: str) -> reno.explorer.PanesSet
     """
     pn.extension("gridstack", "texteditor", "terminal")
 
-    with open(model_file) as infile:
+    with Path(model_file).open() as infile:
         model_data = json.load(infile)
 
-    with open(panesset_file) as infile:
+    with Path(panesset_file).open() as infile:
         panesset_data = json.load(infile)
 
     model = reno.model.Model.from_dict(model_data)
@@ -38,12 +40,12 @@ def load_pn_panes(model_file: str, panesset_file: str) -> reno.explorer.PanesSet
     return panes
 
 
-def export_clean_html(model_file: str, panesset_file: str, output_path: str):
+def export_clean_html(model_file: str, panesset_file: str, output_path: str) -> None:
     """Cleaner approach to export_bokeh_html. This relies on every pane type having a
     ``to_html`` function that outputs something nice and static, (e.g. embedding images,
     little to no JS, etc.).
 
-    Resulting HTML should be standalone and is much more amenable to printing/PDF export.
+    Resulting HTML should be standalone and is much more amenable to printing/PDF export
 
     Args:
         model_file (str): Path to a model JSON file.
@@ -84,14 +86,14 @@ def export_clean_html(model_file: str, panesset_file: str, output_path: str):
 
     html += "</div></body>"
 
-    with open(output_path, "w") as outfile:
+    with Path(panesset_file).open("w") as outfile:
         outfile.write(html)
 
 
-def export_bokeh_html(model_file: str, panesset_file: str, output_path: str):
-    """Leaving in just in case we find it useful, but this effectively dumps out a small HTML
-    that just loads in a ****ton of JS to populate every bokeh component. This is fine for
-    just HTML outputs, but very messy to try to create printable PDFs with.
+def export_bokeh_html(model_file: str, panesset_file: str, output_path: str) -> None:
+    """Leaving in just in case we find it useful, but this effectively dumps out a small
+    HTML that just loads in a ****ton of JS to populate every bokeh component. This is
+    fine for just HTML outputs, but very messy to try to create printable PDFs with.
     """
     paneset = load_pn_panes(model_file, panesset_file)
 
@@ -126,7 +128,7 @@ def export_bokeh_html(model_file: str, panesset_file: str, output_path: str):
     grid.save(output_path, resources=INLINE, embed=True)
 
 
-def export_selenium_pdf(input_path: str, output_path: str):
+def export_selenium_pdf(input_path: str, output_path: str) -> None:
     """Create a PDF from an HTML file using selenium's chrome webdriver.
 
     Args:
@@ -140,11 +142,11 @@ def export_selenium_pdf(input_path: str, output_path: str):
     options = Options()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
-    driver.get(f"file://{os.path.abspath(input_path)}")
+    driver.get(f"file://{Path(input_path).resolve()}")
     print_options = PrintOptions()
     print_options.shink_to_fit = True
     pdf = base64.b64decode(driver.print_page(print_options))
-    with open(output_path, "wb") as outfile:
+    with Path(output_path).open("wb") as outfile:
         outfile.write(pdf)
 
 
