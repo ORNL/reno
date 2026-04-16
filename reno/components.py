@@ -293,16 +293,17 @@ class EquationPart:
         """
         return str(self.value)
 
-    def seek_refs(
+    def seek_refs(  # noqa: C901
         self, include_ref_types: bool = False
-    ) -> list[Reference] | dict[Reference, list[str]]:  # noqa: C901
+    ) -> list[Reference] | dict[Reference, list[str]]:
         """Recursively find a list of all References immediately underneath this part.
 
         Either provides a list of references that appear underneath these equations
         or a dictionary with the "roles" or types that those references play.
 
-        Note that this doesn't infinitely recurse into TrackedReferences themselves, this is
-        used to find the outermost references that need to resolve. (Avoiding circular refs)
+        Note that this doesn't infinitely recurse into TrackedReferences themselves,
+        this is used to find the outermost references that need to resolve. (Avoiding
+        circular refs)
         """
         # TODO: (2026-03-18): break this up so that components reponsible for
         # the sub behavior, bad pattern to be defining _everything_ up here.
@@ -361,7 +362,9 @@ class EquationPart:
                     else:
                         refs.append(part.tracked_ref)
                         refs.append(part)  # TODO: (2025.02.03) ?????
-                        # I feel like I'm still missing something between eq setting, assign op, seek_refs and static checks, but test_static_check_eq_with_historical_value breaks without this
+                        # I feel like I'm still missing something between eq setting,
+                        # assign op, seek_refs and static checks, but
+                        # test_static_check_eq_with_historical_value breaks without this
                         refs.extend(part.index_eq.seek_refs(include_ref_types))
                 elif isinstance(part, Reference):
                     if include_ref_types:
@@ -464,8 +467,8 @@ class EquationPart:
         )
 
     def is_static(self) -> bool:
-        """Convenience shortcut for :py:func:`reno.utils.is_static` - True if this equation
-        doesn't rely on any dynamic values (thus constant), False if it does.
+        """Convenience shortcut for :py:func:`reno.utils.is_static` - True if this
+        equation doesn't rely on any dynamic values (thus constant), False if it does.
         """
         return is_static(self)
 
@@ -676,8 +679,8 @@ class Operation(EquationPart):
     """
 
     OP_REPR = None
-    """If defined, this is what gets printed as the 'label' for the operation in the repr,
-    and is what's used during parsing. Otherwise, just uses class name."""
+    """If defined, this is what gets printed as the 'label' for the operation in the
+    repr, and is what's used during parsing. Otherwise, just uses class name."""
 
     def __init__(self, *operands: list[EquationPart]):
         """Create an operation node involving the passed sub equation parts.
@@ -696,7 +699,7 @@ class Operation(EquationPart):
         t: int = 0,
         save: bool = False,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> int | float | np.ndarray:
         """'wrap' all operation eval functions so we get better error handling."""
         try:
@@ -880,14 +883,14 @@ class Reference(EquationPart):
         """A docstring to explain/describe the reference."""
         super().__init__()
 
-    def latex(self, **kwargs) -> str:
+    def latex(self, **kwargs: dict) -> str:
         """String representation suitable for a latex display."""
         latex_str = latex_name(self.label)
         if hasattr(self, "model") and self.model.parent is not None:
             latex_str += f"_{{{latex_name(self.model.label)}}}"
         if "t" in kwargs:
             latex_str = latex_debug_output(self, latex_str, **kwargs)
-        if "hl" in kwargs:
+        if "hl" in kwargs:  # noqa: SIM102
             if kwargs["hl"] == self.name or (
                 hasattr(self, "qual_name") and kwargs["hl"] == self.qual_name()
             ):

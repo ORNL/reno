@@ -1454,6 +1454,8 @@ class assign(reno.components.Operation):
     this mitigates the annoying recursion issue.
 
     String notation: ``(= A)``
+
+    Don't use this operation directly, it's implicitly added where needed.
     """
 
     OP_REPR = "="
@@ -1484,6 +1486,15 @@ class astype(reno.components.Operation):
     """Allow explicitly converting to float, int, etc.
 
     String notation: ``(astype A DTYPE)``
+
+    Example:
+        .. code-block:: python
+
+            >>> import reno as r
+            >>> r.Scalar(3).eval()
+            3
+            >>> r.Scalar(3).astype(float).eval()
+            3.0
     """
 
     def __init__(self, a: EquationOrValue, dtype: type):
@@ -1511,7 +1522,9 @@ class astype(reno.components.Operation):
         return f"({self.sub_equation_parts[0].pt_str(**refs)}).astype({self.__dtype.__name__})"
 
     @staticmethod
-    def parse(arg_strs: list[str], refs: dict[str, reno.components.Reference]):
+    def parse(
+        arg_strs: list[str], refs: dict[str, reno.components.Reference]
+    ) -> astype:
         if len(arg_strs) != 2:
             raise SyntaxError(
                 "astype op expects two arguments, the reference to convert, and the string type to convert to"
@@ -1594,8 +1607,17 @@ class stack(reno.components.Operation):
 
 
 class ifelse(reno.components.Operation):
-    """A simpler piecewise for a single boolean conditional, easier than constantly having to have
-    r.Piecewise([SOMETHING, 0], [CONDITION.equal(True), CONDITION.not_equal(True)])
+    """A simpler piecewise for a single boolean conditional.
+
+    Allows replacing
+
+    .. code-block:: python
+
+        r.Piecewise([SOMETHING, 0], [CONDITION.equal(True), CONDITION.not_equal(True)])
+
+    .. code-block:: python
+
+        r.ifelse(CONDITION, SOMETHING)
 
     String notation: ``(if CONDITION VAL_IF_TRUE [VAL_IF_FALSE=0])``
     """
@@ -1629,8 +1651,8 @@ class ifelse(reno.components.Operation):
 
 
 class pulse(reno.components.Operation):
-    """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``.
-    Returns 0 at all other timesteps.
+    """Return a '1' signal for ``width`` number of timesteps starting at timestep
+    ``start``, and 0 at all other timesteps.
 
     String notation: ``(pulse START [WIDTH=1])``
     """
@@ -1661,9 +1683,9 @@ class pulse(reno.components.Operation):
 
 
 class repeated_pulse(reno.components.Operation):
-    """Return a '1' signal for ``width`` number of timesteps starting at timestep ``start``,
-    with ``interval`` number of timesteps between each subsequent leading edge. Returns 0
-    at all other timesteps.
+    """Return a '1' signal for ``width`` number of timesteps starting at timestep
+    ``start``, with ``interval`` number of timesteps between each subsequent leading
+    edge. Returns 0 at all other timesteps.
 
     String notation: ``(repeated_pulse START INTERVAL [WIDTH=1])``
 
@@ -1777,8 +1799,7 @@ class delay1(reno.components.ExtendedOperation):
 
 
 class delay3(reno.components.ExtendedOperation):
-    """Third order material delay.
-    (Three chained first order delays.)
+    """Third order material delay, or three chained first order delays.
 
     String notation: ``(delay3 INPUT DELAY_TIME)``
     """
@@ -1868,7 +1889,9 @@ class inflow(reno.components.Operation):
         if not isinstance(flow, reno.components.Flow):
             raise TypeError(f"The inflow op must be on a Flow, not a {type(flow)}")
 
-    def seek_refs(self, include_ref_types: bool = False):
+    def seek_refs(
+        self, include_ref_types: bool = False
+    ) -> list[reno.Reference] | dict[reno.Reference, list[str]]:
         if not include_ref_types:
             return [self.sub_equation_parts[0]]
         return {self.sub_equation_parts[0]: ["inflow"]}
@@ -1904,7 +1927,9 @@ class outflows(reno.components.Operation):
         if not isinstance(stock, reno.components.Stock):
             raise TypeError(f"The outflows op must be on a Stock, not a {type(stock)}")
 
-    def seek_refs(self, include_ref_types: bool = False):
+    def seek_refs(
+        self, include_ref_types: bool = False
+    ) -> list[reno.Reference] | dict[reno.Reference, list[str]]:
         # have to override because outflows is "substituting in" the sum of flows.
         # print("In outflows seek refs!")
         if not include_ref_types:
@@ -1945,7 +1970,7 @@ class outflows(reno.components.Operation):
 def dist_shape(
     dist: reno.components.Distribution, n: int, steps: int, dim: int
 ) -> int | tuple:
-    """Compute the shape/dimensions needed to populate the passed distribution"""
+    """Compute the shape/dimensions needed to populate the passed distribution."""
     if not dist.per_timestep and dim == 1:
         shape = n
         # shape = (n, 1)
@@ -1962,8 +1987,8 @@ def dist_shape(
 def dist_params(
     dist: reno.components.Distribution, refs: dict
 ) -> tuple[str, int, str, int]:
-    """Extract any dunder variables in the refs passed from pymc.py for setting up parameters
-    for the pymc converted distribution.
+    """Extract any dunder variables in the refs passed from pymc.py for setting up
+    parameters for the pymc converted distribution.
     """
     name = "dist" + str(id(dist))
     if "__PTNAME__" in refs:
@@ -1981,7 +2006,7 @@ def dist_params(
 
 
 def dist_dim_shape_args(dist: reno.components.Distribution, refs: dict) -> dict:
-    name, dim, dim_name, seq = dist_params(dist, refs)
+    _name, dim, dim_name, seq = dist_params(dist, refs)
     if not dist.per_timestep and dim == 1:
         return dict()
     elif dist.per_timestep and dim == 1:
@@ -1995,7 +2020,7 @@ def dist_dim_shape_args(dist: reno.components.Distribution, refs: dict) -> dict:
 def dist_dim_shape_args_str(
     dist: reno.components.Distribution, refs: dict[str, str]
 ) -> str:
-    name, dim, dim_name, seq = dist_params(dist, refs)
+    _name, dim, dim_name, seq = dist_params(dist, refs)
     if not dist.per_timestep and dim == 1:
         return ""
     elif dist.per_timestep and dim == 1:
@@ -2020,7 +2045,7 @@ class Normal(reno.components.Distribution):
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
         self.value = np.random.normal(
             self.sub_equation_parts[0].eval(),
@@ -2037,7 +2062,7 @@ class Normal(reno.components.Distribution):
         return f"Normal({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return pm.Normal(
             name,
             self.sub_equation_parts[0].pt(**refs),
@@ -2046,7 +2071,7 @@ class Normal(reno.components.Distribution):
         )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
@@ -2065,7 +2090,7 @@ class Uniform(reno.components.Distribution):
     def get_type(self) -> type:
         return float
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
         self.value = np.random.uniform(
             self.sub_equation_parts[0].eval(),
@@ -2079,7 +2104,7 @@ class Uniform(reno.components.Distribution):
         return f"Uniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return pm.Uniform(
             name,
             self.sub_equation_parts[0].pt(**refs),
@@ -2088,7 +2113,7 @@ class Uniform(reno.components.Distribution):
         )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return f'pm.Uniform("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
@@ -2109,7 +2134,7 @@ class DiscreteUniform(reno.components.Distribution):
     def get_type(self) -> type:
         return int
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
         self.value = np.random.randint(
             self.sub_equation_parts[0].eval(),
@@ -2125,7 +2150,7 @@ class DiscreteUniform(reno.components.Distribution):
         return f"DiscreteUniform({self.clean_part_repr(0)}, {self.clean_part_repr(1)}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return pm.DiscreteUniform(
             name,
             self.sub_equation_parts[0].pt(**refs),
@@ -2134,15 +2159,15 @@ class DiscreteUniform(reno.components.Distribution):
         )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         return f'pm.DiscreteUniform("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
 
 
 class Bernoulli(reno.components.Distribution):
-    """Discrete single event probability (p is probability of eval == 1)
+    """Discrete single event probability (p is probability of eval == 1).
 
-    Specifying ``use_p_dist`` models p (in pymc) with an additional interpolated distribution
-    with a prior pdf_points set at 0 and 1 with the 1-p, p values.
+    Specifying ``use_p_dist`` models p (in pymc) with an additional interpolated
+    distribution with a prior pdf_points set at 0 and 1 with the 1-p, p values.
 
     String notation: ``Bernoulli(p, use_p_dist=False, per_timestep=False)``
     """
@@ -2154,7 +2179,7 @@ class Bernoulli(reno.components.Distribution):
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{Bernoulli}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
         self.value = np.random.binomial(1, self.sub_equation_parts[0].eval(), dims)
 
@@ -2167,7 +2192,7 @@ class Bernoulli(reno.components.Distribution):
         return f"Bernoulli({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
 
         inner_dist = self.sub_equation_parts[0].pt(**refs)
         if self.use_p_dist:
@@ -2184,7 +2209,7 @@ class Bernoulli(reno.components.Distribution):
         return pm.Bernoulli(name, inner_dist, **dist_dim_shape_args(self, refs))
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
 
         inner_dist = self.sub_equation_parts[0].pt_str(**refs)
         if self.use_p_dist:
@@ -2198,8 +2223,8 @@ class Categorical(reno.components.Distribution):
     """Random categorical distribution - you specify the probability per category,
     and the output is a set of category indices.
 
-    Specifying ``use_p_dist`` models p (in pymc) with an additional dirichlet distribution
-    with a prior of the passed p.
+    Specifying ``use_p_dist`` models p (in pymc) with an additional dirichlet
+    distribution with a prior of the passed p.
 
     String notation: ``Categorical(p, use_p_dist=False, per_timestep=False)``
     """
@@ -2217,7 +2242,7 @@ class Categorical(reno.components.Distribution):
     def get_type(self) -> type:
         return int
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
         # TODO: how would p_dist apply here? Should it?
         self.value = np.argmax(
@@ -2228,7 +2253,7 @@ class Categorical(reno.components.Distribution):
         return f"Categorical({self.clean_part_repr(0)}, {self.use_p_dist}, {self.per_timestep})"
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
 
         inner_dist = self.sub_equation_parts[0].pt(**refs)
         if self.use_p_dist:
@@ -2238,7 +2263,7 @@ class Categorical(reno.components.Distribution):
         return pm.Categorical(name, inner_dist, **dist_dim_shape_args(self, refs))
 
     def pt_str(self, **refs: dict[str, str]) -> str:
-        name, dim, dim_name, seq = dist_params(self, refs)
+        name, *_ = dist_params(self, refs)
         inner_dist = self.sub_equation_parts[0].pt_str(**refs)
         if self.use_p_dist:
             inner_dist = f'pm.Dirichlet("{name}_p", {self.p.pt_str(**refs)})'
@@ -2247,7 +2272,7 @@ class Categorical(reno.components.Distribution):
 
 class List(reno.components.Distribution):
     """Tile passed list to the sample size so each value is hit roughly
-    equally (dependent on exact sample size) and deterministically
+    equally (dependent on exact sample size) and deterministically.
     """
 
     def __init__(self, values: list | np.ndarray | set):
@@ -2257,7 +2282,7 @@ class List(reno.components.Distribution):
     def op_latex(self, **kwargs: dict) -> str:
         return f"{self.values}"
 
-    def get_shape(self):
+    def get_shape(self) -> int:
         if isinstance(self.values, np.ndarray) and len(self.values.shape) == 2:
             return self.values.shape[1]
         if isinstance(self.values[0], (set, list)):
@@ -2281,7 +2306,7 @@ class List(reno.components.Distribution):
             return bool
         return type(value)
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1):
+    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         repetitions = n / len(self.values)
         # if the specified value is _larger_ than the samples, we have to
         # truncate (and warn, does the user know this is what's happening?)
@@ -2294,7 +2319,8 @@ class List(reno.components.Distribution):
         else:
             expanded = np.tile(self.values, math.ceil(repetitions))
         self.value = expanded[:n]
-        if dim > 1:
+        # handle repetitions for multidim lists
+        if dim > 1:  # noqa: SIM102
             if (
                 isinstance(self.values, np.ndarray) and len(self.values.shape) == 1
             ) or not isinstance(self.values[0], (list, set)):
@@ -2327,7 +2353,7 @@ class Observation(reno.components.Distribution):
         self.sigma = sigma
         self.data = data
 
-    def add_tensors(self, pymc_model):
+    def add_tensors(self, pymc_model: pm.Model) -> None:
         with pymc_model:
             # sigma = pm.HalfNormal(f"{self.ref.qual_name()}_sigma", self.sigma)
             pm.Normal(
