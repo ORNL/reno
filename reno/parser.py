@@ -3,24 +3,29 @@ reno op objects themselves. This is primarily needed for the interative viz
 portions and the ability to serialize models for saving/loading to file.
 """
 
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
+
 import json
 
 import reno
 
 
 def parse(
-    string: str, refs: dict[str, "reno.components.Reference"] = None
+    string: str, refs: dict[str, reno.components.Reference] = None
 ) -> reno.components.EquationPart:
-    """Turn an equation string into Reno's math equation objects. This runs prefix parsing on
-    equation strings/reprs, e.g. '(+ (- 5 'my_variable') 3)' to turn it into a fully populated
-    EquationPart.
+    """Turn an equation string into Reno's math equation objects. This runs prefix
+    parsing on equation strings/reprs, e.g. '(+ (- 5 'my_variable') 3)' to turn it into
+    a fully populated EquationPart.
 
     This function runs recursively through each level of an equation tree.
 
     Args:
-        string (str): The string representation (repr) of a Reno equation tree: "(+ (- 5 'my_variable'))"
-        refs (dict[str, reno.components.Reference]): Any references that have already been populated, so
-            multiple ``'my_variable'`` strings translate to the same object correctly.
+        string (str): The string representation (repr) of a Reno equation tree:
+            "(+ (- 5 'my_variable'))"
+        refs (dict[str, reno.components.Reference]): Any references that have already
+            been populated, so multiple ``'my_variable'`` strings translate to the same
+            object correctly.
 
     Returns:
         An EquationPart populated with recursive sub_equation_parts.
@@ -83,8 +88,9 @@ def parse(
     return op_class(*parsed_args)
 
 
-def parse_value(string: str) -> float | int | str:
-    """Try to parse out a float or int if possible, otherwise just return the string itself.
+def parse_value(string: str) -> float | int | str:  # noqa: C901
+    """Try to parse out a float or int if possible, otherwise just return the string
+    itself.
 
     e.g. '5.0', or '13'
     """
@@ -115,7 +121,7 @@ def parse_value(string: str) -> float | int | str:
         # except ValueError:
         #     val = None
 
-    if val is None:
+    if val is None:  # noqa: SIM102
         if str(string).startswith("[") and str(string).endswith("]"):
             # safer parse of a list than a eval() would be
             try:
@@ -129,7 +135,7 @@ def parse_value(string: str) -> float | int | str:
     return val
 
 
-def parse_op_str(string: str, no_op: bool = False) -> tuple[str, list[str]]:
+def parse_op_str(string: str, no_op: bool = False) -> tuple[str, list[str]]:  # noqa: C901
     """Pull out the **topmost** operation and component arguments, leaving
     all nested/sub components as raw strings. This effectively pulls out just
     the data needed to construct the next root of an equation tree.
@@ -200,7 +206,7 @@ def parser_table() -> dict[str, type]:
 # vvv -- python func syntax parsing -- vvv
 
 
-def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, int]:
+def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, int]:  # noqa: C901
     """Pull out any python formatted args or kwargs for a function.
 
     e.g. 'Normal(5.0, std=1.0)'
@@ -255,7 +261,7 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
     return args, kwargs, start, end
 
 
-def parse_class_or_scalar(string) -> reno.components.EquationPart:
+def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
     """Parse a single non-math op concatenated equation part, e.g.
     a scalar (float or int) or distribution with parameters.
     """

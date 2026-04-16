@@ -531,7 +531,7 @@ class slice(reno.components.Operation):
     # TODO: (2025.09.22) will need to think about how best to implement a
     # get_shape for this
 
-    def op_eval(self, t, **kwargs: dict) -> list | np.ndarray:
+    def op_eval(self, t: int, **kwargs: dict) -> list | np.ndarray:
         start = self.start.eval(t, **kwargs) if self.start is not None else None
         stop = self.stop.eval(t, **kwargs) if self.stop is not None else None
 
@@ -747,7 +747,7 @@ class orient_timeseries(reno.components.Operation):
 # ==================================================
 
 
-def adjust_shapes_for_n(*parts, **kwargs: dict):
+def adjust_shapes_for_n(*parts: list[reno.components.EquationPart], **kwargs: dict):
     """For numpy calculations, while () can broadcast to (dim,)
     but not (n,) to (n,dim), so handle converting (n,) to (n,1)
     if necessary, given the other components.
