@@ -1,8 +1,7 @@
-"""Various visualization tools, classes, and functions.
+"""Various visualization tools, classes, and functions."""
 
-A lot of this may eventually need to be broken out into separate
-submodules for sanity.
-"""
+# make it so we don't have to quote every type annotation ever
+from __future__ import annotations
 
 import math
 from collections.abc import Callable
@@ -30,18 +29,23 @@ from reno.parser import parse
 from reno.utils import latex_eqline_wrap, latex_eqline_wrap_doc
 
 
-def _create_seq_line_collection(seq_np_values: np.ndarray, **kwargs) -> LineCollection:
+def _create_seq_line_collection(
+    seq_np_values: np.ndarray, **kwargs: dict
+) -> LineCollection:
     """Running ax.plot for each individual line (of potentially thousands) is very slow,
-    but you can create a LineCollection of all of the lines and render almost instantly,
-    see https://matplotlib.org/stable/gallery/shapes_and_collections/line_collection.html
+    but you can create a LineCollection of all of the lines and render almost instantly.
+
+    See https://matplotlib.org/stable/gallery/shapes_and_collections/line_collection.html
 
     Args:
         seq_np_values (np.ndarray): A matrix of y-values to plot (assumes that each row
             is a timeseries.)
-        **kwargs: Any additional arguments passed to matplotlib.collections.LineCollection
+        **kwargs: Any additional arguments passed to
+            matplotlib.collections.LineCollection
 
     Returns:
-        A LineCollection object that can be plotted on an axis with ``ax.add_collection()``
+        A LineCollection object that can be plotted on an axis with
+            ``ax.add_collection()``
     """
     # the trick is that LineCollection needs to be a list of lines where each
     # line is a list of (x0, y0), ... coords, e.g.
@@ -81,17 +85,15 @@ def _get_label_and_dataset(
         trace = key_or_trace
 
     # automatically grab the posterior if not explicitly requested
-    if isinstance(trace, az.InferenceData):
-        ds = trace.posterior
-    else:
-        ds = trace
+    ds = trace.posterior if isinstance(trace, az.InferenceData) else trace
 
     return label, ds
 
 
 def _get_sample_count(array: xr.DataArray) -> int:
     """Dimensions for base reno and pymc are different since pymc has chains, so this
-    throws off alpha calculations, use this to get the number of things that will be drawn.
+    throws off alpha calculations, use this to get the number of things that will be
+    drawn.
     """
     if "chain" in array.coords:
         array = array.stack(sample=["chain", "draw"])
@@ -103,31 +105,34 @@ def compare_seq(
     traces: (
         list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
     ),
-    prior_trace=None,
-    ax=None,
+    prior_trace: az.InferenceData | xr.Dataset = None,
+    ax: plt.Axes = None,
     legend: bool = True,
     title: str = None,
-    **figargs,
-):
-    """Plot the timeseries data for the specified variable from each of the passed traces + prior trace.
+    **figargs: dict,
+) -> plt.Figure:
+    """Plot the timeseries data for the specified variable from each of the passed
+    traces + prior trace.
 
     Args:
         varname (str): The name of the variable in the xr.Datasets to plot
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset): A list
-            or dictionary of traces or dataset to plot the variable from. Passed traces will plot from
-            the posterior, pass the specific dataset if you need the priors (``pymc_trace.prior``). If
-            a dictionary is used, the legend will use the specified keys.
-        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the 'prior' key.
-        ax: Optionally pass an axis if one already exists, otherwise this function will create a new one,
-            using any additional figargs passed.
-        legend (bool): Whether to render a legend or not. If ``True`` and traces is a dictionary, the
-            keys will be used as the legend labels.
+        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+            A list or dictionary of traces or dataset to plot the variable from. Passed
+            traces will plot from the posterior, pass the specific dataset if you need
+            the priors (``pymc_trace.prior``). If a dictionary is used, the legend will
+            use the specified keys.
+        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the
+            'prior' key.
+        ax: Optionally pass an axis if one already exists, otherwise this function will
+            create a new one, using any additional figargs passed.
+        legend (bool): Whether to render a legend or not. If ``True`` and traces is a
+            dictionary, the keys will be used as the legend labels.
         title (str): Optional title to set on the axis.
-        **figargs: Parameters to pass to ``plt.subplots(**figargs)`` if no axis passed in.
+        **figargs: Parameters to pass to ``plt.subplots(**figargs)`` if no axis passed.
     """
     if ax is None:
         with plt.ioff():
-            fig, ax = plt.subplots(**figargs)
+            _, ax = plt.subplots(**figargs)
 
     cat_col = 0
 
@@ -170,13 +175,13 @@ def compare_seq(
 
 
 def _plot_posterior_values(
-    ax,
+    ax: plt.Axes,
     values: np.ndarray,
     label: str,
     smoothing: float = 0.1,
     num_traces_to_plot: int = 1,
     trace_index: int = 0,
-):
+) -> None:
     """num_traces_to_plot only matters for the bar chart, for handling offset."""
     # plot bars for categorical data
     if values.dtype in ("int64", "int32", "int8"):
@@ -203,31 +208,35 @@ def compare_posterior(
     traces: (
         list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
     ),
-    prior_trace=None,
+    prior_trace: az.InferenceData | xr.Dataset = None,
     smoothing: float = 0.1,
-    ax=None,
+    ax: plt.Axes = None,
     legend: bool = True,
-    title=None,
-    per_dim=None,
-    **figargs,
-):
-    """Plot the sampled distribution densities for the specified variable from each of the passed traces + prior trace.
+    title: str = None,
+    per_dim: str = None,
+    **figargs: dict,
+) -> None:
+    """Plot the sampled distribution densities for the specified variable from each of
+    the passed traces + prior trace.
 
     Args:
         varname (str): The name of the variable in the xr.Datasets to plot
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset): A list
-            or dictionary of traces or dataset to plot the variable from. Passed traces will plot from
-            the posterior, pass the specific dataset if you need the priors (``pymc_trace.prior``). If
-            a dictionary is used, the legend will use the specified keys.
-        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the 'prior' key.
-        smoothing (float): What degree of smoothing to apply to the density plot. Lower = more bumpy.
-        ax: Optionally pass an axis if one already exists, otherwise this function will create a new one,
-            using any additional figargs passed.
-        legend (bool): Whether to render a legend or not. If ``True`` and traces is a dictionary, the
-            keys will be used as the legend labels.
+        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+            A list or dictionary of traces or dataset to plot the variable from. Passed
+            traces will plot from the posterior, pass the specific dataset if you need
+            the priors (``pymc_trace.prior``). If a dictionary is used, the legend will
+            use the specified keys.
+        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the
+            'prior' key.
+        smoothing (float): What degree of smoothing to apply to the density plot. Lower
+            = more bumpy.
+        ax: Optionally pass an axis if one already exists, otherwise this function will
+            create a new one, using any additional figargs passed.
+        legend (bool): Whether to render a legend or not. If ``True`` and traces is a
+            dictionary, the keys will be used as the legend labels.
         title (str): Optional title to set on the axis.
         per_dim (str): TODO
-        **figargs: Parameters to pass to ``plt.subplots(**figargs)`` if no axis passed in.
+        **figargs: Parameters to pass to ``plt.subplots(**figargs)`` if no axis passed.
     """
     # NOTE: use per_dim to either individually plot chains, or individually plot
     # dirichlet components, None to entirely flatten (the default)
@@ -235,7 +244,7 @@ def compare_posterior(
 
     if ax is None:
         with plt.ioff():
-            fig, ax = plt.subplots(**figargs)
+            _, ax = plt.subplots(**figargs)
 
     num_traces = len(traces)
     trace_index = 0
@@ -279,14 +288,15 @@ def plot_refs_single_axis(
     trace: az.InferenceData | xr.Dataset,
     ref_list: list[str | reno.components.Reference],
     num_ticks: int = 3,
-    # ax = None,
-    **figargs,
-):
+    **figargs: dict,
+) -> plt.Figure:
     """I've seen this type of plot in a few SDM textbooks and references at this point,
-    it plots all the specified references on the same plot and scales each one individually.
+    it plots all the specified references on the same plot and scales each one
+    individually.
 
-    This means there's a separate y-axis per reference, and getting the tick labels to not
-    conflict with eachother and be offset was a bit of a trick, so this simplifies that logic.
+    This means there's a separate y-axis per reference, and getting the tick labels to
+    not conflict with eachother and be offset was a bit of a trick, so this simplifies
+    that logic.
     """
     plt.ioff()
     fig, ax1 = plt.subplots(**figargs)
@@ -297,12 +307,9 @@ def plot_refs_single_axis(
         for ref in ref_list
     ]
 
-    if isinstance(trace, az.InferenceData):
-        ds = trace.posterior
-    else:
-        ds = trace
+    ds = trace.posterior if isinstance(trace, az.InferenceData) else trace
 
-    def label_offset(n, n_max):
+    def label_offset(n: int, n_max: float) -> float:
         """Algorithm to vertically offset each label for a single tick so they
         don't overlap. n is the index of the current label, n_max is the total
         number of labels that have to fit.
@@ -316,10 +323,9 @@ def plot_refs_single_axis(
     for i, ref in enumerate(refs):
         alpha = 0.01 if _get_sample_count(ds[ref]) > 10 else 0.75
 
-        if i == 0:
-            ax = ax1
-        else:
-            ax = ax1.twinx()
+        # the regular axis applies to the first reference to plot,
+        # all the rest a new one must be created for it
+        ax = ax1 if i == 0 else ax1.twinx()
 
         ax.add_collection(
             _create_seq_line_collection(ds[ref].values, color=f"C{i}", alpha=alpha)
@@ -346,8 +352,8 @@ def plot_refs_single_axis(
     return fig
 
 
-def plot_trace_refs(
-    reference_model,
+def plot_trace_refs(  # noqa: C901
+    reference_model: reno.Model,
     traces: (
         list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
     ),
@@ -355,24 +361,29 @@ def plot_trace_refs(
     cols: int = None,
     rows: int = None,
     smoothing: float = 0.1,
-    **figargs,
-):
-    """Create a set of plots for each of the specified references, automatically plotting timeseries
-    sequences or distribution densities where relevant.
+    **figargs: dict,
+) -> plt.Figure:
+    """Create a set of plots for each of the specified references, automatically plotting
+    timeseries sequences or distribution densities where relevant.
 
     Args:
-        reference_model: The model from which the datasets are being plotted, this is used to help
-            axes titles and determine which references are random variables etc.
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset): A list
-            or dictionary of traces or dataset to plot the references from. Passed traces will plot from
-            the posterior, pass the specific dataset if you need the priors (``pymc_trace.prior``). If
-            a dictionary is used, the legends will use the specified keys.
-        ref_list (list[str | reno.components.Reference]): Either the string names or actual reference
-            objects to plot the data of. (A separate plot will be created for each reference.)
+        reference_model: The model from which the datasets are being plotted, this is
+            used to help axes titles and determine which references are random variables
+            etc.
+        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+            A list or dictionary of traces or dataset to plot the references from.
+            Passed traces will plot from the posterior, pass the specific dataset if you
+            need the priors (``pymc_trace.prior``). If a dictionary is used, the legends
+            will use the specified keys.
+        ref_list (list[str | reno.components.Reference]): Either the string names or
+            actual reference objects to plot the data of. (A separate plot will be
+            created for each reference.)
         cols (int): The number of columns to split the plots into.
         rows (int): The number of rows to split the plots into.
-        smoothing (float): Degree of smoothing to apply to density plots, lower = more bumpy.
-        **figargs: Arguments to pass to the figure creation ``plt.subplots(..., **figargs)`` call.
+        smoothing (float): Degree of smoothing to apply to density plots, lower = more
+            bumpy.
+        **figargs: Arguments to pass to the figure creation
+            ``plt.subplots(..., **figargs)`` call.
     """
     # remaining_refs = [*ref_list]
     remaining_refs = [
@@ -406,7 +417,7 @@ def plot_trace_refs(
     row_i = 0
     col_i = 0
 
-    def advance_indices():
+    def advance_indices() -> None:
         nonlocal row_i, col_i
         col_i += 1
         if col_i >= cols:
@@ -504,7 +515,7 @@ def density(data: np.ndarray, smoothing: float = 0.1) -> tuple[np.ndarray, np.nd
     dens = gaussian_kde(data)
     xs = np.linspace(data.min(), data.max(), 400)
     dens.covariance_factor = lambda: smoothing
-    try:
+    try:  # noqa: SIM105
         dens._compute_covariance()
     except:  # noqa: E722
         # There probably wasn't enough data/enough diversity in the data to
@@ -522,7 +533,7 @@ def plot_refs(  # noqa: C901
     cols: int = None,
     rows: int = None,
     legends: bool = True,
-    **figargs,
+    **figargs: dict,
 ) -> plt.Figure:
     """Render a bunch of subplots containing the line plots for the values of the passed
     references.
@@ -623,24 +634,6 @@ class ModelLatex:
 
     NOTE: start_name is exclusive, stop_name is inclusive.
 
-    Args:
-        model (Model): The system dynamics model to get the equations for.
-        show_docs (bool): Whether to display docstrings below each relevant equation.
-        start_name (str): Don't display any equations before the one specified (in order
-            of their definition.) This is mostly unused for now, intended to eventually
-            allow displaying sets of graphs "between" equations.
-        stop_name (str): Don't display any equations after the one specified (in order
-            of their definition.) This is mostly unused for now, intended to eventually
-            allow displaying sets of graphs "between" equations.
-        t (int): Only used when `debug` is `True`, refers to the timestep to use for
-            displaying the current values within each equation.
-        sample (int): Only used when `debug` is `True`, refers to which sample to use
-            for displaying the current values within each equation.
-        debug (bool): If true, display the value of every reference at the specified `t`
-            and `sample`.
-        debug_ops (bool): If true, display the value of every individual operation at
-            specified `t` and `sample`.
-
     Example:
         >>> ModelLatex(my_model).widget
 
@@ -649,7 +642,7 @@ class ModelLatex:
 
     def __init__(
         self,
-        model,
+        model: reno.Model,
         show_docs: bool = False,
         start_name: str = None,
         stop_name: str = None,
@@ -659,6 +652,28 @@ class ModelLatex:
         ref_list: list[str | reno.components.Reference] = None,
         debug_ops: bool = False,
     ):
+        """Create ModelLatex instance.
+
+        Args:
+            model (reno.Model): The system dynamics model to get the equations for.
+            show_docs (bool): Whether to display docstrings below each equation.
+            start_name (str): Don't display any equations before the one specified (in
+                order of their definition.) This is mostly unused for now, intended to
+                eventually allow displaying sets of graphs "between" equations.
+            stop_name (str): Don't display any equations after the one specified (in
+                order of their definition.) This is mostly unused for now, intended to
+                eventually allow displaying sets of graphs "between" equations.
+            t (int): Only used when `debug` is `True`, refers to the timestep to use for
+                displaying the current values within each equation.
+            sample (int): Only used when `debug` is `True`, refers to which sample to
+                use for displaying the current values within each equation.
+            debug (bool): If true, display the value of every reference at the specified
+                `t` and `sample`.
+            ref_list (list[str | reno.components.Reference]): Limit the displayed
+                equations to only the specified references/component names.
+            debug_ops (bool): If true, display the value of every individual operation
+                at specified `t` and `sample`.
+        """
         self.model = model
         self.widget = InteractiveLatex()
         """This is the actual displayable object, use this to "view" the equations."""
@@ -691,7 +706,7 @@ class ModelLatex:
 
         self.handle_refresh = True
 
-    def on_name_clicked(self, callback: Callable[[str], None]):
+    def on_name_clicked(self, callback: Callable[[str], None]) -> None:
         """Register an event handler for when an equation is clicked.
 
         Callbacks should take a single parameter which is the string name of
@@ -699,12 +714,12 @@ class ModelLatex:
         """
         self._name_clicked_callbacks.append(callback)
 
-    def fire_on_name_clicked(self, name: str):
+    def fire_on_name_clicked(self, name: str) -> None:
         """Trigger the event to notify that a reference/eq was clicked on."""
         for callback in self._name_clicked_callbacks:
             callback(name)
 
-    def _handle_ilatex_click(self, i: int):
+    def _handle_ilatex_click(self, i: int) -> None:
         hl_name = self.find_equation_name_from_index(i)
         self.fire_on_name_clicked(hl_name)
         if self.handle_refresh:
@@ -724,7 +739,7 @@ class ModelLatex:
             return None
         return names[i]
 
-    def _equation_lines_refname_reference(self) -> list[str]:
+    def _equation_lines_refname_reference(self) -> list[str]:  # noqa: C901
         """Create a list of reference names that correspond to the equation lines
         in the latex. This is influenced based on the presence of docstrings (and
         whether show_docs is enabled) etc.
@@ -739,7 +754,7 @@ class ModelLatex:
         NOTE: start_name is exclusive, stop_name is inclusive.
         """
         names = []
-        started = True if self.start_name is None else False
+        started = self.start_name is None
         stopped = False
 
         for ref in self.ref_list:
@@ -772,7 +787,7 @@ class ModelLatex:
                 names.append(ref.qual_name())
         return names
 
-    def latex_data_with_highlight(self, hl_name: str = None) -> str:
+    def latex_data_with_highlight(self, hl_name: str = None) -> str:  # noqa: C901
         """Construct the latex string with highlighting for the specified name."""
         kwargs = {}
         if hl_name is not None:
@@ -902,7 +917,7 @@ class ReferenceEditor:
     Primarily only used in explorer now.
     """
 
-    model: "reno.model.Model"
+    model: reno.Model
     ref_name: str
     is_init: bool
     control: ipw.Text | pn.widgets.TextInput = None
@@ -949,7 +964,7 @@ class ReferenceEditor:
             result = Scalar(result)
         return result
 
-    def assign_value_from_control(self):
+    def assign_value_from_control(self) -> None:
         """Set the underlying reference's equation based on the current string
         in the control.
         """
@@ -962,14 +977,14 @@ class ReferenceEditor:
 
 
 class ModelViewer:
-    """An interface for viewing a model, modifying any free variables, and simulating live.
+    """An interface for viewing a model, modifying free variables, and live simulation.
 
     Leaving for now, recommend using Explorer/explorer widgets instead
     """
 
     def __init__(
         self,
-        model,
+        model: reno.Model,
         exclude_vars: list[str] = None,
         plot_refs: list[
             reno.components.Reference
@@ -977,6 +992,7 @@ class ModelViewer:
             | tuple[reno.components.Reference]
         ] = None,
     ):
+        """Create a widget for exploring a model in a notebook."""
         if exclude_vars is None:
             exclude_vars = []
         self.model = model
@@ -1028,27 +1044,27 @@ class ModelViewer:
         self.rerender_graph()
         self.rerender_equations()
 
-    def simulate_button_press(self, widget):
+    def simulate_button_press(self, *args: list) -> None:
         """Event handler for when the button labeled "simulate" is pressed, not a
         function simulating a button being pressed...
         """
         self.assign_controls()
         self.rerun(self.n.value, self.steps.value)
 
-    def rerender_graph(self):
+    def rerender_graph(self) -> None:  # noqa: D102
         with self.graphviz_out:
             clear_output(True)
             display(
                 self.model.graph(self.show_vars.value, exclude_vars=self.exclude_vars)
             )
 
-    def rerender_equations(self):
+    def rerender_equations(self) -> None:  # noqa: D102
         self.latex_out.latex_data_with_highlight()
-        # with self.latex_out:
-        #     clear_output(True)
-        #     display(self.model)
 
-    def rerun(self, n, steps):
+    def rerun(self, n: int, steps: int) -> None:
+        """Reset all visuals, run a simulation based on current controls, and update
+        graphics.
+        """
         plt.close("all")
         self.rerender_graph()
         self.rerender_equations()
@@ -1067,11 +1083,12 @@ class ModelViewer:
             # TODO: better options than print_metrics
             # self.model.print_metrics()
 
-    def assign_controls(self):
+    def assign_controls(self) -> None:
+        """Update the underlying references based on the current control values."""
         for ref_editor in self.reference_editors:
             ref_editor.assign_value_from_control()
 
-    def create_variable_controls(self):
+    def create_variable_controls(self) -> None:
         """Set up a bunch of ReferenceEditors for the free variables."""
         style = {"description_width": "initial"}
         controls = []
