@@ -747,7 +747,9 @@ class orient_timeseries(reno.components.Operation):
 # ==================================================
 
 
-def adjust_shapes_for_n(*parts: list[reno.components.EquationPart], **kwargs: dict):
+def adjust_shapes_for_n(
+    *parts: list[reno.components.EquationPart], **kwargs: dict
+) -> list[int | float | np.ndarray]:
     """For numpy calculations, while () can broadcast to (dim,)
     but not (n,) to (n,dim), so handle converting (n,) to (n,1)
     if necessary, given the other components.

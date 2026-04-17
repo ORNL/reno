@@ -207,7 +207,7 @@ def stock_flow_diagram(
             g_s.attr(label=submodel.label)
             g_s.attr(fontcolor="#888888")
             m = getattr(model, submodel.name)
-            unused_graph, remaining_connections = stock_flow_diagram(
+            _, remaining_connections = stock_flow_diagram(
                 m,
                 show_vars=show_vars,
                 exclude_var_names=exclude_var_names,
@@ -240,7 +240,7 @@ def stock_flow_diagram(
     return g, missing_connections
 
 
-def add_stock_io_edge(
+def add_stock_io_edge(  # noqa: C901
     g: Digraph, stock: Stock, flow: Flow, dir: str = None, group_colors: dict = None
 ) -> None:
     """Edge with attributes for heavily highlighting in flows and
@@ -484,7 +484,7 @@ def should_render(  # noqa: C901
         return True
     if ref.cgroup in hide_groups or ref.group in hide_groups:
         return False
-    if (
+    if (  # noqa: SIM103
         ref.cgroup in ref.model.default_hide_groups
         or ref.group in ref.model.default_hide_groups
     ):

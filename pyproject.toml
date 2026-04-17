@@ -3,6 +3,13 @@
 src = [
     "reno"
 ]
+exclude = [
+    "docs",
+    "notebooks",
+    "sphinx",
+    "tests",
+    "reno/examples",
+]
 lint.select = [
     "D", # pydocstyle
     # "DOC", # pydoclint (only in preview mode)
@@ -21,6 +28,9 @@ lint.select = [
 lint.ignore = [
     "D205", # 1 blank line required between summary line and description
     "RUF013", # PEP 484 prohibits implicit `Optional` (can't implicitly default something to None)
+    "ANN401", # I have no issue with Any types in function parameters
+    "D105", # most dunder methods don't need docstrings because common conventions
+    "ANN204", # __init__ doesn't need a return type
 ]
 lint.pydocstyle.convention = "google"
 target-version = "py311"
@@ -31,6 +41,7 @@ flake8-annotations.mypy-init-return = true  # don't require return type annotati
 [tool.ruff.lint.per-file-ignores]
 "reno/explorer_rest_api.py" = ["D415"]
 "ops.py" = ["D102", "D105", "D107"]
+"reno/__init__.py" = ["F401"]
 
 
 # [tool.isort]

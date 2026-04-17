@@ -551,7 +551,7 @@ class Scalar(EquationPart):
             return f'pt.as_tensor({self.value}).astype("float64")'
         return f"pt.as_tensor({self.value})"
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         # print("Type", type(self.value))
         value = self.value
         if isinstance(self.value, np.ndarray):
@@ -814,7 +814,7 @@ class Operation(EquationPart):
                     to_process.append(child_class)
         return subclasses
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         sub_parts_string = " ".join(
             [
                 subpart.__repr__()
@@ -904,7 +904,7 @@ class Reference(EquationPart):
     # might be easier to define reference-wide (plus if models have diff
     # timerefs)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f'"{self.label}"'
 
 
@@ -1146,7 +1146,7 @@ class Piecewise(EquationPart):
             equations.append(equation)
         return Piecewise(equations, conditions)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         piece_str = "(piecewise"
         for i, condition in enumerate(self.conditions):
             piece_str += f" ({condition.__repr__()} {self.equations[i].__repr__()})"
@@ -1394,7 +1394,7 @@ class TimeRef(Reference):
             return refs[self.name]
         return f'pt.scalar("{self.name}")'
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return '"t"'
 
 
@@ -1658,8 +1658,7 @@ class TrackedReference(Reference):
         return type_
 
     def populate(self, n: int, steps: int) -> None:
-        """Initialize the matrix of values with size ``n x steps``. All
-        values initially nan to indicate they need to be computed still.
+        """Initialize the matrix of values with size ``n x steps``.
 
         Args:
             n (int): The number of samples to simulate.
@@ -1954,7 +1953,7 @@ class TrackedReference(Reference):
             print(f"Trying to parse: {data['eq']}")
             self.eq = reno.parser.parse(data["eq"], refs)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f'"{self.qual_name()}"'
 
 
@@ -2127,7 +2126,7 @@ class HistoricalValue(Reference):
         index_eq = reno.parser.parse(arg_strs[1], refs)
         return HistoricalValue(tracked_ref, index_eq)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f"(history {self.tracked_ref.__repr__()} {self.index_eq.__repr__()})"
 
 
@@ -2864,7 +2863,7 @@ class Metric(Reference):
         self.label = data["label"]
         self.eq = reno.parser.parse(data["eq"], refs)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f'"{self.qual_name()}"'
 
     def __setattr__(self, name: str, value: Any):
@@ -2918,6 +2917,13 @@ class Flag(Metric):
     # the sim itself.
 
     def __init__(self, eq: EquationPart = None, label: str = None):
+        """Create a Flag metric node.
+
+        Args:
+            eq (EquationPart): The equation that describes the boolean flag.
+            label (str): Visual label for the reference. In the context of a model,
+                is set to the name assigned on the model if not explicitly provided.
+        """
         super().__init__(eq, label)
         self.internal_step = 0
         self._computing = []
@@ -2930,6 +2936,12 @@ class Flag(Metric):
         # self.first.eq = Function(self.first_event)
 
     def populate(self, n: int, steps: int) -> None:
+        """Initialize the matrix of values with size ``n x steps``.
+
+        Args:
+            n (int): The number of samples to simulate.
+            steps (int): How many steps will be run in the simulation.
+        """
         # TODO: TODO: this needs to act the same way as TrackedReference, using
         # NaN's instead of an internal step
         self.value = np.zeros((n, steps))

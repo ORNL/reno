@@ -18,7 +18,7 @@ EQ_HIGHLIGHT_COLOR = "cyan"
 VAL_COLOR = "lime"
 
 
-def _get_assigned_var_name(var: Any) -> str | None:  # noqa: ANN401
+def _get_assigned_var_name(var: Any) -> str | None:
     """Inspect the current frame (e.g. within a context manager) and find the variable
     name of the passed variable.
 
@@ -126,7 +126,7 @@ def is_ref_in_parent_scope(
     return False
 
 
-def ensure_scalar(operand: Any) -> Any:  # noqa: ANN401
+def ensure_scalar(operand: Any) -> Any:
     """Convert int/float types into a Scalar type if relevant, otherwise
     directly return what was passed.
     """

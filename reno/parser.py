@@ -275,7 +275,7 @@ def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
         return try_simple_convert_first
 
     # must be an op, pull the params
-    args, kwargs, start, end = parse_function_args(string)
+    args, kwargs, start, _ = parse_function_args(string)
     op_name = string[: start - 1].strip()
 
     classes = [

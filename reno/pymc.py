@@ -68,7 +68,7 @@ import pymc as pm
 import reno
 
 
-def pt_sim_step(model: reno.Model, steps: int) -> Callable:
+def pt_sim_step(model: reno.Model, steps: int) -> Callable:  # noqa: C901
     """Returns a target function for pytensor scan, this equates to a single step in the
     system dynamics model simulation. This probably shouldn't be used anywhere
     outside of the context of the pymc model creation function.
@@ -154,7 +154,7 @@ def pt_sim_step(model: reno.Model, steps: int) -> Callable:
             if isinstance(obj, reno.components.Stock):
                 # already handled in for loop above
                 continue
-            if not obj.is_static() and obj not in per_timestep_dist_objs:
+            if not obj.is_static() and obj not in per_timestep_dist_objs:  # noqa: SIM102
                 if other_nexts[obj].dtype != original_refs[obj.qual_name()].dtype:
                     other_nexts[obj] = other_nexts[obj].astype(
                         original_refs[obj.qual_name()].dtype
