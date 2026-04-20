@@ -1,11 +1,11 @@
 Math in Reno
 ############
 
-A system dynamics model allows exploration of the behavior of a set
-of equations describing information or material flow over time. Reno provides a
-framework for creating and evaluating these equations similar to something like
-PyMC or PyTorch - symbolically setting them up in a form of compute graph that
-can then be populated with different values/data and run to create simulations.
+A system dynamics model allows exploration of the behavior of a set of equations
+describing information or material flow over time. Reno provides a framework for
+creating and evaluating these equations similar to something like PyMC or
+PyTorch - symbolically setting up a form of compute graph that can then be
+populated with different values/data and evaluated over time to create simulations.
 
 The math API itself looks similar to numpy, but a lot of the functions are being
 added as I go/need them, if you need a numpy function that doesn't yet exist in
@@ -14,14 +14,13 @@ Reno, please submit an issue! (Or add them yourself locally in your project, see
 
 All aspects of models and their equations are made up of Reno's
 :py:class:`reno.components.EquationPart` class, essentially a tree data
-structure that can be made up of sub equation parts and has an
+structure that can have other EquationParts as children and has an
 :py:func:`.eval() <reno.components.EquationPart.eval>` function to
 populate and execute the equation compute graph.
 
 Execution of an equation triggers recursive ``.eval()`` calls throughout the
 full tree, each component running corresponding numpy operations
 on the results from its sub-equation parts.
-
 
 A simple example for an equation adding two constants is shown below:
 
@@ -75,10 +74,10 @@ Python just evaluates the math as normal.)
 Operations
 ==========
 
-Symbolic operations, like what's shown above, are the core of how Reno's math
+Symbolic operations, like the addition shown above, are the core of how Reno's math
 system works. A full list can be found at :py:mod:`reno.ops`. Conceptually
 Reno's math is intended to act similarly to PyTensor (what PyMC uses under the hood),
-though in our implementation acting as a thunk for Numpy operations, while providing
+though in our implementation acting as a thunk for Numpy operations, while also providing
 a way to translate directly into the PyTensor math system for :ref:`Bayesian
 Inference` reasons.
 
@@ -197,22 +196,31 @@ complex indexing or slicing should take the timeseries form:
    my_flow.eq = my_stock.timeseries[t - some_var:t - 1].sum()
 
 
-Broadcasting?
-=============
-
-Maybe this belongs in the components section?
-
-
 Component references
 ====================
+
+All :ref:`components` (stocks, flows, variables) inherit from ``EquationPart``
+and can be referenced/used directly inside of equations to get their current
+value in a simulation:
+
+.. code-block:: python
+
+    >>> my_model = reno.Model()
+    >>> with my_model:
+    >>>     variable1 = reno.Variable(reno.Scalar(5) + 2)
+    >>>     variable2 = reno.Variable(variable1 + 3)
+
+    >>> # evaluating variable 2 evaluates the equation tree: ((5 + 2) + 3)
+    >>> my_model.variable2.eval()
+    10
 
 
 Extended operations
 ===================
 
-Extended or "higher order" operations are any operations that wrap/abstract some set
-of hidden sub-components or are based on other Reno operations in order to run
-some more complex process. A simple example of this would be the
+Extended or "higher order" operations are any operations that either wrap some
+set of hidden sub-components or are based on other Reno operations in order to
+run some more complex process. A simple example of this would be the
 :py:class:`reno.ops.pulse` operation, which returns a 1 for a specified number
 of timesteps at a specified start time, and 0 at any other timestep. To achieve
 this, it uses a ``Piecewise`` component rather than directly defining a
@@ -269,7 +277,8 @@ inflow to ``s2``. This indirectness is apparent in the diagram:
 .. figure:: ../_static/flow_to_flow.png
    :align: center
 
-Wrapping a flow reference with ``inflow()``, e.g. ``f2.eq = reno.inflow(f1)`` tells Reno to render the ``f1 -> f2`` edge as a normal flow/stock line:
+Wrapping a flow reference with ``inflow()``, e.g. ``f2.eq = reno.inflow(f1)``
+tells Reno to render the ``f1 -> f2`` edge as a normal flow/stock line:
 
 .. code-block:: python
 
@@ -306,7 +315,6 @@ with a more straightforward diagram:
 
 .. figure:: ../_static/implicit_flow_to_flow.png
    :align: center
-
 
 
 outflows
@@ -374,3 +382,9 @@ Shape and type info
 ===================
 
 (cover multidim here)
+
+
+Broadcasting
+============
+
+(TODO)

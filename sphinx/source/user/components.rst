@@ -2,14 +2,14 @@ Components
 ##########
 
 
-Reno models are based primarily on `stocks and flows
+Reno models are based on `stocks and flows
 <https://en.wikipedia.org/wiki/Stock_and_flow>`__. A model is created by
-defining all of these components and the corresponding equations that make them
-up.
+creating instances of these components and defining the corresponding equations
+that make them up.
 
-The equations themselves and how to construct them are discussed in more depth
-on the :ref:`math in reno` page, while this page primarily focuses on the higher
-level Flow/Stock/Variable components.
+The specifics on equations and how they're constructed are discussed in more
+depth on the :ref:`math in reno` page, while this page primarily focuses on the
+higher level Flow/Stock/Variable components.
 
 
 Flows
@@ -18,9 +18,9 @@ Flows
 Flows are equations that define rates of change, or represent how much
 material/information moves over time.
 
-Flows are created with the :py:class:`reno.Flow <reno.components.Flow>` class, and the equation can either be
-directly provided in the constructor or by setting the ``.eq`` attribute later
-on:
+Flows are created with the :py:class:`reno.Flow <reno.components.Flow>` class,
+and the equation can either be directly provided in the constructor or by
+setting the ``.eq`` attribute later on:
 
 .. code-block:: python
 
@@ -35,6 +35,8 @@ on:
                    # always refers to the current timestep in the simulation
     faucet.eq = reno.sin(t) * 2 + 5
 
+(The ability to separately create the component and define the equation applies
+to :ref:`Variables` as well.)
 
 Stocks
 ======
@@ -42,7 +44,7 @@ Stocks
 A stock represents an accumulation of material or information, or some quantity
 thereof over time.
 
-Stock equations are defined exclusively in terms of flows, in-flows (rates of
+Stock equations are defined exclusively in terms of flows: in-flows (rates of
 material moving *into* the stock) and out-flows (rates of material moving *out
 of* the stock.)
 
@@ -58,9 +60,9 @@ Creating stocks in Reno are done via the ``Stock`` class:
 Defining stock equations
 ------------------------
 
-Stock equations are defined by setting up in-flows and out-flows. The basic
-syntax for doing this uses the ``+=`` operator for in-flows and ``-=`` operator for
-outflows:
+Stock equations are built by adding and subtracting in-flows and out-flows. The
+basic syntax for doing this uses the ``+=`` operator for in-flows and ``-=``
+operator for outflows:
 
 .. code-block:: python
 
@@ -74,9 +76,8 @@ outflows:
 
 
 A slightly more readable syntax that allows constructing whole "chains" of
-in-flow/out-flows can be done with the ``>>`` and ``<<`` operators, where the
-arrows indicate the direction of a flow in relation to the stock on the other
-side:
+in-flows/out-flows overloads the ``>>`` and ``<<`` operators, where the arrows
+indicate the direction of a flow in relation to the stock on the other side:
 
 .. code-block:: python
 
@@ -91,10 +92,9 @@ Specifically a ``stock >> flow`` or ``flow << stock`` makes ``flow`` an
 **out**-flow of ``stock``, and ``stock << flow`` or ``flow >> stock`` makes
 ``flow`` an **in**-flow to ``stock``.
 
-Chains of these ``>>``/``<<`` operations work because they are
-interpreted left to right, and the "return" value of an individual operation
-is always the right-most component, e.g. ``component2`` in ``component1 >>
-component2``.
+Chains of these ``>>``/``<<`` operations work because they are interpreted left
+to right, and the "return" value of an individual operation is always the
+right-most component, e.g. ``component2`` in ``component1 >> component2``.
 
 As a result,
 
@@ -117,8 +117,8 @@ When an in-flow to a stock is set (either through ``+=`` or ``>>``/``<<``)
 with an equation rather than just a flow, an **implicit** flow defined by that
 equation is created and applied.
 
-(e.g. if there's some loss involved between the outflow of one stock and the
-inflow for another, you could of course explicitly model this with two separate
+(e.g. if there's some loss or dropped material between the outflow of one stock
+and the inflow for another. You could explicitly model this with two separate
 flows as well)
 
 .. code-block:: python
@@ -146,9 +146,6 @@ a full chain-like definition when an inflow needs to be a slightly modified vers
 
 Using stocks in other equations
 -------------------------------
-
-(This might need to have its own section at the end to discuss the difference
-between circular references involving stocks and those between flows)
 
 Referencing a stock always refers to the stock's value in the *previous*
 timestep. This allows a form of circular reference between stocks
@@ -213,24 +210,23 @@ and compare the final coffee stock values (at timestep 10):
 Metrics
 =======
 
-Metrics are a special type of component whose equations run once, after all the
-timesteps of the simulation have been calculated. These equations are normally
-used to retrieve a specific value or run a basic analysis/measurement on
-something. Metrics are useful from a convenience standpoint (making it
-semantically simpler to get e.g. the last value of the ``coffee`` stock like in
-the previous example), since they are then available to include in Reno's
-:ref:`Visualizations`, but they can also be used as targets for observed/measured
-values ("data") for :ref:`Bayesian Inference`.
+Metrics are a special type of component whose equations run once at the end of a
+simulation. These equations are normally used to retrieve a specific value or
+run a basic analysis/measurement on something. Metrics are useful from a
+convenience standpoint (making it semantically simpler to get e.g. the last
+value of the ``coffee`` stock like in the previous example), since they are then
+available to include in Reno's :ref:`Visualizations`, but they can also be used
+as targets for observed/measured values ("data") for :ref:`Bayesian Inference`.
 
-We can add a metric to the previous system to capture the final value in the
-stock with:
+We can add a metric to the previous system to capture the final coffee amount
+with:
 
 .. code-block:: python
 
     coffee_process.final_coffee_level = reno.Metric(coffee.timeseries[-1])
 
-This would, for example, allow plotting this final value distribution if an
-input distribution were specified for ``drip_speed``:
+This would, for example, allow plotting the distribution of coffee produced if
+an input distribution were specified for ``drip_speed``:
 
 .. code-block:: python
 
@@ -259,13 +255,13 @@ Other arguments for components
 min/max
 -------
 
-All stock/flow/variable components take several additional optional arguments.
-Equation minimum/maximum limits can be defined with equations/values via ``min``
-and ``max``. This can be useful to specify on outflows to avoid sending a stock into
-negative values (e.g. if it represents a physical quantity.) In the coffee
+All stock/flow/variable components can take several optional arguments. Equation
+minimum/maximum limits can be defined with values/other equations via ``min``
+and ``max``. This can be used to constrain outflows to avoid sending a stock
+into negative values (e.g. if it represents a physical quantity.) In the coffee
 example above, the ``coffee_machine`` flow is initialized with a ``max=water``,
 meaning that despite the result of the equation itself, the value won't be
-higher than the water stock in each timestep.
+greater than the available water stock in each timestep.
 
 It is important to note that setting a min/max on a stock **does not modify
 inflow values** to that stock. To highlight this, the system below defines two
@@ -298,17 +294,17 @@ above 10, but ``s1`` still decreases by 20 each time, resulting in "dropped" mat
     array([0, 10, 10])
 
 To appropriately bottleneck a stock like this entails also applying limits to
-the flow, possibly using something like the :ref:`space` operation discussed on
+the flow, achievable with something like the :ref:`space` operation discussed on
 the :ref:`math in reno` page.
 
 dim/dtype
 ---------
 
-Specifying the `dtype` (where you pass a regular python type such as ``float``,
-``int``, ``bool``, etc.) of a component ensures the type of the underlying value and
-will automatically convert as needed. This type assignment occurs on initial
-value population - this either occurs automatically at the beginning of a
-simulation, or you have to call :py:func:`populate()
+Specifying the `dtype` (by passing a regular python type such as ``float``,
+``int``, ``bool``, etc.) of a component ensures the type of the underlying value
+and will automatically convert values as needed. This type assignment occurs on
+initial value population - either automatically at the beginning of a
+simulation, or by calling :py:func:`populate()
 <reno.components.TrackedReference.populate>` yourself:
 
 
@@ -345,9 +341,9 @@ and converted appropriately when it is:
    >>> m.a.dtype, m.b.dtype
    (float, int)
 
-``dim`` refers to an optional extra "data dimension" which allows you to work
-with vector data. Operations automatically broadcast according to numpy rules
-(TODO: link broadcasting):
+``dim`` refers to an optional "data dimension" which allows you to work with
+vector data. Operations automatically broadcast according to numpy rules (TODO:
+link broadcasting):
 
 .. code-block:: python
 

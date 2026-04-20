@@ -10,30 +10,28 @@ This is done through the PyMC library - since math equations in Reno have the
 ability to produce a PyTensor equivalent, Reno can recreate the entire system
 dynamics model as a PyMC model along with the mechanisms to compute the full
 timeseries outputs, and then take advantage of PyMC's samplers to approximate
-posterior distributions.
+posteriors.
 
-The value of doing this through Reno as opposed to directly through PyMC is due
-to a couple of reasons:
+The value of doing this through Reno as opposed to directly through PyMC comes
+from a few observations:
 
-* Setting up timeseries evaluation in pytensor involves a lot of boilerplate
+* Setting up timeseries evaluation in pytensor involves significant boilerplate
   that can be confusing to learn.
 * The order in which equations are executed during evaluation matters to avoid
   circular dependency issues or incorrect calculations. Reno handles dependency
-  ordering for you.
+  ordering itself when converting into PyTensor.
 * Re-parameterizing or modifying equations involves changing the boilerplate or
-  redefining the model. Reno handles this step for you since it recompiles the
-  PyMC version from scratch.
+  redefining the model. Reno rebuilds the PyMC model every time, addressing this
+  automatically.
 
-Running a Reno model with PyMC is very similar to a normal run by using the
-model's :py:func:`.pymc() <reno.model.Model.pymc>` call. This acts similarly to
-the model's :py:func:`__call__() <reno.model.Model.__call__>`, optionally taking
-any free variable/initial value conditions, plus some pymc-specific sampling
-arguments.
+Running a Reno model with PyMC involves calling the model's :py:func:`.pymc()
+<reno.model.Model.pymc>` function. This function acts similarly to the default
+:py:func:`__call__() <reno.model.Model.__call__>`, optionally taking any free
+variable/initial value conditions, plus some pymc-specific sampling arguments.
 
-A normal "forward-run" of the model using PyMC, or running the simulations just based on
-prior probabilities can be done by specifying the ``compute_prior_only=True``
-argument.
-
+A simple prior-only "forward run" of the model in PyMC (running the simulations
+based solely on prior probabilities) is done by passing ``compute_prior_only=True``
+to the pymc function:
 
 .. code-block:: python
 
@@ -122,7 +120,7 @@ And observe the change from prior to posterior:
 Technical process
 =================
 
-Under the hood, Reno produces the PyMC model made up of the following things:
+Under the hood, Reno produces a PyMC model by defining the following:
 
 1. A PyMC variable per component set to the initial conditions/values of that
    component. (When no separate ``init`` is provided for a component, this is
@@ -141,22 +139,20 @@ Under the hood, Reno produces the PyMC model made up of the following things:
 Some of the details and code samples for what this looks like can be found in the
 :py:mod:`reno.pymc` module.
 
-TODO: describe the scan arguments in more depth?
-
 Transpiling
 ===========
 
 In addition to directly producing a PyMC model, Reno models can also transpile
-into a raw string of python code that creates the equivalent PyMC model. This is
-useful for a couple reasons - if you need to run a more complex bayesian problem
-than a Reno model provides (e.g. more complicated/custom likelihood functions,
-performance optimizations that require manual adjustment, or using the Reno model
-in some larger overarching model), then Reno can be used as a starting point for
-writing the code (and takes care of a lot of the complexity around using the
-scan function.) It can also be helpful for debugging issues in a PyMC model - if
-you've implemented a custom Reno operation (TODO: link to extending) and a pytensor conversion isn't
-working correctly, minor changes to the PyMC code might be tested more quickly than
-modifying the Reno operation code first.
+into a raw string of python code that creates the equivalent PyMC model. If you
+need to run a more complex bayesian problem than a Reno model provides (e.g.
+more complicated/custom likelihood functions, performance optimizations that
+require manual adjustment, or using the Reno model in some larger overarching
+model), then Reno can be used as a starting point for writing the code (and
+takes care of a lot of the complexity around using the scan function.) It can
+also be helpful for debugging issues in a PyMC model. If you've implemented a
+custom Reno operation (:ref:`custom operations`) and a pytensor conversion isn't
+working correctly, minor changes to the PyMC code might be tested more quickly
+than modifying the Reno operation code first.
 
 For example, the transpiled code from the model above produced by running
 ``print(tub.pymc_str())`` (see function documentation for
@@ -211,9 +207,9 @@ For example, the transpiled code from the model above produced by running
         final_water_level = pm.Deterministic("final_water_level", water_level[pt.as_tensor(-1)])
 
 
-The above output code assumes certain imports already exist (e.g. pymc and
-pytensor), these assumptions can also be retrieved as a string using
-:py:func:`reno.pymc.pymc_model_imports`:
+Note that the output from ``pymc_str`` assumes certain imports already exist
+(e.g. pymc and pytensor), these assumptions can also be retrieved as a string
+using :py:func:`reno.pymc.pymc_model_imports`:
 
 .. code-block:: python
 
