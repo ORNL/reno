@@ -1,0 +1,6 @@
+reno.diagrams.draw\_appropriate\_edge
+=====================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: draw_appropriate_edge

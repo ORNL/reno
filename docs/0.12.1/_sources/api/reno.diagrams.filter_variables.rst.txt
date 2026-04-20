@@ -1,0 +1,6 @@
+reno.diagrams.filter\_variables
+===============================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: filter_variables
