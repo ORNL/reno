@@ -1120,7 +1120,10 @@ class Model:
     # TODO: option to add in necessary imports
     # TODO: can you run black formatting programmatically on a string?
     def pymc_str(
-        self, observations: list[reno.ops.Observation] = None, steps: int = None
+        self,
+        observations: list[reno.ops.Observation] = None,
+        steps: int = None,
+        **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
     ) -> str:
         """Construct a string of python code to create a pymc model wrapping this system
         dynamics model. Should be a functional (string) equivalent of the
@@ -1134,7 +1137,11 @@ class Model:
             >>> import pymc as pm
             >>> import numpy as np
         """
-        return reno.pymc.to_pymc_model_str(self, observations, steps)
+        previous = self.config()
+        config = self.config(**free_refs)  # noqa: F841
+        code = reno.pymc.to_pymc_model_str(self, observations, steps)
+        self.config(**previous)
+        return code
 
     def pymc(  # noqa: C901
         self,

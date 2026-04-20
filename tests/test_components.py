@@ -735,3 +735,63 @@ def test_variable_boolean():
 
     ds1 = m()
     ds2 = m(v0=False)
+
+
+def test_init_influences_shape():
+    """A stock that has a multidim init should ensure that the component
+    itself is also multidim."""
+
+    m = Model()
+    with m:
+        v0 = Variable([1, 2, 3, 4])
+        s = Stock(init=v0)
+
+    assert v0.shape == 4
+    assert s.shape == 4
+
+
+def test_init_dist_influences_shape():
+    """A stock that has a multidim init should ensure that the component
+    itself is also multidim."""
+
+    m = Model()
+    with m:
+        v0 = Variable(ops.Normal(1.0, 2.0, dim=4))
+        s = Stock(init=v0)
+
+    assert v0.shape == 4
+    assert s.shape == 4
+
+
+def test_init_dist_w_eq_influences_shape():
+    """A stock that has a multidim init should ensure that the component
+    itself is also multidim."""
+
+    m = Model()
+    with m:
+        v0 = Variable(ops.Normal(1.0, 2.0, dim=4))
+        v1 = Variable(3)
+        s = Stock(init=v0)
+        s += v1
+
+    assert v0.shape == 4
+    assert s.shape == 4
+
+
+def test_init_dist_w_eq_influences_shape_after_change():
+    """A stock that has a multidim init should ensure that the component
+    itself is also multidim if that multidim is the result of an equation
+    change after a model run."""
+
+    m = Model()
+    with m:
+        v0 = Variable(ops.Normal(1.0, 2.0))
+        v1 = Variable(3)
+        s = Stock(init=v0)
+        s += v1
+
+    m()
+    m.v0.eq = ops.Normal(1.0, 2.0, dim=4)
+
+    assert v0.shape == 4
+    assert s.shape == 4

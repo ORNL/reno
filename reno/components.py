@@ -220,9 +220,12 @@ class EquationPart:
     def shape(self) -> int:
         """The size of the data dimension, 1 by default."""
         try:
-            if self._shape is None:
-                self._shape = self.get_shape()
-            return self._shape
+            # TODO: sometimes causes weird issues if you try to cache
+            # unfortunately
+            # if self._shape is None:
+            #     self._shape = self.get_shape()
+            # return self._shape
+            return self.get_shape()
         except Exception as e:
             e.add_note(f"Was trying to get shape of {self.qual_name()}")
             raise
@@ -547,9 +550,12 @@ class Scalar(EquationPart):
         return tensor
 
     def pt_str(self, **refs: dict[str, str]) -> str:  # noqa: D102
+        value_str = str(self.value)
+        if isinstance(self.value, np.ndarray):
+            value_str = str(self.value.tolist())
         if pt.as_tensor(self.value).dtype == "float32":
-            return f'pt.as_tensor({self.value}).astype("float64")'
-        return f"pt.as_tensor({self.value})"
+            return f'pt.as_tensor({value_str}).astype("float64")'
+        return f"pt.as_tensor({value_str})"
 
     def __repr__(self) -> str:
         # print("Type", type(self.value))
@@ -568,7 +574,9 @@ class Distribution(EquationPart):
     variable.)
     """
 
-    def __init__(self, *operands: list[EquationPart], per_timestep: bool = False):
+    def __init__(
+        self, *operands: list[EquationPart], per_timestep: bool = False, dim: int = 1
+    ):
         """Create a distribution equation part, this is likely being called from
         a subclass.
 
@@ -577,8 +585,12 @@ class Distribution(EquationPart):
                 this distribution.
             per_timestep (bool): Whether to draw a different value from the
                 distribution for each timestep.
+            dim (int): Size of an optional extra dimension, allowing a given reference
+                to describe a vector of values at every timestep. Default is 1 implying
+                no extra dimension.
         """
         super().__init__(list(operands))
+        self.dim = dim
         self.per_timestep = per_timestep
         self.expected_arg_num_dims = {}
         # if a parameter is supposed to be an array, set expected dims for that
@@ -613,6 +625,7 @@ class Distribution(EquationPart):
         try:
             # print(f"Getting shape for {self}")
             non_one_shapes = []
+            found_shape = 1
             for index, sub_equation_part in enumerate(self.sub_equation_parts):
                 shape = sub_equation_part.shape
                 if (
@@ -631,8 +644,19 @@ class Distribution(EquationPart):
             if len(non_one_shapes) > 0:
                 # if we hit this point there's only one non-one shape, so
                 # it's okay to just grab first one
-                return non_one_shapes[0]
-            return 1  # no data dims involved
+                found_shape = non_one_shapes[0]
+                # return non_one_shapes[0]
+            # return 1  # no data dims involved
+
+            if self.dim > 1 and found_shape == 1:
+                return self.dim
+            elif self.dim > 1 and found_shape != self.dim:
+                raise Exception(f"Was expecting shape {self.dim} and got {found_shape}")
+            # elif self.dim == 1 and found_shape > 1:
+            else:
+                self.dim = found_shape
+                return self.dim
+
         except Exception as e:
             e.add_note(
                 f'Was trying to compute shape for operation "{self.__class__}" ({self.op_repr()}) with sub equation parts:'
@@ -1618,24 +1642,41 @@ class TrackedReference(Reference):
 
         self._computing_shape = True
         eq = self._implied_eq()
+        init_shape = 1 if self.init is None else self.init.shape
+        # print(self, self.init, init_shape)
         # print(f"{self.qual_name()} eq shape: {eq.shape}")
 
-        if self.dim > 1 and eq.shape == 1:
+        if self.dim > 1 and eq.shape == 1 and init_shape == 1:
             # we'd explicitly set a shape but not inherent in the equation
             self._computing_shape = False
             # print(f"{self.qual_name()} requested dim actually larger, so {self.dim}")
             return self.dim
-        elif self.dim > 1 and eq.shape != self.dim:
+        elif self.dim > 1 and (
+            (eq.shape > 1 and eq.shape != self.dim)
+            or (init_shape > 1 and init_shape != self.dim)
+        ):
             # We'd explicitly set a shape but the one inherent in the equation
             # is different
-            raise Exception(f"Was expecting shape {self.dim} and got {eq.shape}")
+            if init_shape > 1:
+                raise Exception(
+                    f"Was expecting shape {self.dim} and got {init_shape} (from init eq)"
+                )
+            else:
+                raise Exception(f"Was expecting shape {self.dim} and got {eq.shape}")
+        elif eq.shape > 1 and init_shape > 1 and eq.shape != init_shape:
+            raise Exception(
+                f"Equation shape {eq.shape} does not match init shape {init_shape}"
+            )
         else:
             # No explicit shape requested, set it and use the one from the
             # equation
-            self.dim = eq.shape
+            if init_shape > 1:
+                self.dim = init_shape
+            else:
+                self.dim = eq.shape
             # print(f"{self.qual_name()} setting dim to {eq.shape}")
             self._computing_shape = False
-            return eq.shape
+            return self.dim
 
     def get_type(self) -> type:
         """Get the type of the target output of this equation expression.
@@ -1734,12 +1775,13 @@ class TrackedReference(Reference):
             # technically redundant? Covered by case outside of conditionals
             return obj_or_eq
         if isinstance(obj_or_eq, Distribution):
+            dim = self.dim if obj_or_eq.dim == 1 else obj_or_eq.dim
             if obj_or_eq.per_timestep:
                 obj_or_eq.populate(
-                    self.value.shape[0], steps=self.value.shape[1], dim=self.dim
+                    self.value.shape[0], steps=self.value.shape[1], dim=dim
                 )
             else:
-                obj_or_eq.populate(self.value.shape[0], dim=self.dim)
+                obj_or_eq.populate(self.value.shape[0], dim=dim)
             return obj_or_eq.eval(0)
         if isinstance(obj_or_eq, EquationPart):
             # this covers Scalar

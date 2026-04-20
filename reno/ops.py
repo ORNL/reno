@@ -1995,7 +1995,8 @@ def dist_params(
     name = "dist" + str(id(dist))
     if "__PTNAME__" in refs:
         name = refs["__PTNAME__"]
-    dim = 1
+    # dim = 1
+    dim = dist.dim
     if "__DIM__" in refs:
         dim = refs["__DIM__"]
     dim_name = "vec"
@@ -2040,9 +2041,13 @@ class Normal(reno.components.Distribution):
     """
 
     def __init__(
-        self, mean: int | float, std: int | float = 1.0, per_timestep: bool = False
+        self,
+        mean: int | float,
+        std: int | float = 1.0,
+        per_timestep: bool = False,
+        dim: int = 1,
     ):
-        super().__init__(mean, std, per_timestep=per_timestep)
+        super().__init__(mean, std, per_timestep=per_timestep, dim=dim)
 
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
@@ -2083,8 +2088,14 @@ class Uniform(reno.components.Distribution):
     String notation: ``Uniform(low=0.0, high=1.0, per_timestep=False)``
     """
 
-    def __init__(self, low: float = 0.0, high: float = 1.0, per_timestep: bool = False):
-        super().__init__(low, high, per_timestep=per_timestep)
+    def __init__(
+        self,
+        low: float = 0.0,
+        high: float = 1.0,
+        per_timestep: bool = False,
+        dim: int = 1,
+    ):
+        super().__init__(low, high, per_timestep=per_timestep, dim=dim)
 
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{U}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
@@ -2127,8 +2138,10 @@ class DiscreteUniform(reno.components.Distribution):
     String notation: ``DiscreteUniform(low=0, high=2, per_timestep=False)``
     """
 
-    def __init__(self, low: int = 0, high: int = 2, per_timestep: bool = False):
-        super().__init__(low, high, per_timestep=per_timestep)
+    def __init__(
+        self, low: int = 0, high: int = 2, per_timestep: bool = False, dim: int = 1
+    ):
+        super().__init__(low, high, per_timestep=per_timestep, dim=dim)
 
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{DiscreteUniform}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)})"
@@ -2174,8 +2187,14 @@ class Bernoulli(reno.components.Distribution):
     String notation: ``Bernoulli(p, use_p_dist=False, per_timestep=False)``
     """
 
-    def __init__(self, p: float, use_p_dist: bool = False, per_timestep: bool = False):
-        super().__init__(p, per_timestep=per_timestep)
+    def __init__(
+        self,
+        p: float,
+        use_p_dist: bool = False,
+        per_timestep: bool = False,
+        dim: int = 1,
+    ):
+        super().__init__(p, per_timestep=per_timestep, dim=dim)
         self.use_p_dist = use_p_dist
 
     def op_latex(self, **kwargs: dict) -> str:
@@ -2232,9 +2251,13 @@ class Categorical(reno.components.Distribution):
     """
 
     def __init__(
-        self, p: list[float], use_p_dist: bool = False, per_timestep: bool = False
+        self,
+        p: list[float],
+        use_p_dist: bool = False,
+        per_timestep: bool = False,
+        dim: int = 1,
     ):
-        super().__init__(p, per_timestep=per_timestep)
+        super().__init__(p, per_timestep=per_timestep, dim=dim)
         self.use_p_dist = use_p_dist
         self.expected_arg_num_dims[0] = 1
 
@@ -2330,6 +2353,14 @@ class List(reno.components.Distribution):
 
     def __repr__(self) -> str:
         return f"List({self.values})"
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        name, *_ = dist_params(self, refs)
+        return pm.Data(name, self.values)
+
+    def pt_str(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        name, *_ = dist_params(self, refs)
+        return f'pm.Data("{name}", {self.values})'
 
 
 class Observation(reno.components.Distribution):
