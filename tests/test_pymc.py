@@ -133,7 +133,7 @@ def test_bernoulli_updates_with_obs_op():
 
     m.final_s = Metric(ops.index(m.s, Scalar(-1)))
 
-    with m.pymc_model([ops.Observation(m.final_s, 100, [900])]):
+    with m.pymc_model([ops.Observation(m.final_s, [900], 100)]):
         posterior = pm.sample(100)
     assert (posterior.posterior.decision.values == 1).all()
 
@@ -156,7 +156,7 @@ def test_bernoulli_updates_faster_compile():
     m.final_s = Metric(ops.index(m.s, Scalar(-1)))
 
     posterior = m.pymc(
-        100, compile_faster=True, observations=[ops.Observation(m.final_s, 100, [900])]
+        100, compile_faster=True, observations=[ops.Observation(m.final_s, [900], 100)]
     )
     assert (posterior.posterior.decision.values == 1).all()
 
@@ -364,7 +364,7 @@ def test_implicit_metrics():
         v0 = Variable(ops.Normal(5, 2))
         v1 = Variable(t + v0)
 
-    ds = m.pymc(1000, observations=[ops.Observation(m.v1.timeseries[3], 1, [5.0])])
+    ds = m.pymc(1000, observations=[ops.Observation(m.v1.timeseries[3], [5.0], 1)])
 
     assert "observation_0" in ds.prior
     assert "observation_0" not in [metric.name for metric in m.metrics]

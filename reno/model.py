@@ -1100,6 +1100,56 @@ class Model:
 
         return compute_order
 
+    def _add_implicit_metrics(
+        self, observations: list[reno.ops.Observation]
+    ) -> list[reno.Metric]:
+        """E.g. if someone passes ``my_variable.timeseries[-1]`` in an observation,
+        temporarily add an "implicit metric" for that equation.
+        """
+        implicit_metric_refs = []
+        if observations is not None:
+            for index, obs in enumerate(observations):
+                if not isinstance(obs.ref, reno.components.Reference):
+                    metric_obj = reno.components.Metric(obs.ref)
+                    setattr(self, f"observation_{index}", metric_obj)
+                    obs.ref = metric_obj
+                    implicit_metric_refs.append(metric_obj)
+        return implicit_metric_refs
+
+    def _convert_data_to_config_and_observations(
+        self,
+        current_observations: list[reno.ops.Observation],
+        data: dict[
+            reno.components.Reference | reno.components.EquationPart,
+            list | np.ndarray | reno.components.Distribution,
+        ],
+    ) -> tuple[
+        dict[str, int | float | list | np.ndarray | reno.components.EquationPart],
+        list[reno.ops.Observation],
+    ]:
+        free_ref_config = {}
+        if data is not None:
+            for ref_or_eq, list_or_dist in data.items():
+                # free var keys get added to the config
+                if (
+                    isinstance(ref_or_eq, reno.components.Reference)
+                    and ref_or_eq.qual_name() in self.free_refs()
+                ):
+                    free_ref_config[ref_or_eq.qual_name()] = list_or_dist
+                else:
+                    dist_type = type(list_or_dist)
+                    observation = reno.ops.Observation(
+                        ref_or_eq,
+                        list_or_dist.sub_equation_parts[0],
+                        *list_or_dist.sub_equation_parts[1:],
+                        dist=dist_type,
+                    )
+                    if current_observations is None:
+                        current_observations = []
+                    current_observations.append(observation)
+
+        return free_ref_config, current_observations
+
     def pymc_model(
         self, observations: list[reno.ops.Observation] = None, steps: int = None
     ) -> pm.model.core.Model:
@@ -1121,8 +1171,12 @@ class Model:
     # TODO: can you run black formatting programmatically on a string?
     def pymc_str(
         self,
-        observations: list[reno.ops.Observation] = None,
         steps: int = None,
+        observations: list[reno.ops.Observation] = None,
+        data: dict[
+            reno.components.Reference | reno.components.EquationPart,
+            list | np.ndarray | reno.components.Distribution,
+        ] = None,
         **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
     ) -> str:
         """Construct a string of python code to create a pymc model wrapping this system
@@ -1137,10 +1191,18 @@ class Model:
             >>> import pymc as pm
             >>> import numpy as np
         """
+        config_updates, observations = self._convert_data_to_config_and_observations(
+            observations, data
+        )
+        free_refs.update(config_updates)
+
         previous = self.config()
         config = self.config(**free_refs)  # noqa: F841
+        implicit_metric_refs = self._add_implicit_metrics(observations)
         code = reno.pymc.to_pymc_model_str(self, observations, steps)
         self.config(**previous)
+        for metric in implicit_metric_refs:
+            self.metrics.remove(metric)
         return code
 
     def pymc(  # noqa: C901
@@ -1151,6 +1213,10 @@ class Model:
         compile_kwargs: dict[str, Any] = None,
         compile_faster: bool = False,
         observations: list[reno.ops.Observation] = None,
+        data: dict[
+            reno.components.Reference | reno.components.EquationPart,
+            list | np.ndarray | reno.components.Distribution,
+        ] = None,
         smc: bool = True,
         trace_prior: az.InferenceData = None,
         compute_prior_only: bool = False,
@@ -1200,6 +1266,12 @@ class Model:
         """
         self._reset_type_and_shape_info()
 
+        # turn any passed data into config or observations
+        config_updates, observations = self._convert_data_to_config_and_observations(
+            observations, data
+        )
+        free_refs.update(config_updates)
+
         # TODO: observations, expect dict(ref, sigma, data)
         # store previous config vals
         previous = self.config()
@@ -1229,14 +1301,7 @@ class Model:
 
         # add any implicit metrics if needed, e.g. if someone passed
         # ``my_variable.timeseries[-1]``
-        implicit_metric_refs = []
-        if observations is not None:
-            for index, obs in enumerate(observations):
-                if not isinstance(obs.ref, reno.components.Reference):
-                    metric_obj = reno.components.Metric(obs.ref)
-                    setattr(self, f"observation_{index}", metric_obj)
-                    obs.ref = metric_obj
-                    implicit_metric_refs.append(metric_obj)
+        implicit_metric_refs = self._add_implicit_metrics(observations)
 
         with self.pymc_model(steps=steps) as m:
             # add any observation likelihood variables

@@ -2029,9 +2029,40 @@ def dist_dim_shape_args_str(
     elif dist.per_timestep and dim == 1:
         return f', shape=({seq},), dims="t"'
     elif dist.per_timestep and dim > 1:
-        return f', shape=({seq},, {dim}), dims=("t", "{dim_name}")'
+        return f', shape=({seq}, {dim}), dims=("t", "{dim_name}")'
     else:
         return f', shape=({dim},), dims="{dim_name}"'
+
+
+def dist_extra_kwargs_str(
+    dist: reno.components.Distribution, refs: dict[str, str]
+) -> str:
+    if len(dist._extra_pymc_kwargs) == 0:
+        return ""
+    string = ", "
+    # string += ", ".join([f"{key}={value}" for key, value in dist._extra_pymc_kwargs.items()])
+    new_strings = []
+    for key, value in dist._extra_pymc_kwargs.items():
+        if isinstance(value, reno.components.EquationPart):
+            new_strings.append(f"{key}={value.pt_str(**refs)}")
+        else:
+            new_strings.append(f"{key}={value}")
+    string += ", ".join(new_strings)
+    return string
+
+
+def dist_extra_kwargs(
+    dist: reno.components.Distribution, refs: dict[str, pt.TensorVariable]
+) -> dict[str, Any]:
+    if len(dist._extra_pymc_kwargs) == 0:
+        return {}
+    new_args = {}
+    for key, value in dist._extra_pymc_kwargs.items():
+        if isinstance(value, reno.components.EquationPart):
+            new_args[key] = value.pt(**refs)
+        else:
+            new_args[key] = value
+    return new_args
 
 
 class Normal(reno.components.Distribution):
@@ -2075,11 +2106,13 @@ class Normal(reno.components.Distribution):
             self.sub_equation_parts[0].pt(**refs),
             self.sub_equation_parts[1].pt(**refs),
             **dist_dim_shape_args(self, refs),
+            **dist_extra_kwargs(self, refs),
         )
 
     def pt_str(self, **refs: dict[str, str]) -> str:
         name, *_ = dist_params(self, refs)
-        return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
+        # return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
+        return f'pm.Normal("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)}{dist_extra_kwargs_str(self, refs)})'
 
 
 class Uniform(reno.components.Distribution):
@@ -2364,6 +2397,72 @@ class List(reno.components.Distribution):
 
 
 class Observation(reno.components.Distribution):
+    """Likelihood distribution."""
+
+    def __init__(
+        self,
+        ref: reno.components.Reference | reno.components.EquationPart,
+        data: int | float | list | np.ndarray,
+        *args: list,
+        dist: type = Normal,
+        **kwargs: dict,
+    ):
+        super().__init__()
+        self.data = data
+        self.ref = ref
+        self.args = args
+        self.kwargs = kwargs
+        self.dist = dist
+
+    def add_tensors(self, pymc_model: pm.Model) -> None:
+        with pymc_model:
+            dist = self.dist(
+                reno.components._PTReference(pymc_model[self.ref.qual_name()]),
+                *(self.args),
+                **(self.kwargs),
+            )
+            dist._extra_pymc_kwargs["observed"] = self.data
+            refs = {}
+            refs["__PTNAME__"] = f"{self.ref.qual_name()}_likelihood"
+            dist.pt(**refs)
+            # if self.dist == Normal:
+            #     pm.Normal(
+            #         f"{self.ref.qual_name()}_likelihood",
+            #         pymc_model[self.ref.qual_name()],
+            #         *(self.args),
+            #         **(self.kwargs),
+            #         observed=self.data,
+            #     )
+
+    # TODO: dataset dimension?
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        dist = self.dist(self.ref, *(self.args), **(self.kwargs))
+        dist._extra_pymc_kwargs["observed"] = self.data
+        refs["__PTNAME__"] = f"{self.ref.qual_name()}_likelihood"
+        return dist.pt(**refs)
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        dist = self.dist(self.ref, *(self.args), **(self.kwargs))
+        dist._extra_pymc_kwargs["observed"] = self.data
+        refs["__PTNAME__"] = f"{self.ref.qual_name()}_likelihood"
+        return dist.pt_str(**refs)
+
+    # def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+    #     return pm.Normal(
+    #         f"{self.ref.qual_name()}_likelihood",
+    #         self.ref.pt(**refs),
+    #         *(self.args),
+    #         **(self.kwargs),
+    #         observed=self.data,
+    #     )
+
+    # def pt_str(self, **refs: dict[str, str]) -> str:
+    #     return f'pm.Normal("{self.ref.qual_name()}_likelihood", {self.ref.pt_str(**refs)}, {self.sigma}, observed={self.data})'
+    #
+
+
+class Observation_(reno.components.Distribution):
     """Represents a Normal distribution around an observed value.
 
     Should only be used for supplying observational data with likelihoods

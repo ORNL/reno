@@ -597,6 +597,9 @@ class Distribution(EquationPart):
         # parameter int index to 1, that way can be checked for in get_shape
         # NOTE: this same strategy may need to apply to operation as well
 
+        self._extra_pymc_kwargs: dict[str, Any] = {}
+        # this is to help implement the observed keyword for Observations
+
     def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         """Generate n x dim samples based on this probability distribution, assigns
         as a vector/matrix to ``self.value``.
@@ -3059,3 +3062,16 @@ class Flag(Metric):
     #     firsts = [sample_indices[-1] for sample_indices in indices]
     #
     #     return np.asarray(firsts)
+
+
+class _PTReference(Reference):
+    """A directly wrapped PyTensor reference, this is to support Observation's
+    ``add_tensors``.
+    """
+
+    def __init__(self, var: pt.TensorVariable):
+        super().__init__()
+        self.var = var
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        return self.var
