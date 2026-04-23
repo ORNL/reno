@@ -30,7 +30,7 @@ from reno.utils import latex_eqline_wrap, latex_eqline_wrap_doc
 
 
 def _create_seq_line_collection(
-    seq_np_values: np.ndarray, **kwargs: dict
+    seq_np_values: np.ndarray, extra_dim: bool = False, **kwargs: dict
 ) -> LineCollection:
     """Running ax.plot for each individual line (of potentially thousands) is very slow,
     but you can create a LineCollection of all of the lines and render almost instantly.
@@ -40,6 +40,8 @@ def _create_seq_line_collection(
     Args:
         seq_np_values (np.ndarray): A matrix of y-values to plot (assumes that each row
             is a timeseries.)
+        extra_dim (bool): If the data is multidimensional, domain is pulled from a
+            different axis.
         **kwargs: Any additional arguments passed to
             matplotlib.collections.LineCollection
 
@@ -54,7 +56,18 @@ def _create_seq_line_collection(
     # so, we do some numpy magic to create the x-domain for these sequences and
     # shape the matrix of y data appropriately
 
-    domain_size = seq_np_values.shape[-1]
+    # an extra data dimension puts the shape at:
+    # (samples, t_domain, data)
+    # Instead we want each time sequence to be independent, so
+    # transpose to (samples, data, t_domain)
+    if extra_dim:
+        # flip the time_domain and data dimensions at the end
+        if len(seq_np_values.shape) == 4:
+            seq_np_values = seq_np_values.transpose(0, 1, 3, 2)
+        else:
+            seq_np_values = seq_np_values.transpose(0, 2, 1)
+
+    domain_size = seq_np_values.shape[-1]  # TODO: doesn't handle if extra dim
     # make sure to flatten if it wasn't passed flattened already
     seqs = seq_np_values.reshape([-1, domain_size])
     # create a corresponding domain (0, 1, 2, ...) for each sequence
@@ -100,6 +113,19 @@ def _get_sample_count(array: xr.DataArray) -> int:
     return len(array.coords["sample"])
 
 
+def _determine_if_extra_dim(array: xr.DataArray) -> bool:
+    """Check if the array has an extra data dimension, regardless of whether from .pymc
+    or a regular call.
+    """
+    # TODO: are there cases where there's a size one extra dim that would break
+    # this logic?
+    if "chain" in array.coords and len(array.coords) == 4:
+        return True
+    if "sample" in array.coords and len(array.coords) == 3:  # noqa: SIM103
+        return True
+    return False
+
+
 def compare_seq(
     varname: str,
     traces: (
@@ -142,7 +168,10 @@ def compare_seq(
         alpha = 0.01 if _get_sample_count(prior_trace.prior[varname]) > 10 else 0.75
         ax.add_collection(
             _create_seq_line_collection(
-                prior_trace.prior[varname].values, color=f"C{cat_col}", alpha=alpha
+                prior_trace.prior[varname].values,
+                extra_dim=_determine_if_extra_dim(prior_trace.prior[varname]),
+                color=f"C{cat_col}",
+                alpha=alpha,
             )
         )
         legend_handles.append(Line2D([0], [0], label="prior", color=f"C{cat_col}"))
@@ -156,7 +185,10 @@ def compare_seq(
         alpha = 0.01 if _get_sample_count(ds[varname]) > 10 else 0.75
         ax.add_collection(
             _create_seq_line_collection(
-                ds[varname].values, color=f"C{cat_col}", alpha=alpha
+                ds[varname].values,
+                extra_dim=_determine_if_extra_dim(ds[varname]),
+                color=f"C{cat_col}",
+                alpha=alpha,
             )
         )
         legend_handles.append(Line2D([0], [0], label=label, color=f"C{cat_col}"))

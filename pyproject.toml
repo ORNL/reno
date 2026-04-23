@@ -36,7 +36,7 @@ lint.pydocstyle.convention = "google"
 target-version = "py311"
 format.docstring-code-format = true
 line-length = 88
-flake8-annotations.mypy-init-return = true  # don't require return type annotation on init
+lint.flake8-annotations.mypy-init-return = true  # don't require return type annotation on init
 
 [tool.ruff.lint.per-file-ignores]
 "reno/explorer_rest_api.py" = ["D415"]
