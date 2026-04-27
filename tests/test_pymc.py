@@ -389,3 +389,39 @@ def test_bool_scalar_in_pymc():
 
     ds = m.pymc(compute_prior_only=True)
     assert (ds.prior.v0.values[0][0][:5] == [2, 2, 2, 4, 2]).all()
+
+
+def test_multiple_implicit_observations():
+    """Passing more than one observation on a timeseries should work and tighten
+    uncertainty."""
+    from reno.examples.one_compartment import one_compartment_model
+    single_obs = one_compartment_model.pymc(
+        n=4000,
+        dosage=100*1000,
+        start=ops.DiscreteUniform(0, 1),
+        interval=ops.DiscreteUniform(7, 9),
+        absorption_fraction=ops.Normal(.15, .025),
+        observations=[
+            ops.Observation(one_compartment_model.concentration.timeseries[100], [15.5], 1)
+        ],
+    )
+    print(np.mean(single_obs.posterior.absorption_fraction.values))
+
+    one_obs_mean = np.mean(single_obs.posterior.absorption_fraction.values)
+    assert one_obs_mean > .125
+
+    multi_obs = one_compartment_model.pymc(
+        n=4000,
+        dosage=100*1000,
+        start=ops.DiscreteUniform(0, 1),
+        interval=ops.DiscreteUniform(7, 9),
+        absorption_fraction=ops.Normal(.15, .025),
+        observations=[
+            ops.Observation(one_compartment_model.concentration.timeseries[100], [15.5], 1),
+            ops.Observation(one_compartment_model.concentration.timeseries[150], [15.0], 1),
+            ops.Observation(one_compartment_model.concentration.timeseries[30], [9.5], 1),
+        ],
+    )
+
+    multi_obs_mean = np.mean(multi_obs.posterior.absorption_fraction.values)
+    assert .1175 < multi_obs_mean < .121
