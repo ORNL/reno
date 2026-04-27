@@ -7,6 +7,7 @@ import pytensor  # noqa: F401
 import pytensor.tensor as pt  # noqa: F401
 import pytest  # noqa: F401
 from pytensor.ifelse import ifelse  # noqa: F401
+import pandas as pd
 
 from reno import ops
 from reno.components import Flow, Metric, Piecewise, Scalar, Stock, TimeRef, Variable
@@ -425,3 +426,64 @@ def test_multiple_implicit_observations():
 
     multi_obs_mean = np.mean(multi_obs.posterior.absorption_fraction.values)
     assert .1175 < multi_obs_mean < .121
+
+
+def test_obs_and_config_from_lists():
+    """Passing a list of data and a list of observations should correctly
+    pull out optimized results."""
+
+    m = Model()
+    with m:
+        intercept = Variable(ops.Uniform(0.0, 10.0))
+        slope = Variable(ops.Uniform(1.0, 6.0))
+        value = Stock(init=intercept)
+        value += slope
+        final = Metric(value.timeseries[-1])
+
+    trace = m.pymc(
+        n=4000,
+        intercept=[1, 10, 3.5, 15, 20, 6],
+        slope=ops.Uniform(0.0, 6.0, dim=6),
+        observations=[
+            ops.Observation(m.final, [19.0, 28.0, 21.0, 24.0, 29.0, 15.0], 0.25)
+        ],
+    )
+
+    vals = trace.posterior.slope.values
+    np.testing.assert_almost_equal(np.mean(vals[vals < 1.5]), 1.0, decimal=1)
+    np.testing.assert_almost_equal(np.mean(vals[vals > 1.5]), 2.0, decimal=1)
+
+
+def test_data_dictionary():
+    """Passing pandas series to a data dictionary for both observations and
+    configuration should work correctly."""
+
+    m = Model()
+    with m:
+        intercept = Variable(ops.Uniform(0.0, 10.0))
+        slope = Variable(ops.Uniform(1.0, 6.0))
+        value = Stock(init=intercept)
+        value += slope
+        final = Metric(value.timeseries[-1])
+
+    df = pd.DataFrame({
+        "intercept": [1, 10, 3.5, 15, 20, 6],
+        "intercept_unc": [1.0, 0.5, 0.2, 0.5, 0.1, 0.2],
+        "final": [19.0, 28.0, 21.0, 24.0, 29.0, 15.0],
+        "final_unc": [0.1, 1.0, 0.2, 0.2, 0.1, 0.5],
+    })
+
+    trace = m.pymc(
+        n=4000,
+        intercept=[1, 10, 3.5, 15, 20, 6],
+        slope=ops.Uniform(0.0, 6.0, dim=6),
+
+        data = {
+            m.intercept: ops.Normal(df.intercept, df.intercept_unc),
+            m.final: ops.Normal(df.final, df.final_unc),
+        }
+    )
+
+    vals = trace.posterior.slope.values
+    np.testing.assert_almost_equal(np.mean(vals[vals < 1.5]), 1.0, decimal=1)
+    np.testing.assert_almost_equal(np.mean(vals[vals > 1.5]), 2.0, decimal=1)

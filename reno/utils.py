@@ -8,6 +8,7 @@ import inspect
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 import reno
 
@@ -132,6 +133,8 @@ def ensure_scalar(operand: Any) -> Any:
     """
     if isinstance(operand, (int, float, np.ndarray)):
         return reno.components.Scalar(operand)
+    elif isinstance(operand, pd.Series):
+        return reno.components.Scalar(operand.values)
     if isinstance(operand, list):
         return reno.components.Scalar(np.array(operand))
     return operand
