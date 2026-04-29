@@ -441,7 +441,7 @@ class EquationPart:
             if sub_equation_part.is_timeseries:
                 found_timeseries = True
         return found_timeseries
-        
+
     def find_parts_of_type(
         self, search_type: type, already_checked: list[EquationPart] = None
     ) -> list[EquationPart]:
@@ -555,6 +555,12 @@ class Scalar(EquationPart):
                 # TODO: possibly raise warning here?
                 return None
         return type(self.value)
+
+    def get_is_timeseries(self) -> bool:
+        """Scalars are leaf nodes in equations, so never includes a subop that is
+        timeseries based.
+        """
+        return False
 
     def eval(
         self,
@@ -691,6 +697,12 @@ class Distribution(EquationPart):
             for sub_eq in self.sub_equation_parts:
                 e.add_note(f"\t{sub_eq}: {sub_eq._shape}")
             raise
+
+    def get_is_timeseries(self) -> bool:
+        """Distributions are leaf nodes in equations, so never includes a subop that is
+        timeseries based.
+        """
+        return False
 
     def eval(
         self,
@@ -874,6 +886,22 @@ class Operation(EquationPart):
             ]
         )
         return f"({self.op_repr()} {sub_parts_string})"
+
+
+class AggregationOperation(Operation):
+    """A largely semantic distinction from a regular operation, an aggregation op is one
+    that operates across/aggregates values in a series into one of a different shape.
+
+    This exists to indicate that an aggregation operation acting on a timeseries-shaped
+    input will _no longer_ be timeseries-shaped afterwards, added to address
+    ``get_is_timeseries`` needs.
+    """
+
+    def get_is_timeseries(self) -> bool:
+        """An aggregation operation explicitly takes out/reduces across a dimension,
+        meaning it removes a separate timeseries axis if relevant.
+        """
+        return False
 
 
 class ExtendedOperation(Operation):
@@ -2816,6 +2844,12 @@ class Stock(TrackedReference):
         if eq is None:
             eq = self + self.compute_diff_eq()
         return super()._implied_eq(eq=eq)
+
+    def get_is_timeseries(self) -> bool:
+        """Stocks don't use sub_equation_parts directly"""
+        # TODO: why isn't this _implied_eq? I get a recursion depth error when I
+        # use that.
+        return self.compute_diff_eq().is_timeseries
 
     def to_dict(self) -> dict:
         """Serialize class into a dictionary for saving to file.

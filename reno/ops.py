@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 import warnings
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import numpy as np
 import pytensor.tensor as pt
@@ -90,7 +90,7 @@ __all__ = [  # noqa: RUF022
 
 # NOTE: can't use 'proper' name of max because TrackedReferences already have a
 # max (equation max) which I don't want to rename.
-class series_max(reno.components.Operation):
+class series_max(reno.components.AggregationOperation):
     """Maximum value in an array. Effectively a row-wise np.max. This can either be
     applied to a timeseries or a value with a data dimension.
 
@@ -145,7 +145,7 @@ class series_max(reno.components.Operation):
 
 # NOTE: can't use 'proper' name of min because TrackedReferences already have a
 # min (equation min) which I don't want to rename.
-class series_min(reno.components.Operation):
+class series_min(reno.components.AggregationOperation):
     """Minimum value in an array. Effectively a row-wise np.min. This can either be
     applied to a timeseries or a value with a data dimension.
 
@@ -198,7 +198,7 @@ class series_min(reno.components.Operation):
         return f"pt.min({self.sub_equation_parts[0].pt_str(**refs)})"
 
 
-class mean(reno.components.Operation):
+class mean(reno.components.AggregationOperation):
     """Average across the values of a vector (either timeseries or data dim).
 
     String notation: ``(mean A)``
@@ -252,7 +252,7 @@ class mean(reno.components.Operation):
         return f"pt.mean({self.sub_equation_parts[0].pt_str(**refs)}, axis={self.axis})"
 
 
-class sum(reno.components.Operation):
+class sum(reno.components.AggregationOperation):
     """Series-wise sum (e.g. row-wise if a matrix).
 
     String notation: ``(sum A)``
@@ -448,7 +448,7 @@ class nanindex(reno.components.Operation):
         return f"{self.sub_equation_parts[0].pt_str(**refs)}[{self.sub_equation_parts[1].pt_str(**refs)}]"
 
 
-class index(reno.components.Operation):
+class index(reno.components.AggregationOperation):
     """Get a previous value in the time series at specified index, only works for
     tracked references inside of equations for metrics.
 
@@ -489,7 +489,7 @@ class index(reno.components.Operation):
         return f"{self.sub_equation_parts[0].pt_str(**refs)}[{self.sub_equation_parts[1].pt_str(**refs)}]"
 
 
-class slice(reno.components.Operation):
+class slice(reno.components.AggregationOperation):
     """Can be applied along with timeseries op in metrics for getting specific time
     segments, or can be applied generally in equations when dealing with vector data.
 
@@ -627,6 +627,12 @@ class orient_timeseries(reno.components.Operation):
     # def get_shape(self) -> int:
     #     if self.model is not None:
     #     return
+
+    def get_is_timeseries(self) -> bool:
+        """This is the one operation that _creates_ a timeseries dimension, so it always
+        returns ``True``.
+        """
+        return True
 
     def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].value
