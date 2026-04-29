@@ -462,7 +462,7 @@ class index(reno.components.Operation):
         return f"{self.sub_equation_parts[0].latex(**kwargs)}[{self.sub_equation_parts[1].latex(**kwargs)}]"
 
     def get_shape(self) -> int:
-        return 1
+        return self.sub_equation_parts[0].shape
 
     def op_eval(self, **kwargs: dict) -> list | np.ndarray:
         # TODO: support for static?
@@ -624,6 +624,9 @@ class orient_timeseries(reno.components.Operation):
         return f"({self.op_repr()} {self.sub_equation_parts[0].__repr__()})"
 
     # TODO: how best to get timeseries length for get_shape?
+    # def get_shape(self) -> int:
+    #     if self.model is not None:
+    #     return
 
     def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
         value = self.sub_equation_parts[0].value

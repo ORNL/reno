@@ -319,6 +319,34 @@ def test_slice_end_t_is_correct():
     assert ds.m0.values[0] == 40.0
 
 
+def test_index_of_timeseries_of_multidim():
+    """Getting an index of a timeseries of a multidim value should provide the multidim value at
+    the requested timestep."""
+    m = model.Model()
+    with m:
+        v0 = Variable([2, 3])
+        val = Stock()
+        val += v0
+        final = Metric(val.timeseries[-1])
+
+    ds = m()
+    assert (ds.final.values == np.array([18, 27])).all()
+
+
+def test_index_of_timeseries_of_multidim_pymc():
+    """Getting an index of a timeseries of a multidim value should provide the multidim value at
+    the requested timestep."""
+    m = model.Model()
+    with m:
+        v0 = Variable([2, 3])
+        val = Stock()
+        val += v0
+        final = Metric(val.timeseries[-1])
+
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (ds.prior.final.values[0][0] == np.array([18, 27])).all()
+
+
 def test_piecewise_with_int():
     """Piecewise equations should support just directly specifying an integer and
     have it auto-wrapped in a scalar."""
