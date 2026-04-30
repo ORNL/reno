@@ -250,11 +250,23 @@ def add_stock_io_edge(  # noqa: C901
         for ref in flow.seek_refs():
             if isinstance(ref, Flow):
                 add_stock_io_edge(g, stock, ref, "in", group_colors)
+                # attach any other variables involved in this implicit flow to
+                # the one explicitly shown
+                for ref_2 in flow.seek_refs():
+                    if ref_2 == ref:
+                        continue
+                    add_to_flow_edge(g, ref_2, ref)
         return
     elif flow.implicit and flow in stock.out_flows:
         for ref in flow.seek_refs():
             if isinstance(ref, Flow):
                 add_stock_io_edge(g, stock, ref, "out", group_colors)
+                # attach any other variables involved in this implicit flow to
+                # the one explicitly shown
+                for ref_2 in flow.seek_refs():
+                    if ref_2 == ref:
+                        continue
+                    add_to_flow_edge(g, ref_2, ref)
         return
 
     color = EDGE_COLOR
