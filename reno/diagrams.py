@@ -438,6 +438,12 @@ class StockDiagramNode(DiagramNode):
 
 
 class FlowDiagramNode(DiagramNode):
+    default_color: ClassVar[dict[str, str]] = {
+        "light": "transparent",
+        "dark": "transparent",
+    }
+    shape: ClassVar[str] = "plain"
+
     def configure_sparklines(self, config: RenderConfig) -> None:
         self.sparkline = config.flow_sparklines
 
