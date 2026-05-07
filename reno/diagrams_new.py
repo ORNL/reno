@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 import xarray as xr
 from graphviz import Digraph
 
 import reno
 
-SUBGRAPH_COLORS = ["#BBDDFF", "#DDBBFF"]
+# TODO: ability to manually specify model colors
 
 
 @dataclass
@@ -23,10 +24,10 @@ class RenderConfig:
 
     group_colors: dict[str | tuple[reno.components.TrackedReference], str]
 
-    var_sparks: bool = False
-    flow_sparks: bool = False
-    stock_sparks: bool = False
-    metric_sparks: bool = False
+    var_sparklines: bool = False
+    flow_sparklines: bool = False
+    stock_sparklines: bool = False
+    metric_sparklines: bool = False
 
     traces: list[xr.Dataset] = None
 
@@ -43,6 +44,8 @@ class RenderConfig:
 
 
 class ModelDiagram:
+    subgraph_colors: ClassVar[list[str]] = ["#BBDDFF", "#DDBBFF"]
+
     def __init__(
         self,
         model: reno.Model,
@@ -157,47 +160,13 @@ class ModelDiagram:
         return everything
 
     def configure(self, config: RenderConfig) -> None:
-        self.configure_render(config)
-        self.configure_color(config)
-        self.configure_sparklines(config)
-
-    def configure_sparklines(self, config: RenderConfig) -> None:
-        pass
-
-    def configure_color(self, config: RenderConfig) -> None:
         for node in self.all_nodes():
-            pass
+            node.configure_render(config)
+            node.configure_color(config)
+            node.configure_sparklines(config)
 
-    def configure_render(self, config: RenderConfig) -> None:
-        # TODO: move this into the nodes?
-        for node in self.all_nodes():
-            node.render = True
-
-            if isinstance(node, MetricDiagramNode) and not config.metrics:
-                node.render = False
-
-            if isinstance(node, VarDiagramNode) and not config.vars:
-                node.render = False
-
-            for cgroup in node.ref.cgroups:
-                if cgroup in config.show_groups:
-                    node.render = True
-
-            for cgroup in node.ref.cgroups:
-                if cgroup in config.hide_groups:
-                    node.render = False
-
-            if node.ref in config.show:
-                node.render = True
-
-            if node.ref in config.hide:
-                node.render = False
-
-            if config.universe is not None and node.ref not in config.universe:
-                node.render = False
-
-            if node.ref.implicit:
-                node.render = False
+        for edge in self.all_edges():
+            edge.configure_color(config)
 
     def _reset_edge_render_state(self) -> None:
         """Edges track a ``rendered`` variable to avoid double-rendering. Find
@@ -206,12 +175,6 @@ class ModelDiagram:
         for edge in self.all_edges():
             edge.rendered = False
 
-        # for node in self.nodes:
-        #     for edge in node.edges:
-        #         edge.rendered = False
-        # for model in self.submodels:
-        #     model._reset_edge_render_state()
-
     def _make_graph(self) -> Digraph:
         # TODO: RenderConfig (apply to all nodes and all submodel nodes)
         # TODO: lr/tb and dark mode attrs
@@ -219,7 +182,7 @@ class ModelDiagram:
 
         if self.level > 0:
             g.attr(style="filled")
-            g.attr(color=SUBGRAPH_COLORS[self.level])
+            g.attr(color=ModelDiagram.subgraph_colors[self.level])
             g.attr(cluster="true")
             g.attr(label=self.model.label)
             g.attr(fontcolor="#888888")
@@ -246,8 +209,6 @@ class ModelDiagram:
 
         return g
 
-    # def configure_nodes(self):
-
     def get_ref_node(self, ref: reno.Reference) -> DiagramNode:
         """Get the DiagramNode associated with a reference. This is challenging because
         references don't have any direct connection to nodes. This gets used for
@@ -264,6 +225,8 @@ class ModelDiagram:
 
 
 class DiagramNode:
+    default_color: ClassVar[str] = "transparent"
+
     def __init__(self, ref: reno.Reference, diagram: ModelDiagram):
         self.diagram = diagram
         self.ref = ref
@@ -272,6 +235,94 @@ class DiagramNode:
         self.color = None
 
         self.edges: list[DiagramEdge] = []
+
+    def configure_render(self, config: RenderConfig) -> None:
+        """Decide if this node should be rendered based on configuration and underlying
+        reference.
+
+        Precedence/priority in this determination (earlier in the list overrides later):
+        1. An implicit reference is never rendered
+        2. If a universe is specified and the reference isn't in it, don't render it.
+        3. Individually specified show/hide references
+        4. Show/hide color groups
+        5. Blanket variable/metric on/off
+        """
+        self.render = True
+
+        # lowest priority is blanket variables/metrics on or off
+        # TODO: possibly move this higher than cgroups?
+        if isinstance(self, MetricDiagramNode) and not config.metrics:
+            self.render = False
+
+        if isinstance(self, VarDiagramNode) and not config.vars:
+            self.render = False
+
+        # fourth highest priority is show/hide color groups
+        for cgroup in self.ref.cgroups:
+            if cgroup in config.show_groups:
+                self.render = True
+
+        for cgroup in self.ref.cgroups:
+            if cgroup in config.hide_groups:
+                self.render = False
+
+        # third highest priorities are individually specified show/hide controls
+        if self.ref in config.show:
+            self.render = True
+
+        if self.ref in config.hide:
+            self.render = False
+
+        # second highest priority - if a universe has been specified, don't
+        # render anything outside of that universe
+        if config.universe is not None and self.ref not in config.universe:
+            self.render = False
+
+        # highest priority - if the reference is implicit, never render
+        if self.ref.implicit:
+            self.render = False
+
+    def configure_color(self, config: RenderConfig) -> None:
+        # lowest priority is the default
+        self.color = self.default_color
+
+        # next lowest priority are model-defined default group colors
+        # (cgroup takes priority over group)
+        default_group_check = self.check_str_or_listpart_in_dict(
+            self.ref.group, self.ref.model.group_colors
+        )
+        if default_group_check is not None:
+            self.color = default_group_check
+        default_cgroup_check = self.check_str_or_listpart_in_dict(
+            self.ref.cgroup, self.ref.model.group_colors
+        )
+        if default_cgroup_check is not None:
+            self.color = default_cgroup_check
+
+        # next level of precedence is a group specified in config's group_colors
+        config_check = self.check_str_or_listpart_in_dict(
+            self.ref.cgroup, config.group_colors
+        )
+        if config_check is not None:
+            self.color = config_check
+
+        # manually specified groups in config (tuples of references) take
+        # highest priority
+        for group in config.group_colors:
+            if isinstance(group, tuple) and self.ref in group:
+                self.color = config.group_colors[group]
+                break
+
+    def check_str_or_listpart_in_dict(
+        self, keys: str | list, dictionary: dict[str, str]
+    ) -> str:
+        if isinstance(keys, str) and keys in dictionary:
+            return dictionary[keys]
+        if isinstance(keys, list):
+            for key in keys:
+                if key in dictionary:
+                    return dictionary[key]
+        return None
 
     def add_to_graphviz(self, g: Digraph = None) -> None:
         pass
@@ -291,6 +342,12 @@ class DiagramNode:
 
 
 class StockDiagramNode(DiagramNode):
+    # TODO: make these tuples, one for light, one for dark
+    default_color: ClassVar[str] = "transparent"
+
+    def configure_sparklines(self, config: RenderConfig) -> None:
+        self.sparkline = config.stock_sparklines
+
     def map_edges(self) -> None:
         for flow in self.ref.in_flows:
             DiagramNode.add_edge(
@@ -313,6 +370,11 @@ class StockDiagramNode(DiagramNode):
 
 
 class FlowDiagramNode(DiagramNode):
+    default_color: ClassVar[str] = "transparent"
+
+    def configure_sparklines(self, config: RenderConfig) -> None:
+        self.sparkline = config.flow_sparklines
+
     def map_edges(self) -> None:
         for ref, ref_types in self.ref.seek_refs(include_ref_types=True).items():
             if isinstance(ref, reno.components.TimeRef):
@@ -367,6 +429,11 @@ class FlowDiagramNode(DiagramNode):
 
 
 class VarDiagramNode(DiagramNode):
+    default_color: ClassVar[str] = "lightgreen"
+
+    def configure_sparklines(self, config: RenderConfig) -> None:
+        self.sparkline = config.var_sparklines
+
     def map_edges(self) -> None:
         for ref in self.ref.seek_refs():
             if isinstance(ref, reno.components.TimeRef):
@@ -378,6 +445,11 @@ class VarDiagramNode(DiagramNode):
 
 
 class MetricDiagramNode(DiagramNode):
+    default_color: ClassVar[str] = "purple"
+
+    def configure_sparklines(self, config: RenderConfig) -> None:
+        self.sparkline = config.metric_sparklines
+
     def map_edges(self) -> None:
         for ref in self.ref.seek_refs():
             if isinstance(ref, reno.components.TimeRef):
@@ -396,10 +468,12 @@ class DiagramEdge:
     the nodes on both ends can share the edge objects.
     """
 
+    default_color: ClassVar[str] = "black"
+
     def __init__(self, source: DiagramNode, target: DiagramNode):
         self.source = source
         self.target = target
-        self.color = "#000000"
+        self.color = None
 
         self.rendered = False
         """Ensure an edge doesn't get double-rendered"""
@@ -409,6 +483,9 @@ class DiagramEdge:
         if self not in target.edges:
             target.edges.append(self)
 
+    def configure_color(self, config: RenderConfig) -> None:
+        self.color = self.default_color
+
     def other(self, node: DiagramNode) -> DiagramNode:
         """Given one side of the edge, get the other side."""
         if node == self.source:
@@ -417,6 +494,14 @@ class DiagramEdge:
             return self.source
         # TODO: error?
         return None
+
+    def should_render(self) -> bool:
+        if self.rendered:
+            return False
+        if not self.source.render or not self.target.render:  # noqa: SIM103
+            return False
+        # TODO: prob need the duplicate check here
+        return True
 
     # TODO: not sure if needed
     # TODO: should it include itself or no?
@@ -440,30 +525,89 @@ class DiagramEdge:
                 duplicates.append(edge)
         return duplicates
 
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+    # def add_to_graphviz(self, g: Digraph = None) -> None:
+    #     pass
 
 
 class StockIODiagramEdge(DiagramEdge):
+    def configure_color(self, config: RenderConfig) -> None:
+        # next highest is if either side happens to have a color
+        if self.source.color != self.source.default_color:
+            self.color = self.source.color
+        if self.target.color != self.target.default_color:
+            self.color = self.target.color
+
+        # highest priority is the stock color
+        # NOTE: if there's an "inflow" op neither one is a stock, so just assume
+        # the source by default.
+        stock_node = self.source
+        if isinstance(self.target.ref, reno.Stock):
+            stock_node = self.target
+        if stock_node.color != stock_node.default_color:
+            self.color = stock_node.color
+
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.should_render():
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                style="bold",
+                weight="50",
+                color=self.color,
+            )
 
 
 class StockLimitDiagramEdge(DiagramEdge):
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.should_render():
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                style="dotted",
+                arrowsize=".5",
+                color=self.color,
+            )
 
 
 class ToVarDiagramEdge(DiagramEdge):
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.should_render():
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                style="dotted",
+                arrowsize=".5",
+                color=self.color,
+            )
 
 
 class ToFlowDiagramEdge(DiagramEdge):
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.should_render():
+            style = "dotted" if isinstance(self.source.ref, reno.Variable) else "dashed"
+            constraint = "false" if isinstance(self.source.ref, reno.Stock) else "true"
+            # TODO: deemphasize option?
+            # weight = "1" if
+
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                style=style,
+                arrowsize=".5",
+                constraint=constraint,
+                color=self.color,
+            )
 
 
 class ToMetricDiagramEdge(DiagramEdge):
+    default_color: ClassVar[str] = "grey"
+
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.should_render():
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                style="dotted",
+                arrowsize=".5",
+                color=self.color,
+            )
