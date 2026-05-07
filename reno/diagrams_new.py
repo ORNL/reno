@@ -22,7 +22,7 @@ class RenderConfig:
     vars: bool = True
     metrics: bool = False
 
-    group_colors: dict[str | tuple[reno.components.TrackedReference], str]
+    group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None
 
     var_sparklines: bool = False
     flow_sparklines: bool = False
@@ -41,6 +41,8 @@ class RenderConfig:
             self.show = []
         if self.hide is None:
             self.hide = []
+        if self.group_colors is None:
+            self.group_colors = {}
 
 
 class ModelDiagram:
@@ -93,6 +95,7 @@ class ModelDiagram:
         if self.level == 0:
             self.build_edges()
             self.fix_implicit_inflow_nodes()
+            self.configure(RenderConfig())
 
     def build_nodes(self) -> None:
         """Build out the graph structure in python land before trying to graphviz-ify
@@ -109,7 +112,7 @@ class ModelDiagram:
 
     def build_edges(self) -> None:
         for node in self.nodes:
-            node.build_edges()
+            node.map_edges()
         for model in self.submodels:
             model.build_edges()
 
@@ -130,7 +133,7 @@ class ModelDiagram:
         return self.parent.all_nodes()
 
     def _all_nodes(self) -> list[DiagramNode]:
-        nodes = self.nodes
+        nodes = [*self.nodes]
         for model in self.submodels:
             nodes.extend(model._all_nodes())
         return nodes
@@ -149,7 +152,7 @@ class ModelDiagram:
     def _all_edges(self) -> list[DiagramEdge]:
         everything = []
         for node in self.nodes:
-            for edge in self.edges:
+            for edge in node.edges:
                 if edge not in everything:
                     everything.append(edge)
         for model in self.submodels:
@@ -182,10 +185,11 @@ class ModelDiagram:
 
         if self.level > 0:
             g.attr(style="filled")
-            g.attr(color=ModelDiagram.subgraph_colors[self.level])
+            g.attr(color=ModelDiagram.subgraph_colors[self.level - 1])
             g.attr(cluster="true")
             g.attr(label=self.model.label)
             g.attr(fontcolor="#888888")
+        return g
 
     def to_graphviz(self) -> Digraph:
         """Generate the graphviz Digraph and return it.
@@ -203,10 +207,15 @@ class ModelDiagram:
             sub_g = model.to_graphviz()
             g.subgraph(sub_g)
 
-        for node in self.nodes:
-            for edge in node.edges:
-                edge.add_to_graphviz(g)
+        if self.level == 0:
+            # the edges need to be included _outside_ of cluster definitions,
+            # otherwise nodes can get incorrectly moved into a cluster because
+            # of where the edge is defined
+            for node in self.all_nodes():
+                for edge in node.edges:
+                    edge.add_to_graphviz(g)
 
+        self.digraph = g
         return g
 
     def get_ref_node(self, ref: reno.Reference) -> DiagramNode:
@@ -226,6 +235,9 @@ class ModelDiagram:
 
 class DiagramNode:
     default_color: ClassVar[str] = "transparent"
+    shape: ClassVar[str] = "rect"
+    style: ClassVar[str] = "filled"
+    other_attrs: ClassVar[dict[str, str]] = {}
 
     def __init__(self, ref: reno.Reference, diagram: ModelDiagram):
         self.diagram = diagram
@@ -245,7 +257,8 @@ class DiagramNode:
         2. If a universe is specified and the reference isn't in it, don't render it.
         3. Individually specified show/hide references
         4. Show/hide color groups
-        5. Blanket variable/metric on/off
+        5. Default model hide groups
+        6. Blanket variable/metric on/off
         """
         self.render = True
 
@@ -257,19 +270,23 @@ class DiagramNode:
         if isinstance(self, VarDiagramNode) and not config.vars:
             self.render = False
 
-        # fourth highest priority is show/hide color groups
-        for cgroup in self.ref.cgroups:
-            if cgroup in config.show_groups:
-                self.render = True
+        # fifth highest priority is default hide groups on model
+        if self.check_str_or_listpart_in_list(
+            self.ref.cgroup, self.ref.model.default_hide_groups
+        ):
+            self.render = False
+        if self.ref.group in self.ref.model.default_hide_groups:
+            self.render = False
 
-        for cgroup in self.ref.cgroups:
-            if cgroup in config.hide_groups:
-                self.render = False
+        # fourth highest priority is show/hide color groups
+        if self.check_str_or_listpart_in_list(self.ref.cgroup, config.show_groups):
+            self.render = True
+        if self.check_str_or_listpart_in_list(self.ref.cgroup, config.hide_groups):
+            self.render = False
 
         # third highest priorities are individually specified show/hide controls
         if self.ref in config.show:
             self.render = True
-
         if self.ref in config.hide:
             self.render = False
 
@@ -313,6 +330,17 @@ class DiagramNode:
                 self.color = config.group_colors[group]
                 break
 
+    def check_str_or_listpart_in_list(
+        self, vals: str | list, containing_list: list[str]
+    ) -> bool:
+        if isinstance(vals, str) and vals in containing_list:
+            return True
+        if isinstance(vals, list):
+            for val in vals:
+                if val in containing_list:
+                    return True
+        return False
+
     def check_str_or_listpart_in_dict(
         self, keys: str | list, dictionary: dict[str, str]
     ) -> str:
@@ -325,9 +353,18 @@ class DiagramNode:
         return None
 
     def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
+        if self.render:
+            g.node(
+                name=self.ref.qual_name(),
+                label=self.ref.label,
+                shape=self.shape,
+                group=self.ref.group,
+                style=self.style,
+                fillcolor=self.color,
+                **self.other_attrs,
+            )
 
-    @classmethod
+    @staticmethod
     def add_edge(edge: DiagramEdge) -> None:
         if edge not in edge.source.edges:
             edge.source.edges.append(edge)
@@ -344,6 +381,9 @@ class DiagramNode:
 class StockDiagramNode(DiagramNode):
     # TODO: make these tuples, one for light, one for dark
     default_color: ClassVar[str] = "transparent"
+    shape: ClassVar[str] = "rect"
+    style: ClassVar[str] = "filled"
+    other_attrs: ClassVar[dict[str, str]] = {}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         self.sparkline = config.stock_sparklines
@@ -363,14 +403,12 @@ class StockDiagramNode(DiagramNode):
                 StockLimitDiagramEdge(self.diagram.get_ref_node(ref), self)
             )
 
-        # TODO: logic for implicit flows?
-
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
-
 
 class FlowDiagramNode(DiagramNode):
     default_color: ClassVar[str] = "transparent"
+    shape: ClassVar[str] = "plain"
+    style: ClassVar[str] = "filled"
+    other_attrs: ClassVar[dict[str, str]] = {}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         self.sparkline = config.flow_sparklines
@@ -388,9 +426,6 @@ class FlowDiagramNode(DiagramNode):
                 DiagramNode.add_edge(
                     ToFlowDiagramEdge(self.diagram.get_ref_node(ref), self)
                 )
-
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
 
     def fix_implicit_inflow_edges(self) -> None:
         is_inflow = False
@@ -430,6 +465,9 @@ class FlowDiagramNode(DiagramNode):
 
 class VarDiagramNode(DiagramNode):
     default_color: ClassVar[str] = "lightgreen"
+    shape: ClassVar[str] = "rect"
+    style: ClassVar[str] = "rounded,filled"
+    other_attrs: ClassVar[dict[str, str]] = {"fontsize": "10pt", "height": ".2"}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         self.sparkline = config.var_sparklines
@@ -440,12 +478,12 @@ class VarDiagramNode(DiagramNode):
                 continue
             DiagramNode.add_edge(ToVarDiagramEdge(self.diagram.get_ref_node(ref), self))
 
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
-
 
 class MetricDiagramNode(DiagramNode):
     default_color: ClassVar[str] = "purple"
+    shape: ClassVar[str] = "ellipse"
+    style: ClassVar[str] = "filled"
+    other_attrs: ClassVar[dict[str, str]] = {"fontsize": "10pt", "height": ".2"}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         self.sparkline = config.metric_sparklines
@@ -458,9 +496,6 @@ class MetricDiagramNode(DiagramNode):
                 ToMetricDiagramEdge(self.diagram.get_ref_node(ref), self)
             )
 
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        pass
-
 
 class DiagramEdge:
     """Edge information stands outside of an individual diagram since there can be
@@ -469,6 +504,13 @@ class DiagramEdge:
     """
 
     default_color: ClassVar[str] = "black"
+    style: ClassVar[str] = None
+    weight: ClassVar[str] = None
+    arrowsize: ClassVar[str] = None
+
+    PRIORITY: int = 0
+    """When two edges can be drawn between the same source and target, priority (based on type)
+    is used to determine which edge is actually drawn."""
 
     def __init__(self, source: DiagramNode, target: DiagramNode):
         self.source = source
@@ -498,13 +540,34 @@ class DiagramEdge:
     def should_render(self) -> bool:
         if self.rendered:
             return False
-        if not self.source.render or not self.target.render:  # noqa: SIM103
+        if not self.source.render or not self.target.render:
             return False
-        # TODO: prob need the duplicate check here
+        if self.source == self.target:
+            # don't render a self loop (this tends to happen because of the
+            # implicit flow fixes)
+            return False
+
+        max_edge_priority = 0
+        for edge in self.find_duplicate_edges():
+            if max_edge_priority < edge.PRIORITY:
+                max_edge_priority = edge.PRIORITY
+        if max_edge_priority > self.PRIORITY:
+            return False
+
         return True
 
-    # TODO: not sure if needed
-    # TODO: should it include itself or no?
+    # TODO: function to mark rendered (then it will also mark all duplicate
+    # edges as rendered)
+    def mark_rendered(self) -> None:
+        """Set rendered state of this edge (and all duplicate/similar edges) to ``True``.
+
+        Without this, "duplicate" edges will sometimes still render.
+        """
+        self.rendered = True
+        for edge in self.find_duplicate_edges():
+            edge.rendered = True
+
+    # TODO: should it include itself or no? (currently does not)
     def find_duplicate_edges(self) -> list[DiagramEdge]:
         duplicates = []
         for edge in self.source.edges:
@@ -525,11 +588,25 @@ class DiagramEdge:
                 duplicates.append(edge)
         return duplicates
 
-    # def add_to_graphviz(self, g: Digraph = None) -> None:
-    #     pass
+    def add_to_graphviz(self, g: Digraph = None) -> None:
+        if self.should_render():
+            g.edge(
+                self.source.ref.qual_name(),
+                self.target.ref.qual_name(),
+                color=self.color,
+                style=self.style,
+                weight=self.weight,
+                arrowsize=self.arrowsize,
+            )
+            self.mark_rendered()
 
 
 class StockIODiagramEdge(DiagramEdge):
+    style: ClassVar[str] = "bold"
+    weight: ClassVar[str] = "50"
+    arrowsize: ClassVar[str] = None
+    PRIORITY = 5
+
     def configure_color(self, config: RenderConfig) -> None:
         # next highest is if either side happens to have a color
         if self.source.color != self.source.default_color:
@@ -546,42 +623,23 @@ class StockIODiagramEdge(DiagramEdge):
         if stock_node.color != stock_node.default_color:
             self.color = stock_node.color
 
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        if self.should_render():
-            g.edge(
-                self.source.ref.qual_name(),
-                self.target.ref.qual_name(),
-                style="bold",
-                weight="50",
-                color=self.color,
-            )
-
 
 class StockLimitDiagramEdge(DiagramEdge):
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        if self.should_render():
-            g.edge(
-                self.source.ref.qual_name(),
-                self.target.ref.qual_name(),
-                style="dotted",
-                arrowsize=".5",
-                color=self.color,
-            )
+    style: ClassVar[str] = "dotted"
+    arrowsize: ClassVar[str] = ".5"
+    PRIORITY = 3
 
 
 class ToVarDiagramEdge(DiagramEdge):
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        if self.should_render():
-            g.edge(
-                self.source.ref.qual_name(),
-                self.target.ref.qual_name(),
-                style="dotted",
-                arrowsize=".5",
-                color=self.color,
-            )
+    style: ClassVar[str] = "dotted"
+    arrowsize: ClassVar[str] = ".5"
+    PRIORITY = 1
 
 
 class ToFlowDiagramEdge(DiagramEdge):
+    arrowsize: ClassVar[str] = ".5"
+    PRIORITY = 2
+
     def add_to_graphviz(self, g: Digraph = None) -> None:
         if self.should_render():
             style = "dotted" if isinstance(self.source.ref, reno.Variable) else "dashed"
@@ -593,21 +651,15 @@ class ToFlowDiagramEdge(DiagramEdge):
                 self.source.ref.qual_name(),
                 self.target.ref.qual_name(),
                 style=style,
-                arrowsize=".5",
+                arrowsize=self.arrowsize,
                 constraint=constraint,
                 color=self.color,
             )
+            self.mark_rendered()
 
 
 class ToMetricDiagramEdge(DiagramEdge):
     default_color: ClassVar[str] = "grey"
-
-    def add_to_graphviz(self, g: Digraph = None) -> None:
-        if self.should_render():
-            g.edge(
-                self.source.ref.qual_name(),
-                self.target.ref.qual_name(),
-                style="dotted",
-                arrowsize=".5",
-                color=self.color,
-            )
+    style: ClassVar[str] = "dotted"
+    arrowsize: ClassVar[str] = ".5"
+    PRIORITY = 1
