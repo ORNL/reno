@@ -477,6 +477,45 @@ class Model:
 
     def graph(
         self,
+        vars: bool = True,
+        metrics: bool = False,
+        show: list[reno.components.Reference] = None,
+        hide: list[reno.components.Reference] = None,
+        show_groups: list[str] = None,
+        hide_groups: list[str] = None,
+        universe: list[reno.components.Reference] = None,
+        group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None,
+        var_sparklines: bool = False,
+        flow_sparklines: bool = False,
+        stock_sparklines: bool = False,
+        metric_sparklines: bool = False,
+        traces: list[xr.Dataset] = None,
+        lr: bool = False,
+        theme: str = "light",
+    ) -> reno.diagrams.ModelDiagram:
+        config = reno.diagrams.RenderConfig(
+            vars=vars,
+            metrics=metrics,
+            show=show,
+            hide=hide,
+            show_groups=show_groups,
+            hide_groups=hide_groups,
+            universe=universe,
+            group_colors=group_colors,
+            var_sparklines=var_sparklines,
+            flow_sparklines=flow_sparklines,
+            stock_sparklines=stock_sparklines,
+            metric_sparklines=metric_sparklines,
+            traces=traces,
+            lr=lr,
+            theme=theme,
+        )
+        diagram = reno.diagrams.ModelDiagram(self)
+        diagram.to_graphviz(config)
+        return diagram
+
+    def graph_old(
+        self,
         show_vars: bool = True,
         exclude_vars: list[str] = None,
         sparklines: bool = False,
@@ -536,7 +575,7 @@ class Model:
         if exclude_vars is None:
             exclude_vars = []
         set_jupyter_format("png")
-        diagram, _ = reno.diagrams.stock_flow_diagram(
+        diagram, _ = reno.diagrams_old.stock_flow_diagram(
             self,
             show_vars,
             exclude_vars,
