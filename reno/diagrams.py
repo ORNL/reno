@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import ClassVar
 
+import matplotlib.pyplot as plt
 import xarray as xr
 from graphviz import Digraph
 
@@ -59,7 +61,6 @@ class ModelDiagram:
     def __init__(
         self,
         model: reno.Model,
-        bg: str = None,
         _model_map: dict[reno.Model, ModelDiagram] = None,
         _level: int = 0,
         _parent: ModelDiagram = None,
@@ -75,12 +76,11 @@ class ModelDiagram:
         self.parent: ModelDiagram = _parent
         self.digraph: Digraph = None
 
-        self.bg = bg
-        """background color."""
-
         self.level = _level
 
         self.nodes: list[DiagramNode] = []
+
+        self.spark_traces: list[xr.Dataset] = []
 
         # in order to not lose track of what node is in what diagram
         # corresponding to what model, this dictionary maps model objects to
@@ -135,6 +135,11 @@ class ModelDiagram:
             if isinstance(node, FlowDiagramNode):
                 node.fix_implicit_inflow_edges()
 
+    def get_topmost_diagram(self) -> ModelDiagram:
+        if self.parent is not None:
+            return self.parent.get_topmost_diagram()
+        return self
+
     def all_nodes(self) -> list[DiagramNode]:
         if self.parent is None:
             return self._all_nodes()
@@ -171,6 +176,7 @@ class ModelDiagram:
         return everything
 
     def configure(self, config: RenderConfig) -> None:
+        self.get_model_traces(config)
         for node in self.all_nodes():
             node.configure_render(config)
             node.configure_color(config)
@@ -178,6 +184,31 @@ class ModelDiagram:
 
         for edge in self.all_edges():
             edge.configure_color(config)
+
+    def get_model_traces(self, config: RenderConfig) -> None:
+        # NOTE: this only sets the traces on the parent model. Anywhere where
+        # the traces are used, you have to use the get_topmost_diagram function.
+        # TODO: set property for spark traces to automatically get topmost?
+        self.spark_traces = []
+        if (
+            config.flow_sparklines
+            or config.stock_sparklines
+            or config.var_sparklines
+            or config.metric_sparklines
+        ):
+            if config.traces is not None:
+                # highest priority is a manually specified set of traces
+                self.spark_traces = config.traces
+                return
+            if self.model.trace is not None:
+                # next highest is if a previous trace exists on the model
+                if "prior" in self.model.trace:
+                    self.spark_traces.append(self.model.trace.prior)
+                if "posterior" in self.model.trace:
+                    self.spark_traces.append(self.model.trace.posterior)
+                return
+            # otherwise try to get a previous numpy run on the model
+            self.spark_traces = [self.model.dataset()]
 
     def _reset_edge_render_state(self) -> None:
         """Edges track a ``rendered`` variable to avoid double-rendering. Find
@@ -196,7 +227,10 @@ class ModelDiagram:
 
         if self.level == 0:
             graph_attrs = dict(
-                rankdir=rankdir, bgcolor=bgcolor[config.theme], style="filled"
+                rankdir=rankdir,
+                bgcolor=bgcolor[config.theme],
+                style="filled",
+                mclimit="0.0",
             )
             g = Digraph(
                 name=self.model.name,
@@ -244,10 +278,18 @@ class ModelDiagram:
         self.digraph = g
         return g
 
-    def _repr_svg_(self) -> str:
+    def _repr_png_(self) -> bytes:
         if self.digraph is None:
             self.to_graphviz()
-        return self.digraph.pipe(format="svg", encoding="ascii")
+        return self.digraph._repr_mimebundle_(include=["image/png"])["image/png"]
+
+    # NOTE: svg repr in jupyter lab doesn't work well because sparkplots rely on
+    # href'd images to display correctly. This doesn't seem like an issue that's
+    # going to be resolved any time soon from the jupyter side
+    # def _repr_svg_(self) -> str:
+    #     if self.digraph is None:
+    #         self.to_graphviz()
+    #     return self.digraph.pipe(format="svg", encoding="ascii")
 
     def get_ref_node(self, ref: reno.Reference) -> DiagramNode:
         """Get the DiagramNode associated with a reference. This is challenging because
@@ -270,6 +312,11 @@ class DiagramNode:
         "dark": "#333333",
     }
     default_font_color: ClassVar[dict[str, str]] = {"light": "black", "dark": "#e6e6e6"}
+    default_sparkline_edge_color: ClassVar[dict[str, str]] = {
+        "light": "black",
+        "dark": "#e6e6e6",
+    }
+
     shape: ClassVar[str] = "rect"
     style: ClassVar[str] = "filled"
     other_attrs: ClassVar[dict[str, str]] = {}
@@ -278,9 +325,11 @@ class DiagramNode:
         self.diagram = diagram
         self.ref = ref
         self.sparkline = False
+        self.sparkline_edge_color = None
         self.render = True
         self.color = None
         self.font_color = None
+        self.theme: str = "light"
 
         self.edges: list[DiagramEdge] = []
 
@@ -336,6 +385,8 @@ class DiagramNode:
             self.render = False
 
     def configure_color(self, config: RenderConfig) -> None:
+        self.theme = config.theme
+
         # lowest priority is the default
         self.color = self.default_color[config.theme]
 
@@ -367,6 +418,7 @@ class DiagramNode:
                 break
 
         self.font_color = self.default_font_color[config.theme]
+        self.sparkline_edge_color = self.default_sparkline_edge_color[config.theme]
 
     def check_str_or_listpart_in_list(
         self, vals: str | list, containing_list: list[str]
@@ -390,18 +442,46 @@ class DiagramNode:
                     return dictionary[key]
         return None
 
+    def graphviz_label_node(self, g: Digraph = None) -> None:
+        g.node(
+            name=self.ref.qual_name(),
+            label=self.ref.label,
+            shape=self.shape,
+            group=self.ref.group,
+            style=self.style,
+            fillcolor=self.color,
+            fontcolor=self.font_color,
+            **self.other_attrs,
+        )
+
     def add_to_graphviz(self, g: Digraph = None) -> None:
         if self.render:
-            g.node(
-                name=self.ref.qual_name(),
-                label=self.ref.label,
-                shape=self.shape,
-                group=self.ref.group,
-                style=self.style,
-                fillcolor=self.color,
-                fontcolor=self.font_color,
-                **self.other_attrs,
-            )
+            if not self.sparkline:
+                self.graphviz_label_node(g)
+            else:
+                # with g.subgraph(graph_attr={"rank": "same", "cluster": "false"}) as c:
+                with g.subgraph(
+                    name=f"cluster_{self.ref.qual_name}",
+                    graph_attr={"label": "", "style": None, "color": "invis"},
+                ) as c:
+                    self.graphviz_label_node(c)
+                    plot_path = self.generate_sparkline()
+
+                    c.node(
+                        name=f"{self.ref.qual_name()}_fig",
+                        label="",
+                        image=plot_path,
+                        shape="none",
+                        group=self.ref.group,
+                    )
+                    c.edge(
+                        self.ref.qual_name(),
+                        f"{self.ref.qual_name()}_fig",
+                        constraint="false",
+                        color=self.sparkline_edge_color,
+                        weight="20",
+                        dir="none",
+                    )
 
     @staticmethod
     def add_edge(edge: DiagramEdge) -> None:
@@ -414,7 +494,54 @@ class DiagramNode:
         """Find all connected nodes and determine how corresponding edges need to be
         drawn.
         """
-        pass
+        # implemented in subclasses
+
+    def generate_sparkline(self) -> str:
+        """Returns the filepath of the saved plot so graphviz can display
+        in a node.
+        """
+        # store current plot rcParams to avoid side effects
+        if self.theme == "light":
+            mpl_style_name = "default"
+        elif self.theme == "dark":
+            mpl_style_name = "dark_background"
+
+        # generate the sparkline graph
+        with plt.style.context(mpl_style_name), plt.ioff():
+            # fig, ax = plt.subplots(figsize=(1.5, .75))
+            traces = self.diagram.get_topmost_diagram().spark_traces
+
+            # based on ref type
+            # TODO: need better way to handle what the set of coords
+            # are, because a metric with a timeseries[-1] still counted
+            # as dynamic
+            if (
+                isinstance(self.ref, (reno.Stock, reno.Flow))
+                or not self.ref.is_static()
+            ):
+                fig, ax = plt.subplots(figsize=(1.65, 0.75))
+                reno.viz.compare_seq(
+                    self.ref.qual_name(), traces, ax=ax, legend=False, title=""
+                )
+                ax.xaxis.set_ticks([])
+            else:
+                fig, ax = plt.subplots(figsize=(1.5, 0.90))
+                reno.viz.compare_posterior(
+                    self.ref.qual_name(), traces, ax=ax, legend=False, title=""
+                )
+                ax.yaxis.set_ticks([])
+            ax.tick_params(labelsize=8)
+            fig.tight_layout(pad=0.05)
+            fig.patch.set_alpha(0)
+
+            # save the figure (graphviz needs a path to render an image)
+            cache_dir = Path(".plotcache")
+            cache_dir.mkdir(exist_ok=True)
+            filepath = cache_dir / f"{self.ref.qual_name()}.png"
+            fig.savefig(filepath)
+            plt.close(fig)
+
+        return str(filepath)
 
 
 class StockDiagramNode(DiagramNode):
@@ -651,9 +778,9 @@ class StockIODiagramEdge(DiagramEdge):
 
         # next highest is if either side happens to have a color
         if self.source.color != self.source.default_color[config.theme]:
-            self.color = self.source.color[config.theme]
+            self.color = self.source.color
         if self.target.color != self.target.default_color[config.theme]:
-            self.color = self.target.color[config.theme]
+            self.color = self.target.color
 
         # highest priority is the stock color
         # NOTE: if there's an "inflow" op neither one is a stock, so just assume
@@ -662,7 +789,7 @@ class StockIODiagramEdge(DiagramEdge):
         if isinstance(self.target.ref, reno.Stock):
             stock_node = self.target
         if stock_node.color != stock_node.default_color[config.theme]:
-            self.color = stock_node.color[config.theme]
+            self.color = stock_node.color
 
 
 class StockLimitDiagramEdge(DiagramEdge):
@@ -700,7 +827,7 @@ class ToFlowDiagramEdge(DiagramEdge):
 
 
 class ToMetricDiagramEdge(DiagramEdge):
-    default_color: ClassVar[dict[str, str]] = {"light": "grey", "dark": "grey"}
+    default_color: ClassVar[dict[str, str]] = {"light": "#444444", "dark": "#999999"}
     style: ClassVar[str] = "dotted"
     arrowsize: ClassVar[str] = ".5"
     PRIORITY = 1
