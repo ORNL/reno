@@ -1,3 +1,10 @@
+"""Functions for generating stock & flow diagrams.
+
+Diagrams are graphviz dot diagrams, and notably don't follow the
+exact format typically used with SFDs. The biggest difference is
+sources and sinks aren't explicitly represented.
+"""
+
 # make it so we don't have to quote every type annotation ever
 from __future__ import annotations
 
@@ -16,27 +23,53 @@ import reno
 
 @dataclass
 class RenderConfig:
+    """Settings for what gets rendered in a stock and flow diagram."""
+
     show: list[reno.components.Reference] = None
+    """List of individual references to include, this takes priority over groups."""
     hide: list[reno.components.Reference] = None
+    """List of individual references to exclude, this takes priority over groups."""
     show_groups: list[str] = None
+    """List of group names, any references part of any groups listed here will be
+    displayed."""
     hide_groups: list[str] = None
+    """List of group names, any references part of any groups listed here will be
+    excluded."""
     universe: list[reno.components.Reference] = None
+    """Limit the possible set of references to draw from when rendering. Specifying
+    this applies restrictions to the other show*/hide* functions. The default of
+    ``None`` places no restrictions."""
     vars: bool = True
+    """Whether to include variables in the diagram (``True`` by default.)"""
     metrics: bool = False
+    """Whether to include metrics in the diagram (``False`` by default.)"""
 
     group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None
+    """Modify existing group colors or define new groups and associated colors to render
+    with. String keys refer to existing cgroup/group names. Tuples of references create
+    new ad-hoc groups."""
 
     var_sparklines: bool = False
+    """Include sparklines next to variables."""
     flow_sparklines: bool = False
+    """Include sparklines next to flows."""
     stock_sparklines: bool = False
+    """Include sparklines next to stocks."""
     metric_sparklines: bool = False
+    """Include sparklines next to metrics."""
 
     traces: list[xr.Dataset] = None
+    """The set of xarray datasets from simulation runs (numpy or pymc) to use in the
+    sparklines."""
 
     theme: str = "light"
+    """Whether to render the diagram in ``"light"`` or ``"dark"`` theme."""
     # TODO: make this an enum
 
+    # TODO: include an option for setting the plotcache location
+
     lr: bool = False
+    """Render the diagram top-bottom (default, if ``False``) or left-right."""
 
     def __post_init__(self):
         # TODO: just do default factories?
@@ -53,6 +86,10 @@ class RenderConfig:
 
 
 class ModelDiagram:
+    """A graph representation of a model, where nodes are the components and the edges
+    represent the connections between them based on their equations.
+    """
+
     subgraph_colors: ClassVar[list[str]] = [
         {"light": "#BBDDFF", "dark": "#334455"},
         {"light": "#DDBBFF", "dark": "#443355"},
@@ -65,6 +102,7 @@ class ModelDiagram:
         _level: int = 0,
         _parent: ModelDiagram = None,
     ):
+        """Create a new diagram for the specified model."""
         # NOTE: any of the _ params are things passed from parent that are
         # required _during construction_ (since nodes and edges are built in
         # this constructor).
@@ -93,7 +131,7 @@ class ModelDiagram:
             self.model_map = _model_map
         self.model_map[self.model] = self
 
-        self.build_nodes()
+        self._build_nodes()
         for submodel in self.model.models:
             model_diagram = ModelDiagram(
                 submodel, _model_map=self.model_map, _level=self.level + 1, _parent=self
@@ -101,14 +139,15 @@ class ModelDiagram:
             self.submodels.append(model_diagram)
 
         if self.level == 0:
-            self.build_edges()
-            self.fix_implicit_inflow_nodes()
+            self._build_edges()
+            self._fix_implicit_inflow_nodes()
             self.configure(RenderConfig())
 
-    def build_nodes(self) -> None:
+    def _build_nodes(self) -> None:
         """Build out the graph structure in python land before trying to graphviz-ify
         it.
         """
+        # add a new node of the correct type for each of the types of components
         self.nodes.extend(
             [StockDiagramNode(stock, self) for stock in self.model.stocks]
         )
@@ -118,34 +157,42 @@ class ModelDiagram:
             [MetricDiagramNode(metric, self) for metric in self.model.metrics]
         )
 
-    def build_edges(self) -> None:
+    def _build_edges(self) -> None:
+        """Map out all of the edges between the nodes."""
         for node in self.nodes:
             node.map_edges()
         for model in self.submodels:
-            model.build_edges()
+            model._build_edges()
 
-    def fix_implicit_inflow_nodes(self) -> None:
-        """Implicit inflow nodes (flows that are implicit, flow into
-        a stock, and have flows that flow into them) need to move their
-        edges.
+    def _fix_implicit_inflow_nodes(self) -> None:
+        """Implicit inflow nodes (flows that are implicit, flow into a stock, and have
+        flows that flow into them) need to move their edges.
 
-        TODO: additional explanation
+        Specifically, most reference and stock arrows need to move off of this node
+        onto its sources.
         """
         for node in self.all_nodes():
             if isinstance(node, FlowDiagramNode):
                 node.fix_implicit_inflow_edges()
 
     def get_topmost_diagram(self) -> ModelDiagram:
+        """Recurse upwards through parent models until we hit the "top" model."""
         if self.parent is not None:
             return self.parent.get_topmost_diagram()
         return self
 
     def all_nodes(self) -> list[DiagramNode]:
+        """Get a list of every node in this diagrams _greater_ context.
+
+        Note that this returns all nodes from every diagram/sub-diagram
+        involved, not just this one.
+        """
         if self.parent is None:
             return self._all_nodes()
         return self.parent.all_nodes()
 
     def _all_nodes(self) -> list[DiagramNode]:
+        """Recurse downwards to get every node from every submodel."""
         nodes = [*self.nodes]
         for model in self.submodels:
             nodes.extend(model._all_nodes())
@@ -163,6 +210,7 @@ class ModelDiagram:
         return self.parent.all_edges()
 
     def _all_edges(self) -> list[DiagramEdge]:
+        """Recurse downwards to get every edge involved with nodes in every submodel."""
         everything = []
         for node in self.nodes:
             for edge in node.edges:
@@ -176,7 +224,8 @@ class ModelDiagram:
         return everything
 
     def configure(self, config: RenderConfig) -> None:
-        self.get_model_traces(config)
+        """Apply a passed configuration to all nodes/edges."""
+        self._get_model_traces(config)
         for node in self.all_nodes():
             node.configure_render(config)
             node.configure_color(config)
@@ -185,7 +234,12 @@ class ModelDiagram:
         for edge in self.all_edges():
             edge.configure_color(config)
 
-    def get_model_traces(self, config: RenderConfig) -> None:
+    def _get_model_traces(self, config: RenderConfig) -> None:
+        """Determine based on the configuration what traces to use for sparklines.
+
+        (Traces can be found on the model from past simulations even if not manually
+        passed in the config.)
+        """
         # NOTE: this only sets the traces on the parent model. Anywhere where
         # the traces are used, you have to use the get_topmost_diagram function.
         # TODO: set property for spark traces to automatically get topmost?
@@ -218,9 +272,7 @@ class ModelDiagram:
             edge.rendered = False
 
     def _make_graph(self, config: RenderConfig) -> Digraph:
-        # TODO: RenderConfig (apply to all nodes and all submodel nodes)
-        # TODO: lr/tb and dark mode attrs
-
+        """Create the initial Digraph instance."""
         rankdir = "LR" if config.lr else "TB"
         bgcolor = {"light": None, "dark": "#181818"}
         outlinecolor = {"light": "black", "dark": "#e6e6e6"}
@@ -252,7 +304,7 @@ class ModelDiagram:
     def to_graphviz(self, config: RenderConfig = None) -> Digraph:
         """Generate the graphviz Digraph and return it.
 
-        Output is also stored on self.digraph.
+        Output is also stored on ``self.digraph``.
         """
         if self.level == 0:
             self._reset_edge_render_state()
@@ -279,6 +331,7 @@ class ModelDiagram:
         return g
 
     def _repr_png_(self) -> bytes:
+        """Used to automatically render the diagram when used in jupyter."""
         if self.digraph is None:
             self.to_graphviz()
         return self.digraph._repr_mimebundle_(include=["image/png"])["image/png"]
@@ -292,10 +345,11 @@ class ModelDiagram:
     #     return self.digraph.pipe(format="svg", encoding="ascii")
 
     def get_ref_node(self, ref: reno.Reference) -> DiagramNode:
-        """Get the DiagramNode associated with a reference. This is challenging because
-        references don't have any direct connection to nodes. This gets used for
-        correctly constructing an edge, which requires a node on each side when you may
-        only have a reference from seek_refs.
+        """Get the DiagramNode associated with a reference.
+
+        This is challenging because references don't have any direct connection to
+        nodes. This gets used for correctly constructing an edge, which requires a node
+        on each side when you may only have a reference from seek_refs.
         """
         # NOTE: likely a problem if a reference is never explicitly assigned to
         # a model?
@@ -307,6 +361,8 @@ class ModelDiagram:
 
 
 class DiagramNode:
+    """Parent class for any type of node representing a reference in a model."""
+
     default_color: ClassVar[dict[str, str]] = {
         "light": "transparent",
         "dark": "#333333",
@@ -322,6 +378,9 @@ class DiagramNode:
     other_attrs: ClassVar[dict[str, str]] = {}
 
     def __init__(self, ref: reno.Reference, diagram: ModelDiagram):
+        """Initialize a new node for the passed parent diagram and the provided reno
+        component.
+        """
         self.diagram = diagram
         self.ref = ref
         self.sparkline = False
@@ -333,7 +392,7 @@ class DiagramNode:
 
         self.edges: list[DiagramEdge] = []
 
-    def configure_render(self, config: RenderConfig) -> None:
+    def configure_render(self, config: RenderConfig) -> None:  # noqa: C901
         """Decide if this node should be rendered based on configuration and underlying
         reference.
 
@@ -385,6 +444,9 @@ class DiagramNode:
             self.render = False
 
     def configure_color(self, config: RenderConfig) -> None:
+        """Determine what colors should be used for this node given the
+        configuration.
+        """
         self.theme = config.theme
 
         # lowest priority is the default
@@ -423,6 +485,13 @@ class DiagramNode:
     def check_str_or_listpart_in_list(
         self, vals: str | list, containing_list: list[str]
     ) -> bool:
+        """Utility function to determine if a passed value (either a string or list of
+        strings) is in (or at least one instance of the list is in) the passed containing
+        list.
+
+        This is primarily used for checking containment of a group name/list of group
+        names in set of group names.
+        """
         if isinstance(vals, str) and vals in containing_list:
             return True
         if isinstance(vals, list):
@@ -434,6 +503,12 @@ class DiagramNode:
     def check_str_or_listpart_in_dict(
         self, keys: str | list, dictionary: dict[str, str]
     ) -> str:
+        """Utility function to retrieve the value in a dictionary where the key is found
+        in the passed value (either a singular string which would be a direct match, or
+        a list where the key is found in that list).
+
+        This is primarily used for getting values associated with groups (e.g. colors).
+        """
         if isinstance(keys, str) and keys in dictionary:
             return dictionary[keys]
         if isinstance(keys, list):
@@ -442,7 +517,8 @@ class DiagramNode:
                     return dictionary[key]
         return None
 
-    def graphviz_label_node(self, g: Digraph = None) -> None:
+    def graphviz_ref_node(self, g: Digraph = None) -> None:
+        """Add a node for the reference itself to the graph."""
         g.node(
             name=self.ref.qual_name(),
             label=self.ref.label,
@@ -455,16 +531,18 @@ class DiagramNode:
         )
 
     def add_to_graphviz(self, g: Digraph = None) -> None:
+        """Add this node to the digraphviz Digraph, accounting for sparklines if
+        needed.
+        """
         if self.render:
             if not self.sparkline:
-                self.graphviz_label_node(g)
+                self.graphviz_ref_node(g)
             else:
-                # with g.subgraph(graph_attr={"rank": "same", "cluster": "false"}) as c:
                 with g.subgraph(
                     name=f"cluster_{self.ref.qual_name}",
                     graph_attr={"label": "", "style": None, "color": "invis"},
                 ) as c:
-                    self.graphviz_label_node(c)
+                    self.graphviz_ref_node(c)
                     plot_path = self.generate_sparkline()
 
                     c.node(
@@ -485,6 +563,10 @@ class DiagramNode:
 
     @staticmethod
     def add_edge(edge: DiagramEdge) -> None:
+        """Add the given edge to _both_ involved nodes.
+
+        Static method because this doesn't depend on either node in particular.
+        """
         if edge not in edge.source.edges:
             edge.source.edges.append(edge)
         if edge not in edge.target.edges:
@@ -545,10 +627,18 @@ class DiagramNode:
 
 
 class StockDiagramNode(DiagramNode):
+    """Node for a stock component."""
+
     def configure_sparklines(self, config: RenderConfig) -> None:
+        """Set whether to render a sparkline for this reference based on config."""
         self.sparkline = config.stock_sparklines
 
     def map_edges(self) -> None:
+        """Find and add all the necessary edges that connect to this stock.
+
+        This is based on inflows, outflows, and any references found in the stock
+        minimum/maximum constraint equations.
+        """
         for flow in self.ref.in_flows:
             DiagramNode.add_edge(
                 StockIODiagramEdge(self.diagram.get_ref_node(flow), self)
@@ -565,6 +655,8 @@ class StockDiagramNode(DiagramNode):
 
 
 class FlowDiagramNode(DiagramNode):
+    """Node for a flow component."""
+
     default_color: ClassVar[dict[str, str]] = {
         "light": "transparent",
         "dark": "transparent",
@@ -572,9 +664,14 @@ class FlowDiagramNode(DiagramNode):
     shape: ClassVar[str] = "plain"
 
     def configure_sparklines(self, config: RenderConfig) -> None:
+        """Set whether to render a sparkline for this reference based on config."""
         self.sparkline = config.flow_sparklines
 
     def map_edges(self) -> None:
+        """Find and add all the necessary edges that connect to this stock.
+
+        This is based on any refs found in the equation.
+        """
         for ref, ref_types in self.ref.seek_refs(include_ref_types=True).items():
             if isinstance(ref, reno.components.TimeRef):
                 continue
@@ -588,7 +685,17 @@ class FlowDiagramNode(DiagramNode):
                     ToFlowDiagramEdge(self.diagram.get_ref_node(ref), self)
                 )
 
-    def fix_implicit_inflow_edges(self) -> None:
+    def fix_implicit_inflow_edges(self) -> None:  # noqa: C901
+        """Edges that connect to implicit flows (especially if inflows to a stock)
+        have to be moved to the previous references in the chain to avoid incorrect
+        breaks in the diagram.
+
+        Any StockIO edges previously connected to this node as a source get moved
+        (and duplicated if it was an implicit flow made up of several other flows)
+        to the previous flow nodes.
+
+        All other reference edges get moved to the previous references in the chain.
+        """
         is_inflow = False
         for edge in self.edges:
             if (
@@ -625,6 +732,8 @@ class FlowDiagramNode(DiagramNode):
 
 
 class VarDiagramNode(DiagramNode):
+    """Node for a variable component."""
+
     default_color: ClassVar[dict[str, str]] = {
         "light": "lightgreen",
         "dark": "darkgreen",
@@ -633,9 +742,14 @@ class VarDiagramNode(DiagramNode):
     other_attrs: ClassVar[dict[str, str]] = {"fontsize": "10pt", "height": ".2"}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
+        """Set whether to render a sparkline for this reference based on config."""
         self.sparkline = config.var_sparklines
 
     def map_edges(self) -> None:
+        """Find and add all the necessary edges that connect to this stock.
+
+        This is based on any refs found in the equation.
+        """
         for ref in self.ref.seek_refs():
             if isinstance(ref, reno.components.TimeRef):
                 continue
@@ -643,6 +757,8 @@ class VarDiagramNode(DiagramNode):
 
 
 class MetricDiagramNode(DiagramNode):
+    """Node for a metric component."""
+
     default_color: ClassVar[dict[str, str]] = {"light": "purple", "dark": "#551133"}
     default_font_color: ClassVar[dict[str, str]] = {
         "light": "#e6e6e6",
@@ -652,9 +768,14 @@ class MetricDiagramNode(DiagramNode):
     other_attrs: ClassVar[dict[str, str]] = {"fontsize": "10pt", "height": ".2"}
 
     def configure_sparklines(self, config: RenderConfig) -> None:
+        """Set whether to render a sparkline for this reference based on config."""
         self.sparkline = config.metric_sparklines
 
     def map_edges(self) -> None:
+        """Find and add all the necessary edges that connect to this stock.
+
+        This is based on any refs found in the equation.
+        """
         for ref in self.ref.seek_refs():
             if isinstance(ref, reno.components.TimeRef):
                 continue
@@ -664,7 +785,9 @@ class MetricDiagramNode(DiagramNode):
 
 
 class DiagramEdge:
-    """Edge information stands outside of an individual diagram since there can be
+    """A visual connection between nodes (references) in a stock and flow diagram.
+
+    Edge information stands outside of an individual diagram instance since there can be
     crossmodel/intermodel connections. Edges are stored as separate instances so that
     the nodes on both ends can share the edge objects.
     """
@@ -675,16 +798,19 @@ class DiagramEdge:
     arrowsize: ClassVar[str] = None
 
     PRIORITY: int = 0
-    """When two edges can be drawn between the same source and target, priority (based on type)
-    is used to determine which edge is actually drawn."""
+    """When two edges can be drawn between the same source and target, priority (based
+    on type) is used to determine which edge is actually drawn."""
 
     def __init__(self, source: DiagramNode, target: DiagramNode):
+        """Create an edge instance that connects from the passed source node to the
+        passed target node.
+        """
         self.source = source
         self.target = target
         self.color = None
 
         self.rendered = False
-        """Ensure an edge doesn't get double-rendered"""
+        """Flag to ensure an edge doesn't get double-rendered."""
 
         if self not in source.edges:
             source.edges.append(self)
@@ -692,10 +818,11 @@ class DiagramEdge:
             target.edges.append(self)
 
     def configure_color(self, config: RenderConfig) -> None:
+        """Determine what color should be used for this edge given the configuration."""
         self.color = self.default_color[config.theme]
 
     def other(self, node: DiagramNode) -> DiagramNode:
-        """Given one side of the edge, get the other side."""
+        """Given one side of the edge, get the node at the other end."""
         if node == self.source:
             return self.target
         if node == self.target:
@@ -704,6 +831,11 @@ class DiagramEdge:
         return None
 
     def should_render(self) -> bool:
+        """Determine if this edge should be rendered or not.
+
+        This determination is based on whether both end nodes are supposed to render,
+        and if any other edges between those same nodes have already rendered.
+        """
         if self.rendered:
             return False
         if not self.source.render or not self.target.render:
@@ -717,15 +849,14 @@ class DiagramEdge:
         for edge in self.find_duplicate_edges():
             if max_edge_priority < edge.PRIORITY:
                 max_edge_priority = edge.PRIORITY
-        if max_edge_priority > self.PRIORITY:
+        if max_edge_priority > self.PRIORITY:  # noqa: SIM103
             return False
 
         return True
 
-    # TODO: function to mark rendered (then it will also mark all duplicate
-    # edges as rendered)
     def mark_rendered(self) -> None:
-        """Set rendered state of this edge (and all duplicate/similar edges) to ``True``.
+        """Set rendered state of this edge (and all duplicate/similar edges) to
+        ``True``.
 
         Without this, "duplicate" edges will sometimes still render.
         """
@@ -735,6 +866,11 @@ class DiagramEdge:
 
     # TODO: should it include itself or no? (currently does not)
     def find_duplicate_edges(self) -> list[DiagramEdge]:
+        """Get all other edges between the same source and target.
+
+        Only includes those pointing the same direction. The list does not include
+        this current edge.
+        """
         duplicates = []
         for edge in self.source.edges:
             if edge == self:
@@ -755,6 +891,7 @@ class DiagramEdge:
         return duplicates
 
     def add_to_graphviz(self, g: Digraph = None) -> None:
+        """Add this edge to the graphviz Digraph."""
         if self.should_render():
             g.edge(
                 self.source.ref.qual_name(),
@@ -768,12 +905,15 @@ class DiagramEdge:
 
 
 class StockIODiagramEdge(DiagramEdge):
+    """Edge between a stock and a inflow or outflow."""
+
     style: ClassVar[str] = "bold"
     weight: ClassVar[str] = "50"
     arrowsize: ClassVar[str] = None
     PRIORITY = 5
 
     def configure_color(self, config: RenderConfig) -> None:
+        """Determine what color should be used for this edge given the configuration."""
         self.color = self.default_color[config.theme]
 
         # next highest is if either side happens to have a color
@@ -793,22 +933,35 @@ class StockIODiagramEdge(DiagramEdge):
 
 
 class StockLimitDiagramEdge(DiagramEdge):
+    """Edge between a variable and a stock, where the variable is referenced
+    in a limit/constraint (min/max) on the stock.
+    """
+
     style: ClassVar[str] = "dotted"
     arrowsize: ClassVar[str] = ".5"
     PRIORITY = 3
 
 
 class ToVarDiagramEdge(DiagramEdge):
+    """Reference edge that connects to a variable."""
+
     style: ClassVar[str] = "dotted"
     arrowsize: ClassVar[str] = ".5"
     PRIORITY = 1
 
 
 class ToFlowDiagramEdge(DiagramEdge):
+    """Reference edge that connects to a flow."""
+
     arrowsize: ClassVar[str] = ".5"
     PRIORITY = 2
 
     def add_to_graphviz(self, g: Digraph = None) -> None:
+        """Add this edge to the graphviz Digraph.
+
+        Handled separately in this class because the style should
+        depend on the source component type.
+        """
         if self.should_render():
             style = "dotted" if isinstance(self.source.ref, reno.Variable) else "dashed"
             constraint = "false" if isinstance(self.source.ref, reno.Stock) else "true"
@@ -827,6 +980,8 @@ class ToFlowDiagramEdge(DiagramEdge):
 
 
 class ToMetricDiagramEdge(DiagramEdge):
+    """Reference edge that represents usage in a metric."""
+
     default_color: ClassVar[dict[str, str]] = {"light": "#444444", "dark": "#999999"}
     style: ClassVar[str] = "dotted"
     arrowsize: ClassVar[str] = ".5"
