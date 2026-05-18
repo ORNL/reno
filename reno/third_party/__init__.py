@@ -1,5 +1,6 @@
-"""
-Public API is the mmdfuse function, re-exported for convenient import:
+"""Public API for the mmdfuse function, re-exported for convenient import.
+
+Example:
     from reno.third_party.mmdfuse import mmdfuse
 """
 

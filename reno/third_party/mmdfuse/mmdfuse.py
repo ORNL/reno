@@ -35,6 +35,8 @@ See https://github.com/antoninschrab/mmdfuse for the original.
 # Repo link: https://github.com/antoninschrab/mmdfuse
 # =============================================================================
 
+from typing import Literal
+
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -60,7 +62,7 @@ def _logsumexp(a: ArrayLike, axis: int = None, b: float = 1.0) -> np.ndarray:
 
 def kernel_matrix(
     pairwise_matrix: np.ndarray,
-    dist_metric: str,
+    dist_metric: Literal["l1", "l2"],
     kernel: str,
     bandwidth: float,
     rq_kernel_exponent: float = 0.5,
@@ -69,7 +71,7 @@ def kernel_matrix(
 
     Args:
         pairwise_matrix (ndarray): Matrix of pairwise distances.
-        dist_metric (str): {"l1", "l2"} Distance type.
+        dist_metric (Literal["l1", "l2"]): Distance type.
         kernel (str): Kernel name.
         bandwidth (float): Kernel bandwidth.
         rq_kernel_exponent (float): Exponent for rational quadratic kernel.
@@ -128,7 +130,7 @@ def kernel_matrix(
 def np_distances(
     X: ArrayLike,
     Y: ArrayLike,
-    dist_metric: str,
+    dist_metric: Literal["l1", "l2"],
     max_samples: int = None,
     matrix: bool = False,
 ) -> np.ndarray:
@@ -139,7 +141,7 @@ def np_distances(
     Args:
         X (ndarray): shape (m, d)
         Y (ndarray): shape (n, d)
-        dist_metric (str): {"l1", "l2"} Distance type.
+        dist_metric (Literal["l1", "l2"]): Distance type.
         max_samples (int): Maximum number of pairs to draw for computing distances.
         matrix (bool): Returns the full distance matrix if ``True``, otherwise just the
             upper-triangular entries.
@@ -168,7 +170,7 @@ def np_distances(
 def compute_bandwidths(
     X: np.ndarray,
     Y: np.ndarray,
-    dist_metric: str,
+    dist_metric: Literal["l1", "l2"],
     number_bandwidths: int,
     only_median: bool = False,
 ) -> np.ndarray:
