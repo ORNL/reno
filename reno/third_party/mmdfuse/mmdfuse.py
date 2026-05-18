@@ -31,11 +31,9 @@ import numpy as np
 
 
 def _logsumexp(a, axis=None, b=1.0):
-    """
-    NumPy-only stable logsumexp.
+    """NumPy-only stable logsumexp.
 
-    Equivalent to scipy.special.logsumexp(a, axis=axis, b=b)
-    for positive scalar b.
+    Equivalent to ``scipy.special.logsumexp(a, axis=axis, b=b)`` for positive scalar b.
     """
     a = np.asarray(a)
     a_max = np.max(a, axis=axis, keepdims=True)
@@ -52,25 +50,16 @@ def _logsumexp(a, axis=None, b=1.0):
 
 
 def kernel_matrix(pairwise_matrix, l, kernel, bandwidth, rq_kernel_exponent=0.5):
-    """
-    Compute kernel matrix for a given kernel and bandwidth.
+    """Compute kernel matrix for a given kernel and bandwidth.
 
-    Parameters
-    ----------
-    pairwise_matrix : ndarray
-        Matrix of pairwise distances.
-    l : {"l1", "l2"}
-        Distance type.
-    kernel : str
-        Kernel name.
-    bandwidth : float
-        Kernel bandwidth.
-    rq_kernel_exponent : float
-        Exponent for rational quadratic kernel.
+    Args:
+        pairwise_matrix (ndarray): Matrix of pairwise distances.
+        l (str): {"l1", "l2"} Distance type.
+        kernel (str): Kernel name.
+        bandwidth (float): Kernel bandwidth.
+        rq_kernel_exponent (float): Exponent for rational quadratic kernel.
 
-    Returns
-    -------
-    ndarray
+    Returns:
         Kernel matrix.
     """
     d = pairwise_matrix / bandwidth
@@ -106,10 +95,7 @@ def kernel_matrix(pairwise_matrix, l, kernel, bandwidth, rq_kernel_exponent=0.5)
         kernel == "matern_3.5_l2" and l == "l2"
     ):
         return (
-            1
-            + np.sqrt(7) * d
-            + 2 * 7 / 5 * d**2
-            + 7 * np.sqrt(7) / 3 / 5 * d**3
+            1 + np.sqrt(7) * d + 2 * 7 / 5 * d**2 + 7 * np.sqrt(7) / 3 / 5 * d**3
         ) * np.exp(-np.sqrt(7) * d)
 
     elif (kernel == "matern_4.5_l1" and l == "l1") or (
@@ -128,24 +114,17 @@ def kernel_matrix(pairwise_matrix, l, kernel, bandwidth, rq_kernel_exponent=0.5)
 
 
 def np_distances(X, Y, l, max_samples=None, matrix=False):
-    """
-    NumPy replacement for jax_distances.
+    """NumPy replacement for jax_distances.
 
     Computes pairwise l1 or l2 distances using broadcasting.
 
-    Parameters
-    ----------
-    X : ndarray, shape (m, d)
-    Y : ndarray, shape (n, d)
-    l : {"l1", "l2"}
-    max_samples : int or None
-    matrix : bool
-        If True, return full distance matrix.
-        If False, return upper-triangular entries.
-
-    Returns
-    -------
-    ndarray
+    Args:
+        X (ndarray): shape (m, d)
+        Y (ndarray): shape (n, d)
+        l (str): {"l1", "l2"} Distance type.
+        max_samples (int): Maximum number of pairs to draw for computing distances.
+        matrix (bool): Returns the full distance matrix if ``True``, otherwise just the
+            upper-triangular entries.
     """
     X = np.asarray(X)
     Y = np.asarray(Y)
@@ -169,9 +148,7 @@ def np_distances(X, Y, l, max_samples=None, matrix=False):
 
 
 def compute_bandwidths(X, Y, l, number_bandwidths, only_median=False):
-    """
-    NumPy replacement for the JAX/JIT compute_bandwidths function.
-    """
+    """NumPy replacement for the JAX/JIT compute_bandwidths function."""
     Z = np.concatenate((X, Y), axis=0)
     distances = np_distances(Z, Z, l, matrix=False)
 
@@ -191,22 +168,20 @@ def compute_bandwidths(X, Y, l, number_bandwidths, only_median=False):
 
 
 def _make_rng(key=None):
-    """
-    Convert a key-like input into a NumPy random Generator.
+    """Convert a key-like input into a NumPy random Generator.
 
-    Parameters
-    ----------
-    key : None, int, or np.random.Generator
+    Args:
+        key (int | np.random.Generator): The key or existing generator.
 
-    Returns
-    -------
-    np.random.Generator
+    Returns:
+        np.random.Generator
     """
     if isinstance(key, np.random.Generator):
         return key
     return np.random.default_rng(key)
 
 
+# NOTE: typehint for array-like is np.typing.ArrayLike
 def mmdfuse(
     X,
     Y,
@@ -218,36 +193,24 @@ def mmdfuse(
     number_permutations=2000,
     return_p_val=False,
 ):
-    """
-    Two-Sample MMD-FUSE test, NumPy-only version.
+    """Two-Sample MMD-FUSE test, NumPy-only version.
 
-    Parameters
-    ----------
-    X : array_like, shape (m, d)
-    Y : array_like, shape (n, d)
-    key : None, int, or np.random.Generator
-        Random seed or NumPy Generator.
-        Example: key=0
-    alpha : float
-        Test level.
-    kernels : str or tuple/list of str
-        Kernel names.
-    lambda_multiplier : float
-    number_bandwidths : int
-    number_permutations : int
-    return_p_val : bool
+    Args:
+        X (array_like): shape (m, d)
+        Y (array_like): shape (n, d)
+        key (int | np.random.Generator) Random seed or NumPy Generator.
+            Example: ``key=0``
+        alpha (float): Test level.
+        kernels (str | tuple[str] | list[str]): Kernel names.
+        lambda_multiplier (float): ???
+        number_bandwidths (int): ???
+        number_permutations (int): ???
+        return_p_val (bool): ???
 
-    Returns
-    -------
-    int
-        0 if the test fails to reject the null.
-        1 if the test rejects the null.
-
-    Or, if return_p_val=True:
-
-    output : int
-    p_val : float
-    all_statistics : ndarray
+    Returns:
+        0 if the test fails to reject the null. 1 if the test rejects the null.
+        Or, if return_p_val=True, returns a tuple of the int output, float p_val, and
+        the numpy array containing all statistics.
     """
     X = np.asarray(X, dtype=float)
     Y = np.asarray(Y, dtype=float)
@@ -397,12 +360,8 @@ def mmdfuse(
                         * (n - m + 1)
                         * (n - 1)
                         / (m * (m - 1))
-                        + np.sum(V01 * KV01, axis=0)
-                        * (m - n + 1)
-                        / m
-                        + np.sum(V11 * KV11, axis=0)
-                        * (n - 1)
-                        / m
+                        + np.sum(V01 * KV01, axis=0) * (m - n + 1) / m
+                        + np.sum(V11 * KV11, axis=0) * (n - 1) / m
                     )
 
                     values = values / unscaled_std * np.sqrt(n * (n - 1))
