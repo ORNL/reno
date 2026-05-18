@@ -24,6 +24,7 @@
 #         journal       = {Advances in Neural Information Processing Systems},
 #         volume        = {36}
 #       }
+#   @TODO include link to repo
 # =============================================================================
 
 import numpy as np
