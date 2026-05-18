@@ -1,41 +1,45 @@
-"""Third party tool for a value of information algorithm.
+"""Third party library for MMD-FUSE, a value of information algorithm.
 
-=============================================================================
-mmdfuse.py - copy of the original MMD-FUSE implementation
-=============================================================================
-Copyright (c) 2023 Biggs, Schrab & Gretton
-Licensed under the MIT License (see LICENSE file in this directory).
-
--------------------------------------------------------------------------
-  Modifications made for the Reno repository
--------------------------------------------------------------------------
-* Removed JAX dependency – all JAX‑specific imports and `jax.numpy`
-calls have been replaced with NumPy equivalents.  The public API
-(`mmdfuse(...)`) and the statistical behaviour remain unchanged.
-* Updated type hints to use `numpy.ndarray` instead of `jax.numpy.ndarray`.
-* Minor refactoring to avoid JAX random‑key handling.
-* Update docstring style.
-
--------------------------------------------------------------------------
-  Citation
--------------------------------------------------------------------------
-If you use this code in a publication, please cite the original work:
-    @article{biggs2023mmdfuse,
-        author        = {Biggs, Felix and Schrab, Antonin and Gretton, Arthur},
-        title         = {{MMD-FUSE}: {L}earning and Combining Kernels for Two-Sample Testing Without Data Splitting},
-        year          = {2023},
-        journal       = {Advances in Neural Information Processing Systems},
-        volume        = {36}
-    }
-
-Repo link: https://github.com/antoninschrab/mmdfuse
-=============================================================================
+See https://github.com/antoninschrab/mmdfuse for the original.
 """
 
+# =============================================================================
+# mmdfuse.py - copy of the original MMD-FUSE implementation
+# =============================================================================
+# Copyright (c) 2023 Biggs, Schrab & Gretton
+# Licensed under the MIT License (see LICENSE file in this directory).
+#
+# -------------------------------------------------------------------------
+# Modifications made for the Reno repository
+# -------------------------------------------------------------------------
+# * Removed JAX dependency - all JAX-specific imports and `jax.numpy`
+# calls have been replaced with NumPy equivalents.  The public API
+# (`mmdfuse(...)`) and the statistical behaviour remain unchanged.
+# * Updated type hints to use `numpy.ndarray` instead of `jax.numpy.ndarray`.
+# * Minor refactoring to avoid JAX random-key handling.
+# * Update docstring style.
+# * Add typehints and some minor variable renames.
+#
+# -------------------------------------------------------------------------
+# Citation
+# -------------------------------------------------------------------------
+# If you use this code in a publication, please cite the original work:
+#     @article{biggs2023mmdfuse,
+#         author        = {Biggs, Felix and Schrab, Antonin and Gretton, Arthur},
+#         title         = {{MMD-FUSE}: {L}earning and Combining Kernels for Two-Sample Testing Without Data Splitting},
+#         year          = {2023},
+#         journal       = {Advances in Neural Information Processing Systems},
+#         volume        = {36}
+#     }
+#
+# Repo link: https://github.com/antoninschrab/mmdfuse
+# =============================================================================
+
 import numpy as np
+from numpy.typing import ArrayLike
 
 
-def _logsumexp(a, axis=None, b=1.0):
+def _logsumexp(a: ArrayLike, axis: int = None, b: float = 1.0) -> np.ndarray:
     """NumPy-only stable logsumexp.
 
     Equivalent to ``scipy.special.logsumexp(a, axis=axis, b=b)`` for positive scalar b.
@@ -54,57 +58,60 @@ def _logsumexp(a, axis=None, b=1.0):
     return out
 
 
-def kernel_matrix(pairwise_matrix, l, kernel, bandwidth, rq_kernel_exponent=0.5):
+def kernel_matrix(
+    pairwise_matrix: np.ndarray,
+    dist_metric: str,
+    kernel: str,
+    bandwidth: float,
+    rq_kernel_exponent: float = 0.5,
+) -> np.ndarray:
     """Compute kernel matrix for a given kernel and bandwidth.
 
     Args:
         pairwise_matrix (ndarray): Matrix of pairwise distances.
-        l (str): {"l1", "l2"} Distance type.
+        dist_metric (str): {"l1", "l2"} Distance type.
         kernel (str): Kernel name.
         bandwidth (float): Kernel bandwidth.
         rq_kernel_exponent (float): Exponent for rational quadratic kernel.
-
-    Returns:
-        Kernel matrix.
     """
     d = pairwise_matrix / bandwidth
 
-    if kernel == "gaussian" and l == "l2":
+    if kernel == "gaussian" and dist_metric == "l2":
         return np.exp(-(d**2) / 2)
 
-    elif kernel == "laplace" and l == "l1":
+    elif kernel == "laplace" and dist_metric == "l1":
         return np.exp(-d * np.sqrt(2))
 
-    elif kernel == "rq" and l == "l2":
+    elif kernel == "rq" and dist_metric == "l2":
         return (1 + d**2 / (2 * rq_kernel_exponent)) ** (-rq_kernel_exponent)
 
-    elif kernel == "imq" and l == "l2":
+    elif kernel == "imq" and dist_metric == "l2":
         return (1 + d**2) ** (-0.5)
 
-    elif (kernel == "matern_0.5_l1" and l == "l1") or (
-        kernel == "matern_0.5_l2" and l == "l2"
+    elif (kernel == "matern_0.5_l1" and dist_metric == "l1") or (
+        kernel == "matern_0.5_l2" and dist_metric == "l2"
     ):
         return np.exp(-d)
 
-    elif (kernel == "matern_1.5_l1" and l == "l1") or (
-        kernel == "matern_1.5_l2" and l == "l2"
+    elif (kernel == "matern_1.5_l1" and dist_metric == "l1") or (
+        kernel == "matern_1.5_l2" and dist_metric == "l2"
     ):
         return (1 + np.sqrt(3) * d) * np.exp(-np.sqrt(3) * d)
 
-    elif (kernel == "matern_2.5_l1" and l == "l1") or (
-        kernel == "matern_2.5_l2" and l == "l2"
+    elif (kernel == "matern_2.5_l1" and dist_metric == "l1") or (
+        kernel == "matern_2.5_l2" and dist_metric == "l2"
     ):
         return (1 + np.sqrt(5) * d + 5 / 3 * d**2) * np.exp(-np.sqrt(5) * d)
 
-    elif (kernel == "matern_3.5_l1" and l == "l1") or (
-        kernel == "matern_3.5_l2" and l == "l2"
+    elif (kernel == "matern_3.5_l1" and dist_metric == "l1") or (
+        kernel == "matern_3.5_l2" and dist_metric == "l2"
     ):
         return (
             1 + np.sqrt(7) * d + 2 * 7 / 5 * d**2 + 7 * np.sqrt(7) / 3 / 5 * d**3
         ) * np.exp(-np.sqrt(7) * d)
 
-    elif (kernel == "matern_4.5_l1" and l == "l1") or (
-        kernel == "matern_4.5_l2" and l == "l2"
+    elif (kernel == "matern_4.5_l1" and dist_metric == "l1") or (
+        kernel == "matern_4.5_l2" and dist_metric == "l2"
     ):
         return (
             1
@@ -118,7 +125,13 @@ def kernel_matrix(pairwise_matrix, l, kernel, bandwidth, rq_kernel_exponent=0.5)
         raise ValueError('The values of "l" and "kernel" are not valid.')
 
 
-def np_distances(X, Y, l, max_samples=None, matrix=False):
+def np_distances(
+    X: ArrayLike,
+    Y: ArrayLike,
+    dist_metric: str,
+    max_samples: int = None,
+    matrix: bool = False,
+) -> np.ndarray:
     """NumPy replacement for jax_distances.
 
     Computes pairwise l1 or l2 distances using broadcasting.
@@ -126,7 +139,7 @@ def np_distances(X, Y, l, max_samples=None, matrix=False):
     Args:
         X (ndarray): shape (m, d)
         Y (ndarray): shape (n, d)
-        l (str): {"l1", "l2"} Distance type.
+        dist_metric (str): {"l1", "l2"} Distance type.
         max_samples (int): Maximum number of pairs to draw for computing distances.
         matrix (bool): Returns the full distance matrix if ``True``, otherwise just the
             upper-triangular entries.
@@ -139,9 +152,9 @@ def np_distances(X, Y, l, max_samples=None, matrix=False):
 
     diff = Xs[:, None, :] - Ys[None, :, :]
 
-    if l == "l1":
+    if dist_metric == "l1":
         output = np.sum(np.abs(diff), axis=-1)
-    elif l == "l2":
+    elif dist_metric == "l2":
         output = np.sqrt(np.sum(diff**2, axis=-1))
     else:
         raise ValueError("Value of 'l' must be either 'l1' or 'l2'.")
@@ -152,10 +165,16 @@ def np_distances(X, Y, l, max_samples=None, matrix=False):
         return output[np.triu_indices(output.shape[0])]
 
 
-def compute_bandwidths(X, Y, l, number_bandwidths, only_median=False):
+def compute_bandwidths(
+    X: np.ndarray,
+    Y: np.ndarray,
+    dist_metric: str,
+    number_bandwidths: int,
+    only_median: bool = False,
+) -> np.ndarray:
     """NumPy replacement for the JAX/JIT compute_bandwidths function."""
     Z = np.concatenate((X, Y), axis=0)
-    distances = np_distances(Z, Z, l, matrix=False)
+    distances = np_distances(Z, Z, dist_metric, matrix=False)
 
     median = np.median(distances)
 
@@ -172,38 +191,34 @@ def compute_bandwidths(X, Y, l, number_bandwidths, only_median=False):
     return bandwidths
 
 
-def _make_rng(key=None):
-    """Convert a key-like input into a NumPy random Generator.
+def _make_rng(key: int | np.random.Generator = None) -> np.random.Generator:
+    """Convert a key-like input into a NumPy random Generator, if not one already.
 
     Args:
-        key (int | np.random.Generator): The key or existing generator.
-
-    Returns:
-        np.random.Generator
+        key (int | np.random.Generator): The key to use or an existing generator.
     """
     if isinstance(key, np.random.Generator):
         return key
     return np.random.default_rng(key)
 
 
-# NOTE: typehint for array-like is np.typing.ArrayLike
 def mmdfuse(
-    X,
-    Y,
-    key=None,
-    alpha=0.05,
-    kernels=("laplace", "gaussian"),
-    lambda_multiplier=1,
-    number_bandwidths=10,
-    number_permutations=2000,
-    return_p_val=False,
-):
+    X: ArrayLike,
+    Y: ArrayLike,
+    key: int | np.random.Generator = None,
+    alpha: float = 0.05,
+    kernels: str | tuple[str] | list[str] = ("laplace", "gaussian"),
+    lambda_multiplier: float = 1.0,
+    number_bandwidths: int = 10,
+    number_permutations: int = 2000,
+    return_p_val: bool = False,
+) -> int | tuple[int, float, np.ndarray]:
     """Two-Sample MMD-FUSE test, NumPy-only version.
 
     Args:
-        X (array_like): shape (m, d)
-        Y (array_like): shape (n, d)
-        key (int | np.random.Generator) Random seed or NumPy Generator.
+        X (ArrayLike): shape (m, d)
+        Y (ArrayLike): shape (n, d)
+        key (int | np.random.Generator): Random seed or NumPy Generator.
             Example: ``key=0``
         alpha (float): Test level.
         kernels (str | tuple[str] | list[str]): Kernel names.
@@ -323,11 +338,11 @@ def mmdfuse(
 
     for r in range(2):
         kernels_l = (kernels_l1, kernels_l2)[r]
-        l = ("l1", "l2")[r]
+        dist_metric = ("l1", "l2")[r]
 
         if len(kernels_l) > 0:
             # Pairwise distance matrix
-            pairwise_matrix = np_distances(Z, Z, l, matrix=True)
+            pairwise_matrix = np_distances(Z, Z, dist_metric, matrix=True)
 
             # Collection of bandwidths
             distances = pairwise_matrix[np.triu_indices(pairwise_matrix.shape[0])]
@@ -349,7 +364,7 @@ def mmdfuse(
                     bandwidth = bandwidths[i]
 
                     # Compute kernel matrix and set diagonal to zero
-                    K = kernel_matrix(pairwise_matrix, l, kernel, bandwidth)
+                    K = kernel_matrix(pairwise_matrix, dist_metric, kernel, bandwidth)
                     np.fill_diagonal(K, 0)
 
                     # Compute standard deviation
