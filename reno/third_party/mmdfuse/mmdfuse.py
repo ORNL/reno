@@ -1,31 +1,36 @@
-# =============================================================================
-#   mmdfuse.py – copy of the original MMD‑FUSE implementation
-# =============================================================================
-#   Copyright (c) 2023 Biggs, Schrab & Gretton
-#   Licensed under the MIT License (see LICENSE file in this directory).
-#
-# -------------------------------------------------------------------------
-#   Modifications made for the Reno repository
-# -------------------------------------------------------------------------
-#   • Removed JAX dependency – all JAX‑specific imports and `jax.numpy`
-#     calls have been replaced with NumPy equivalents.  The public API
-#     (`mmdfuse(...)`) and the statistical behaviour remain unchanged.
-#   • Updated type hints to use `numpy.ndarray` instead of `jax.numpy.ndarray`.
-#   • Minor refactoring to avoid JAX random‑key handling.
-#
-# -------------------------------------------------------------------------
-#   Citation
-# -------------------------------------------------------------------------
-#   If you use this code in a publication, please cite the original work:
-#       @article{biggs2023mmdfuse,
-#         author        = {Biggs, Felix and Schrab, Antonin and Gretton, Arthur},
-#         title         = {{MMD-FUSE}: {L}earning and Combining Kernels for Two-Sample Testing Without Data Splitting},
-#         year          = {2023},
-#         journal       = {Advances in Neural Information Processing Systems},
-#         volume        = {36}
-#       }
-#   @TODO include link to repo
-# =============================================================================
+"""Third party tool for a value of information algorithm.
+
+=============================================================================
+mmdfuse.py - copy of the original MMD-FUSE implementation
+=============================================================================
+Copyright (c) 2023 Biggs, Schrab & Gretton
+Licensed under the MIT License (see LICENSE file in this directory).
+
+-------------------------------------------------------------------------
+  Modifications made for the Reno repository
+-------------------------------------------------------------------------
+* Removed JAX dependency – all JAX‑specific imports and `jax.numpy`
+calls have been replaced with NumPy equivalents.  The public API
+(`mmdfuse(...)`) and the statistical behaviour remain unchanged.
+* Updated type hints to use `numpy.ndarray` instead of `jax.numpy.ndarray`.
+* Minor refactoring to avoid JAX random‑key handling.
+* Update docstring style.
+
+-------------------------------------------------------------------------
+  Citation
+-------------------------------------------------------------------------
+If you use this code in a publication, please cite the original work:
+    @article{biggs2023mmdfuse,
+        author        = {Biggs, Felix and Schrab, Antonin and Gretton, Arthur},
+        title         = {{MMD-FUSE}: {L}earning and Combining Kernels for Two-Sample Testing Without Data Splitting},
+        year          = {2023},
+        journal       = {Advances in Neural Information Processing Systems},
+        volume        = {36}
+    }
+
+Repo link: https://github.com/antoninschrab/mmdfuse
+=============================================================================
+"""
 
 import numpy as np
 
