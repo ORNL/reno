@@ -944,8 +944,18 @@ class Model:
         # be 1 per step
         new_vars = {}
         for metric in self.metrics:
-            coords = ["sample"] if len(metric.value.shape) == 1 else ["sample", "step"]
-            new_vars[metric.qual_name()] = (coords, metric.value)
+            val = metric.value
+            if metric.is_static():  # noqa: SIM102
+                # bleh, see note above
+                if (
+                    isinstance(val, (int, float))
+                    or (isinstance(val, np.ndarray) and len(val.shape) == 0)
+                    or (len(val.shape) > 0 and val.shape[0] != self.last_n)
+                    or len(val.shape) == 0
+                ):
+                    val = np.broadcast_to(val, (self.last_n,))
+            coords = ["sample"] if len(val.shape) == 1 else ["sample", "step"]
+            new_vars[metric.qual_name()] = (coords, val)
         ds = ds.assign(new_vars)
 
         # merge in any sub datasets
