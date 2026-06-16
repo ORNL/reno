@@ -753,6 +753,8 @@ class VarDiagramNode(DiagramNode):
         for ref in self.ref.seek_refs():
             if isinstance(ref, reno.components.TimeRef):
                 continue
+            if isinstance(ref, reno.components.HistoricalValue):
+                ref = ref.tracked_ref
             DiagramNode.add_edge(ToVarDiagramEdge(self.diagram.get_ref_node(ref), self))
 
 

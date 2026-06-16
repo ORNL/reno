@@ -2049,9 +2049,7 @@ class HistoricalValue(Reference):
         """Get the string representation for referring to this reference, italicized
         and as a function of ``t`` to highlight it's a different timestep.
         """
-        latex_str = (
-            f"{latex_name(self.label, 'textit')}({self.index_eq.latex(**kwargs)})"
-        )
+        latex_str = f"{latex_name(self.tracked_ref.label, 'textit')}({self.index_eq.latex(**kwargs)})"
         if "t" in kwargs:
             latex_str = latex_debug_output(self, latex_str, **kwargs)
         if "hl" in kwargs and kwargs["hl"] == self.tracked_ref.name:
