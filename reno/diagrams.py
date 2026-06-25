@@ -57,6 +57,8 @@ class RenderConfig:
     """Include sparklines next to stocks."""
     metric_sparklines: bool = False
     """Include sparklines next to metrics."""
+    sparklines: list[reno.components.Reference] = None
+    """List of specific components to include sparkline plots for."""
 
     traces: list[xr.Dataset] = None
     """The set of xarray datasets from simulation runs (numpy or pymc) to use in the
@@ -83,6 +85,8 @@ class RenderConfig:
             self.hide = []
         if self.group_colors is None:
             self.group_colors = {}
+        if self.sparklines is None:
+            self.sparklines = []
 
 
 class ModelDiagram:
@@ -249,6 +253,7 @@ class ModelDiagram:
             or config.stock_sparklines
             or config.var_sparklines
             or config.metric_sparklines
+            or len(config.sparklines) > 0
         ):
             if config.traces is not None:
                 # highest priority is a manually specified set of traces
@@ -631,7 +636,7 @@ class StockDiagramNode(DiagramNode):
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         """Set whether to render a sparkline for this reference based on config."""
-        self.sparkline = config.stock_sparklines
+        self.sparkline = config.stock_sparklines or self.ref in config.sparklines
 
     def map_edges(self) -> None:
         """Find and add all the necessary edges that connect to this stock.
@@ -665,7 +670,7 @@ class FlowDiagramNode(DiagramNode):
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         """Set whether to render a sparkline for this reference based on config."""
-        self.sparkline = config.flow_sparklines
+        self.sparkline = config.flow_sparklines or self.ref in config.sparklines
 
     def map_edges(self) -> None:
         """Find and add all the necessary edges that connect to this stock.
@@ -743,7 +748,7 @@ class VarDiagramNode(DiagramNode):
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         """Set whether to render a sparkline for this reference based on config."""
-        self.sparkline = config.var_sparklines
+        self.sparkline = config.var_sparklines or self.ref in config.sparklines
 
     def map_edges(self) -> None:
         """Find and add all the necessary edges that connect to this stock.
@@ -771,7 +776,7 @@ class MetricDiagramNode(DiagramNode):
 
     def configure_sparklines(self, config: RenderConfig) -> None:
         """Set whether to render a sparkline for this reference based on config."""
-        self.sparkline = config.metric_sparklines
+        self.sparkline = config.metric_sparklines or self.ref in config.sparklines
 
     def map_edges(self) -> None:
         """Find and add all the necessary edges that connect to this stock.
