@@ -100,6 +100,21 @@ def _get_sample_count(array: xr.DataArray) -> int:
     return len(array.coords["sample"])
 
 
+def _get_full_seq_values(array: xr.DataArray, dataset: xr.Dataset) -> np.ndarray:
+    """Static values won't correctly return anything visible from
+    _create_seq_line_collection.
+
+    This function checks if the passed array is static, and if so extends
+    it to the length of the full time series. (It otherwise returns the straight
+    .values)
+    """
+    if "step" in array.coords:
+        return array.values
+    seq_length = len(dataset.coords["step"])
+    expanded = np.tile(array.values, (seq_length, 1)).T
+    return expanded
+
+
 def compare_seq(
     varname: str,
     traces: (
@@ -140,10 +155,11 @@ def compare_seq(
 
     if prior_trace is not None:
         alpha = 0.01 if _get_sample_count(prior_trace.prior[varname]) > 10 else 0.75
+        prior_values = _get_full_seq_values(
+            prior_trace.prior[varname], prior_trace.prior
+        )
         ax.add_collection(
-            _create_seq_line_collection(
-                prior_trace.prior[varname].values, color=f"C{cat_col}", alpha=alpha
-            )
+            _create_seq_line_collection(prior_values, color=f"C{cat_col}", alpha=alpha)
         )
         legend_handles.append(Line2D([0], [0], label="prior", color=f"C{cat_col}"))
         cat_col += 1
@@ -154,10 +170,9 @@ def compare_seq(
         if varname not in ds:
             continue
         alpha = 0.01 if _get_sample_count(ds[varname]) > 10 else 0.75
+        values = _get_full_seq_values(ds[varname], ds)
         ax.add_collection(
-            _create_seq_line_collection(
-                ds[varname].values, color=f"C{cat_col}", alpha=alpha
-            )
+            _create_seq_line_collection(values, color=f"C{cat_col}", alpha=alpha)
         )
         legend_handles.append(Line2D([0], [0], label=label, color=f"C{cat_col}"))
         cat_col += 1
