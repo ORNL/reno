@@ -108,9 +108,12 @@ def _get_full_seq_values(array: xr.DataArray, dataset: xr.Dataset) -> np.ndarray
     it to the length of the full time series. (It otherwise returns the straight
     .values)
     """
-    if "step" in array.coords:
+    if "step" in array.coords or "t" in array.coords:
         return array.values
-    seq_length = len(dataset.coords["step"])
+    if "step" in dataset.coords:
+        seq_length = len(dataset.coords["step"])
+    else:
+        seq_length = len(dataset.coords["t"])
     expanded = np.tile(array.values, (seq_length, 1)).T
     return expanded
 
