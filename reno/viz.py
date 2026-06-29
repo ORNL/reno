@@ -101,7 +101,7 @@ def _get_sample_count(array: xr.DataArray) -> int:
 
 
 def _get_full_seq_values(array: xr.DataArray, dataset: xr.Dataset) -> np.ndarray:
-    """Static values won't correctly return anything visible from
+    """Plotting static values won't correctly return anything visible from
     _create_seq_line_collection.
 
     This function checks if the passed array is static, and if so extends

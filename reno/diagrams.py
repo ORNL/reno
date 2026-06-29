@@ -30,8 +30,8 @@ class RenderConfig:
     hide: list[reno.components.Reference] = None
     """List of individual references to exclude, this takes priority over groups."""
     show_groups: list[str] = None
-    """List of group names, any references part of any groups listed here will be
-    displayed."""
+    """List of group names to show, any references part of any groups listed here will
+    be displayed."""
     hide_groups: list[str] = None
     """List of group names, any references part of any groups listed here will be
     excluded."""
