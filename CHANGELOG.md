@@ -5,6 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.13.0] - 2026-06-29
+
+### Changed
+
+* Stock and flow diagram handling now uses much cleaner OOP approach
+* `Model.graph` now returns a reno graph object, which can be reconfigured on
+  the fly
+* Stock and flow diagrams optionally include metrics now
+* Diagram component inclusion/exclusion has much more fine-grained controls (via
+`hide`/`show`, `hide_groups`/`show_groups`)
+* Sparklines can be individually turned on per component type or for
+  individually specified components
+
+
+
+
 ## [0.12.2] - 2026-06-03
 
 ### Fixed
