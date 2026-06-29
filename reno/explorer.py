@@ -1151,9 +1151,18 @@ class DiagramPane(DashboardPane):
     """
 
     show_vars = param.Boolean(True, doc="Include variables in the diagram")
-    sparklines = param.Boolean(True, doc="Show timeseries plots next to each stock")
-    sparkdensities = param.Boolean(
-        False, doc="Show density plots next to each variable"
+    show_metrics = param.Boolean(False, doc="Include metric components in the diagram")
+    stock_sparklines = param.Boolean(
+        False, doc="Show timeseries plots next to each stock"
+    )
+    flow_sparklines = param.Boolean(
+        False, doc="Show timeseries plots next to each flow"
+    )
+    var_sparklines = param.Boolean(
+        False, doc="Show timeseries plots next to each variable"
+    )
+    metric_sparklines = param.Boolean(
+        False, doc="Show timeseries plots next to each metric"
     )
 
     universe = param.ListSelector(
@@ -1203,8 +1212,11 @@ class DiagramPane(DashboardPane):
             name="Diagram controls",
             parameters=[
                 "show_vars",
-                "sparklines",
-                "sparkdensities",
+                "show_metrics",
+                "stock_sparklines",
+                "flow_sparklines",
+                "var_sparklines",
+                "metric_sparklines",
                 "universe",
                 "include_dependencies",
                 "fit",
@@ -1225,8 +1237,10 @@ class DiagramPane(DashboardPane):
 
         self.to_serialize = [
             "show_vars",
-            "sparklines",
-            "sparkdensities",
+            "stock_sparklines",
+            "flow_sparklines",
+            "var_sparklines",
+            "metric_sparklines",
             "universe",
             "include_dependencies",
             "fit",
@@ -1244,8 +1258,11 @@ class DiagramPane(DashboardPane):
 
     @param.depends(
         "show_vars",
-        "sparklines",
-        "sparkdensities",
+        "show_metrics",
+        "stock_sparklines",
+        "flow_sparklines",
+        "var_sparklines",
+        "metric_sparklines",
         "universe",
         "include_dependencies",
         watch=True,
@@ -1263,13 +1280,23 @@ class DiagramPane(DashboardPane):
         if universe is not None and self.include_dependencies:
             universe = reno.utils.ref_universe(universe)
 
+        theme = (
+            "dark"
+            if b"dark" in pn.state.session_args.get("theme", [b"dark"])
+            else "light"
+        )
+
         image_bytes = self.model.graph(
-            show_vars=self.show_vars,
-            sparklines=self.sparklines,
-            sparkdensities=self.sparkdensities,
+            vars=self.show_vars,
+            metrics=self.show_metrics,
+            stock_sparklines=self.stock_sparklines,
+            flow_sparklines=self.flow_sparklines,
+            var_sparklines=self.var_sparklines,
+            metric_sparklines=self.metric_sparklines,
             traces=self.rendered_traces,
             universe=universe,
-        ).pipe(format="png")
+            theme=theme,
+        ).digraph.pipe(format="png")
 
         self.base64repr = base64.b64encode(image_bytes)
         self.image.object = image_bytes
@@ -2084,11 +2111,12 @@ def create_explorer() -> pn.template.Template:  # noqa: C901
                     sizing_mode="stretch_width",
                 )
                 button.on_click(
-                    partial(load_workspace, path=f"{starting_path}/{subpath}")
+                    # partial(load_workspace, path=f"{starting_path}/{subpath}")
+                    partial(load_workspace, path=f"{subpath}")
                 )
                 controls.append(button)
             # recurse into any subdirectories
-            if subpath.isdir() and subpath.name != "models":
+            if subpath.is_dir() and subpath.name != "models":
                 accordion = BetterAccordion(
                     label=f"{subpath}/",
                     child=pn.Column(
@@ -2110,7 +2138,7 @@ def create_explorer() -> pn.template.Template:  # noqa: C901
 
         load_session_controls.objects = [
             pn.pane.HTML("<p style='margin-bottom: 0px;'><b>Load workspace:</b></p>"),
-            *get_recursive_workspaces(WORKSPACE_FOLDER),
+            *get_recursive_workspaces(Path(WORKSPACE_FOLDER)),
         ]
 
     def get_active_workspace_switchers() -> list[pn.widgets.Button]:
@@ -2196,10 +2224,12 @@ def create_explorer() -> pn.template.Template:  # noqa: C901
         """
         if b"dark" in pn.state.session_args.get("theme", [b"dark"]):
             print("DARK MODE ACTIVATED.")
-            reno.diagrams.set_dark_mode(True)
+            # reno.diagrams.set_dark_mode(True)
+            plt.style.use("dark_background")
         else:
             print("BLINDING MODE ACTIVATED.")
-            reno.diagrams.set_dark_mode(False)
+            # reno.diagrams.set_dark_mode(False)
+            plt.style.use("default")
 
     # ---- /functions and event handlers for use by the overall template ----
 
