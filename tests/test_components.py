@@ -735,3 +735,13 @@ def test_variable_boolean():
 
     ds1 = m()
     ds2 = m(v0=False)
+
+
+def test_static_metrics():
+    """A metric that is static shouldn't break when constructing the dataset."""
+    m = Model()
+    with m:
+        met = Metric(Scalar(5) + 4)
+
+    ds = m()
+    assert ds.met.values[0] == 9

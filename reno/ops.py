@@ -1433,10 +1433,13 @@ class interpolate(reno.components.Operation):
         return f"\\text{{interpolate}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}, {self.sub_equation_parts[2].latex(**kwargs)})"
 
     def op_eval(self, **kwargs: dict) -> np.ndarray:
+        input_eval = self.sub_equation_parts[0].eval(**kwargs)
+        x_eval = self.sub_equation_parts[1].eval(**kwargs)
+        y_eval = self.sub_equation_parts[2].eval(**kwargs)
         return np.interp(
-            self.sub_equation_parts[0].eval(**kwargs),
-            self.sub_equation_parts[1].eval(**kwargs),
-            self.sub_equation_parts[2].eval(**kwargs),
+            input_eval,
+            x_eval,
+            y_eval,
         )
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
