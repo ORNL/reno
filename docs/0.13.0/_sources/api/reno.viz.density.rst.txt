@@ -1,0 +1,6 @@
+reno.viz.density
+================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: density

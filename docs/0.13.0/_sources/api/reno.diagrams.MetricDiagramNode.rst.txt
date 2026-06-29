@@ -1,0 +1,44 @@
+reno.diagrams.MetricDiagramNode
+===============================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: MetricDiagramNode
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~MetricDiagramNode.__init__
+      ~MetricDiagramNode.add_edge
+      ~MetricDiagramNode.add_to_graphviz
+      ~MetricDiagramNode.check_str_or_listpart_in_dict
+      ~MetricDiagramNode.check_str_or_listpart_in_list
+      ~MetricDiagramNode.configure_color
+      ~MetricDiagramNode.configure_render
+      ~MetricDiagramNode.configure_sparklines
+      ~MetricDiagramNode.generate_sparkline
+      ~MetricDiagramNode.graphviz_ref_node
+      ~MetricDiagramNode.map_edges
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~MetricDiagramNode.default_color
+      ~MetricDiagramNode.default_font_color
+      ~MetricDiagramNode.default_sparkline_edge_color
+      ~MetricDiagramNode.other_attrs
+      ~MetricDiagramNode.shape
+      ~MetricDiagramNode.style

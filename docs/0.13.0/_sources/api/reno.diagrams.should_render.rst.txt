@@ -1,0 +1,6 @@
+reno.diagrams.should\_render
+============================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: should_render
