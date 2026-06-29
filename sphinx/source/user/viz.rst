@@ -17,10 +17,30 @@ this:
    :align: center
 
 
-Highly complex models with lots of variables can render a simplified diagram by
-either excluding variables entirely with ``exclude_vars=True``, or hiding a
-specific set of variables with names listed in ``exclude_var_names=["my_var1",
-..."]``.
+Highly complex stock and flow diagrams with lots of components can be challenging to interpret
+when everything is rendered. The ``graph`` function has a variety of parameters
+to control what references get included in the final output, prioritized by the
+following:
+
+1. Individually listed references included in either ``show`` or ``hide`` lists.
+2. Group names passed to ``show_groups``/``hide_groups`` lists.
+3. Bulk component flags with ``vars`` (``True`` by default, displaying all
+   variables) and ``metrics`` (``False`` by default, hiding any metric
+   components.)
+
+Note that in all show/hide groupings, hide takes precedence over show.
+
+For example, if a model has dozens of variables, and only one group of them
+should be shown except for one specific variable in that group, one could
+combine all three of the ``vars``, ``show_groups``, and ``hide`` like so:
+
+.. code-block:: python
+
+    graph = my_model.graph(
+        vars=False,
+        show_groups=["variable_group_of_interest"],
+        hide=[my_model.hide_this_variable_in_group_of_interest],
+    )
 
 Highly linear models that don't have many branches or cycles can be oriented
 left-to-right instead of top-down by passing ``lr=True``.
@@ -31,30 +51,32 @@ Sparklines
 
 Mini "sparkline" plots can be added to the sides of various component types
 within the stock and flow diagrams to quickly get an overview of component values
-in the context of where they sit in the overall system. The three parameters to
-control this are ``sparklines``, ``sparkdensities``, and ``sparkall``.
+in the context of where they sit in the overall system. Which components get
+sparklines is controlled by the ``*_sparklines`` flags (``var_sparklines``,
+``flow_sparklines``, ``stock_sparklines``, and ``metric_sparklines``), or
+individual references can be listed in ``sparklines``.
 
-Running with ``sparklines=True`` will add a sparkline plot to every stock in the
-system.
+Running with ``stock_sparklines=True`` will add a sparkline plot to every stock in the
+system:
 
 .. figure:: ../_static/tub_w_sparklines.png
    :align: center
 
-``sparkall=True`` will further add plots for every flow:
+``flow_sparklines=True`` will further add plots for every flow:
 
 .. figure:: ../_static/tub_sparkall.png
    :align: center
 
-Finally, ``sparkdensities=True`` will add histograms/density plots for all
-variables (mostly only useful when variables have probability distributions
-associated with them either directly or upstream.)
+Variables that have probability distributions with them will render as
+histograms/density plots if static, or collections of timeseries if dynamic,
+included with ``var_sparklines``:
 
 .. figure:: ../_static/tub_all_sparks.png
    :align: center
 
 By default, the sparkline plots will be based on the last simulation run that
 completed. To use specific runs or render multiple runs at the same time, pass
-the traces to the ``traces`` array parameter
+the traces to the ``traces`` array parameter.
 
 Groups/Color groups
 -------------------
