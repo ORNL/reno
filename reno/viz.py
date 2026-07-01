@@ -7,7 +7,6 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
-import arviz as az
 import ipywidgets as ipw
 import matplotlib.pyplot as plt
 import numpy as np
@@ -68,9 +67,9 @@ def _create_seq_line_collection(
 
 def _get_label_and_dataset(
     trace_collection: (
-        list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
+        list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset]
     ),
-    key_or_trace: str | az.InferenceData | xr.Dataset,
+    key_or_trace: str | xr.DataTree | xr.Dataset,
 ) -> tuple[str, xr.Dataset]:
     """Traces can be passed to the comparison functions multiple ways, so this is
     a method to consistently get a label for a trace and the desired dataset.
@@ -85,7 +84,11 @@ def _get_label_and_dataset(
         trace = key_or_trace
 
     # automatically grab the posterior if not explicitly requested
-    ds = trace.posterior if isinstance(trace, az.InferenceData) else trace
+    ds = (
+        trace.posterior
+        if isinstance(trace, xr.DataTree) and not trace.is_leaf
+        else trace
+    )
 
     return label, ds
 
@@ -120,10 +123,8 @@ def _get_full_seq_values(array: xr.DataArray, dataset: xr.Dataset) -> np.ndarray
 
 def compare_seq(
     varname: str,
-    traces: (
-        list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
-    ),
-    prior_trace: az.InferenceData | xr.Dataset = None,
+    traces: (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset]),
+    prior_trace: xr.DataTree | xr.Dataset = None,
     ax: plt.Axes = None,
     legend: bool = True,
     title: str = None,
@@ -134,12 +135,12 @@ def compare_seq(
 
     Args:
         varname (str): The name of the variable in the xr.Datasets to plot
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+        traces (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset):
             A list or dictionary of traces or dataset to plot the variable from. Passed
             traces will plot from the posterior, pass the specific dataset if you need
             the priors (``pymc_trace.prior``). If a dictionary is used, the legend will
             use the specified keys.
-        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the
+        prior_trace (xr.DataTree | xr.Dataset): A trace or dataset to plot with the
             'prior' key.
         ax: Optionally pass an axis if one already exists, otherwise this function will
             create a new one, using any additional figargs passed.
@@ -223,10 +224,8 @@ def _plot_posterior_values(
 
 def compare_posterior(
     varname: str,
-    traces: (
-        list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
-    ),
-    prior_trace: az.InferenceData | xr.Dataset = None,
+    traces: (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset]),
+    prior_trace: xr.DataTree | xr.Dataset = None,
     smoothing: float = 0.1,
     ax: plt.Axes = None,
     legend: bool = True,
@@ -239,12 +238,12 @@ def compare_posterior(
 
     Args:
         varname (str): The name of the variable in the xr.Datasets to plot
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+        traces (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset):
             A list or dictionary of traces or dataset to plot the variable from. Passed
             traces will plot from the posterior, pass the specific dataset if you need
             the priors (``pymc_trace.prior``). If a dictionary is used, the legend will
             use the specified keys.
-        prior_trace (az.InferenceData | xr.Dataset): A trace or dataset to plot with the
+        prior_trace (xr.DataTree | xr.Dataset): A trace or dataset to plot with the
             'prior' key.
         smoothing (float): What degree of smoothing to apply to the density plot. Lower
             = more bumpy.
@@ -303,7 +302,7 @@ def compare_posterior(
 
 
 def plot_refs_single_axis(
-    trace: az.InferenceData | xr.Dataset,
+    trace: xr.DataTree | xr.Dataset,
     ref_list: list[str | reno.components.Reference],
     num_ticks: int = 3,
     **figargs: dict,
@@ -325,7 +324,11 @@ def plot_refs_single_axis(
         for ref in ref_list
     ]
 
-    ds = trace.posterior if isinstance(trace, az.InferenceData) else trace
+    ds = (
+        trace.posterior
+        if isinstance(trace, xr.DataTree) and not trace.is_leaf
+        else trace
+    )
 
     def label_offset(n: int, n_max: float) -> float:
         """Algorithm to vertically offset each label for a single tick so they
@@ -372,9 +375,7 @@ def plot_refs_single_axis(
 
 def plot_trace_refs(  # noqa: C901
     reference_model: reno.Model,
-    traces: (
-        list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset]
-    ),
+    traces: (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset]),
     ref_list: list[str | reno.components.Reference],
     cols: int = None,
     rows: int = None,
@@ -388,7 +389,7 @@ def plot_trace_refs(  # noqa: C901
         reference_model: The model from which the datasets are being plotted, this is
             used to help axes titles and determine which references are random variables
             etc.
-        traces (list[az.InferenceData | xr.Dataset] | dict[str, az.InferenceData | xr.Dataset):
+        traces (list[xr.DataTree | xr.Dataset] | dict[str, xr.DataTree | xr.Dataset):
             A list or dictionary of traces or dataset to plot the references from.
             Passed traces will plot from the posterior, pass the specific dataset if you
             need the priors (``pymc_trace.prior``). If a dictionary is used, the legends

@@ -14,7 +14,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-import arviz as az
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -1164,11 +1163,11 @@ class Model:
         compile_faster: bool = False,
         observations: list[reno.ops.Observation] = None,
         smc: bool = True,
-        trace_prior: az.InferenceData = None,
+        trace_prior: xr.DataTree = None,
         compute_prior_only: bool = False,
         keep_config: bool = False,
         **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
-    ) -> az.InferenceData:
+    ) -> xr.DataTree:
         """A PyMC equivalent version of a model's __call__, convert the model to PyMC
         and run the simulation/Bayesian analysis.
 
@@ -1199,7 +1198,7 @@ class Model:
                 default is to do so - the regular samplers in PyMC tend not to do well
                 if posterior distributions might have multiple peaks, see:
                 https://www.pymc.io/projects/examples/en/latest/samplers/SMC2_gaussians.html
-            trace_prior (az.InferenceData): If priors for this model have already been
+            trace_prior (xr.DataTree): If priors for this model have already been
                 run, pass in that arviz inference object here, and the prior xarray
                 dataset will be used in the output arviz object from this pymc run.
             compute_prior_only (bool): If set to ``True``, don't run the Bayesian
@@ -1289,15 +1288,18 @@ class Model:
                     **sampling_kwargs
                 )  # , compile_kwargs=compile_kwargs)
                 if observations is None:
-                    trace.add_groups(posterior=trace.prior)
+                    # trace.add_groups(posterior=trace.prior)
+                    trace["posterior"] = trace.prior
 
         if compute_prior_only:
             trace = trace_prior
         elif observations is not None:
-            trace.extend(trace_prior)
+            # trace.extend(trace_prior)
+            trace.update(trace_prior)
         elif observations is None:
-            del trace.prior
-            trace.add_groups(prior=trace_prior.prior)
+            trace["prior"] = trace_prior.prior
+            # del trace.prior
+            # trace.add_groups(prior=trace_prior.prior)
         self.trace = trace
         self.trace_RVs = [rv.name for rv in m.basic_RVs]
 
