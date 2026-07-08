@@ -90,8 +90,8 @@ dependencies = [
     "xarray",
     # "panel<1.8",
     "panel",
-    "pymc",
-    "arviz<1.0",  # arviz 1.0 and up doesn't support below python 3.12
+    "pymc>=6",
+    "arviz",  # arviz 1.0 and up doesn't support below python 3.12?
     "matplotlib",
     "selenium",
     "ipyvuetify",

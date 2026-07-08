@@ -16,12 +16,6 @@ dynamics models and simulations.
 >>> tub()
 """  # noqa: D212, D415
 
-import os
-
-if "PYTENSOR_FLAGS" not in os.environ:
-    os.environ["PYTENSOR_FLAGS"] = "optimizer=o3"
-
-
 import warnings
 
 import reno.components

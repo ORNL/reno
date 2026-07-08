@@ -16,6 +16,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytensor
 import xarray as xr
 from pytensor import compile
 from tqdm.auto import tqdm
@@ -1261,8 +1262,14 @@ class Model:
                 sample_func = pm.sample_prior_predictive
                 sampling_kwargs = dict(draws=n)
             if trace_prior is None:
+                # forcing a FAST_COMPILE mode for prior predictive because
+                # compiling models with very large numbers of variables can
+                # take a significant amount of time (specifically just for
+                # sample_prior_predictive).
+                prior_compile_kwargs = deepcopy(compile_kwargs)
+                prior_compile_kwargs["mode"] = "FAST_COMPILE"
                 trace_prior = pm.sample_prior_predictive(
-                    n, compile_kwargs=dict(**compile_kwargs)
+                    n, compile_kwargs=dict(**prior_compile_kwargs)
                 )
                 # NOTE: sample_prior_predictive will mutate the passed in
                 # dictionary, since I'm using it later, I make a separate copy
@@ -1277,16 +1284,37 @@ class Model:
                         f"{n} is too few samples, run with a higher n parameter, e.g. ``.pymc(n=1000)``"
                     )
 
-                # leaving explicit compile_kwargs out for now because in an
-                # older pymc version it wasn't implemented for smc (specifically
-                # 5.12.0?) An older version of pymc is sometimes necessary if
-                # there's weird stalling issues:
-                # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
-                if len(compile_kwargs) > 0:
-                    sampling_kwargs["compile_kwargs"] = compile_kwargs
-                trace = sample_func(
-                    **sampling_kwargs
-                )  # , compile_kwargs=compile_kwargs)
+                if "mode" not in compile_kwargs:
+                    # FAST_RUN is the usual default. I'm separately defining
+                    # this because with the change_flags call below I want to
+                    # ensure the sample function always explicitly has a compile
+                    # mode passed to it (we don't want a FAST_COMPILE on the
+                    # main sample by default)
+                    compile_kwargs["mode"] = "FAST_RUN"
+
+                # this change_flags context manager is a workaround to https://github.com/pymc-devs/pymc/issues/8347
+                # Specifically, since the post smc sample compile steps don't
+                # accept any passed compile_kwargs from the parent sample
+                # function, it falls back to the pytensor config. While
+                # optimizer etc. can't directly be changed, the mode _can_ be
+                # changed in the change_flags, so by having FAST_COMPILE here,
+                # we still get custom modes passed to the main sample function,
+                # and FAST_COMPILE on the post trace compilation steps (which
+                # only need to compile to get variable information/the
+                # non-optimized compiled output doesn't matter)
+                with pytensor.config.change_flags(mode="FAST_COMPILE"):
+                    # TODO: we're forcing pymc>6 now anyway, can remove this
+                    # 5.12.0 issue?
+                    # leaving explicit compile_kwargs out for now because in an
+                    # older pymc version it wasn't implemented for smc (specifically
+                    # 5.12.0?) An older version of pymc is sometimes necessary if
+                    # there's weird stalling issues:
+                    # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
+                    if len(compile_kwargs) > 0:
+                        sampling_kwargs["compile_kwargs"] = compile_kwargs
+                    trace = sample_func(
+                        **sampling_kwargs
+                    )  # , compile_kwargs=compile_kwargs)
                 if observations is None:
                     # trace.add_groups(posterior=trace.prior)
                     trace["posterior"] = trace.prior
