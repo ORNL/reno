@@ -1,0 +1,6 @@
+reno.utils.dependency\_compute\_order
+=====================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: dependency_compute_order

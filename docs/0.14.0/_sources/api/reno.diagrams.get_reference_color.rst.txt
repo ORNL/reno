@@ -1,0 +1,6 @@
+reno.diagrams.get\_reference\_color
+===================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: get_reference_color

@@ -1,0 +1,6 @@
+reno.diagrams.DARK\_MODE
+========================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: DARK_MODE

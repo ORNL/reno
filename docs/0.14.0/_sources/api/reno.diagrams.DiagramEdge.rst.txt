@@ -1,0 +1,40 @@
+reno.diagrams.DiagramEdge
+=========================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: DiagramEdge
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~DiagramEdge.__init__
+      ~DiagramEdge.add_to_graphviz
+      ~DiagramEdge.configure_color
+      ~DiagramEdge.find_duplicate_edges
+      ~DiagramEdge.mark_rendered
+      ~DiagramEdge.other
+      ~DiagramEdge.should_render
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DiagramEdge.PRIORITY
+      ~DiagramEdge.arrowsize
+      ~DiagramEdge.default_color
+      ~DiagramEdge.style
+      ~DiagramEdge.weight
+      ~DiagramEdge.rendered

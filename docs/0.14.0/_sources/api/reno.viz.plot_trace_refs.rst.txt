@@ -1,0 +1,6 @@
+reno.viz.plot\_trace\_refs
+==========================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: plot_trace_refs
