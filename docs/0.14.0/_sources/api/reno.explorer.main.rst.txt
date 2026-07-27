@@ -1,0 +1,6 @@
+reno.explorer.main
+==================
+
+.. currentmodule:: reno.explorer
+
+.. autofunction:: main

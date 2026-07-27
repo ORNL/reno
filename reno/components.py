@@ -2146,9 +2146,7 @@ class HistoricalValue(Reference):
         """Get the string representation for referring to this reference, italicized
         and as a function of ``t`` to highlight it's a different timestep.
         """
-        latex_str = (
-            f"{latex_name(self.label, 'textit')}({self.index_eq.latex(**kwargs)})"
-        )
+        latex_str = f"{latex_name(self.tracked_ref.label, 'textit')}({self.index_eq.latex(**kwargs)})"
         if "t" in kwargs:
             latex_str = latex_debug_output(self, latex_str, **kwargs)
         if "hl" in kwargs and kwargs["hl"] == self.tracked_ref.name:
@@ -2905,18 +2903,36 @@ class Metric(Reference):
     during the simulation etc.
     """
 
-    def __init__(self, eq: EquationPart = None, label: str = None):
+    def __init__(
+        self,
+        eq: EquationPart = None,
+        label: str = None,
+        group: str = "",
+        cgroup: str | list[str] = "",
+    ):
         """Create a metric equation node.
 
         Args:
             eq (EquationPart): The equation that describes this measurement/observable
             label (str): Visual label for the reference.
+            group (str): An optional string to help group related references together,
+                primarily only used for visually tightening up elements in the
+                stock/flow graphs.
+            cgroup (str | list[str]): An optional string to refer to related elements and
+                specify colors in the stock/flow graphs or easier hiding. Can specify a
+                list to allow multiple ways of grouping.
         """
         super().__init__(label)
         self.eq = eq
         self.model = None
         """Keep a reference to container model, makes it easier to compare refs across
         multiple models."""
+        self.group = group
+        self.cgroup = cgroup
+
+        self.implicit = False
+        # necessary to include, for use in same situations as regular trackedcomponents
+        # to be clear, a metric is never implicit in the same sense as a flow.
 
         # handle if within a context_manager, tell the manager to eventually
         # appropriately find the name for this reference and add it to the

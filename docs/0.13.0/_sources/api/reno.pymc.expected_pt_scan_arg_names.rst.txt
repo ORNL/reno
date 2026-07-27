@@ -1,0 +1,6 @@
+reno.pymc.expected\_pt\_scan\_arg\_names
+========================================
+
+.. currentmodule:: reno.pymc
+
+.. autofunction:: expected_pt_scan_arg_names

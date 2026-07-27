@@ -795,3 +795,13 @@ def test_init_dist_w_eq_influences_shape_after_change():
 
     assert v0.shape == 4
     assert s.shape == 4
+
+
+def test_static_metrics():
+    """A metric that is static shouldn't break when constructing the dataset."""
+    m = Model()
+    with m:
+        met = Metric(Scalar(5) + 4)
+
+    ds = m()
+    assert ds.met.values[0] == 9

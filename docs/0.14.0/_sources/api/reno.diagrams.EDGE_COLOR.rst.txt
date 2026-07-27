@@ -1,0 +1,6 @@
+reno.diagrams.EDGE\_COLOR
+=========================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: EDGE_COLOR

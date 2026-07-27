@@ -1,0 +1,6 @@
+reno.diagrams.NODE\_COLOR
+=========================
+
+.. currentmodule:: reno.diagrams
+
+.. autodata:: NODE_COLOR

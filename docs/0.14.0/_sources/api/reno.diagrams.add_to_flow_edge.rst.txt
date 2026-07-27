@@ -1,0 +1,6 @@
+reno.diagrams.add\_to\_flow\_edge
+=================================
+
+.. currentmodule:: reno.diagrams
+
+.. autofunction:: add_to_flow_edge

@@ -14,11 +14,10 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-import arviz as az
 import matplotlib.pyplot as plt
 import numpy as np
+import pytensor
 import xarray as xr
-from graphviz import Digraph, set_jupyter_format
 from pytensor import compile
 from tqdm.auto import tqdm
 
@@ -477,80 +476,90 @@ class Model:
 
     def graph(
         self,
-        show_vars: bool = True,
-        exclude_vars: list[str] = None,
-        sparklines: bool = False,
-        sparkdensities: bool = False,
-        sparkall: bool = False,
-        g: Digraph = None,
-        traces: list[xr.Dataset] = None,
-        universe: list[reno.components.TrackedReference] = None,
-        lr: bool = False,
-        hide_groups: list[str] = None,
+        vars: bool = True,
+        metrics: bool = False,
+        show: list[reno.components.Reference] = None,
+        hide: list[reno.components.Reference] = None,
         show_groups: list[str] = None,
+        hide_groups: list[str] = None,
+        universe: list[reno.components.Reference] = None,
         group_colors: dict[str | tuple[reno.components.TrackedReference], str] = None,
-    ) -> Digraph:
-        """Generate a graphviz dot graph for all the stocks and flows of the passed
-        model, optionally including sparklines if a simulation has been run.
+        var_sparklines: bool = False,
+        flow_sparklines: bool = False,
+        stock_sparklines: bool = False,
+        metric_sparklines: bool = False,
+        sparklines: list[reno.components.TrackedReference] = None,
+        traces: list[xr.Dataset] = None,
+        lr: bool = False,
+        theme: str = "light",
+    ) -> reno.diagrams.ModelDiagram:
+        """Generate a graphviz dot graph for the stock and flow diagram of the model.
+
+        The parameters of this function let you control what components get included
+        and if mini "sparkline" plots are rendered if the model has previously been run.
+
+        Many of these arguments map to the :py:class:`reno.diagrams.RenderConfig`
+        dataclass.
 
         Args:
-            model (reno.model.Model): The model to collect stocks/flows/variables from.
-            show_vars (bool): Whether to render variables in the diagram, or just stocks
-                and flows (for very complex models, hiding variables can make it a bit
-                easier to visually parse.)
-            exclude_vars (list[str]): Specific variables to hide in the diagram, can be
-                used with ``show_vars=True`` to just show specific variables of
-                interest.
-            sparklines (bool): Draw mini graphs to the right of each stock showing
-                plotting their values through time. This assumes the model has either
-                been run, or traces are passed in manually with the ``traces`` argument.
-            sparkdensities (bool): Draw mini density plots/histograms next to any
-                variables that sample from distributions. This assumes the model has
-                either been run, or traces are passed in manually with the ``traces``
-                argument.
-            sparkall (bool): Include mini graphs for flows as well as stocks``.
-            g (Digraph): Graphviz Digraph instance to render the nodes/edges on. Mostly
-            only for
-                internal use for drawing subgraphs for submodels.
-            traces (list[xr.Dataset]): A list of traces or model run datasets to use for
-                drawing spark plots. Each dataset will be rendered in a different color.
-            universe (list[TrackedReference]): Limit rendered nodes to only those listed
-                here, this includes all of stocks/flows/variables. (This acts as an
-                initial filter, ``show_vars`` and ``exclude_var_names`` still applies
-                after this.)
-            lr (bool): By default the graphviz plot tries to orient top-down. Specify
-                ``True`` to try to orient it left-right.
-            hide_groups (list[str]): A list of group/cgroup names to hide during
-                diagramming, overriding model.default_hide_groups.
-            show_groups (list[str]): A list of group/cgroup names to show during
-                diagramming, overriding model.default_hide_groups.
+            vars (bool): Whether to include variables in the diagram (``True`` by
+                default.)
+            metrics (bool): Whether to include metrics in the diagram (``False`` by
+                default.)
+            show (list[reno.components.Reference]): List of individual references to
+                include, this takes priority over groups.
+            hide (list[reno.components.Reference]): List of individual references to
+                exclude, this takes priority over groups.
+            show_groups (list[str]): List of group names to show, any references part of
+                any groups listed here will be displayed.
+            hide_groups (list[str]): List of group names to hide, any references part of
+                any groups listed here will be excluded.
+            universe (list[reno.components.Reference]): Limit the possible set of
+                references to draw from when rendering. Specifying this applies
+                restrictions to the other show*/hide* functions. The default of ``None``
+                places no restrictions.
             group_colors (dict[str | tuple[reno.components.TrackedReference], str]):
-                Dictionary specifying colors to render groups with. An ad-hoc group
-                defined by a tuple of references can also be used as a key if the
-                appropriate cgroup does not already exist on the references.
+                Modify existing group colors or define new groups and associated colors
+                to render with. String keys refer to existing cgroup/group names. Tuples
+                of references create new ad-hoc groups.
+            var_sparklines (bool): Include sparklines next to variables.
+            flow_sparklines (bool): Include sparklines next to flows.
+            stock_sparklines (bool): Include sparklines next to stocks.
+            metric_sparklines (bool): Include sparklines next to metrics.
+            sparklines (list[reno.components.Reference]): List of specific components to
+                include sparkline plots for.
+            traces (list[xr.Dataset]): The set of xarray datasets from simulation runs
+                (numpy or pymc) to use in the sparkline plots.
+            lr (bool): Render the diagram top-bottom (the default, if ``False``) or
+                left-right.
+            theme (str): Whether to render the diagram in ``"light"`` or ``"dark"``
+                theme.
 
         Returns:
-            The populated Digraph instance (Jupyter can natively render this in a cell
-            output.)
+            A :py:class:`reno.diagrams.ModelDiagram` instance with graphviz graph
+            pre-populated. Displaying the ``ModelDiagram`` in a Jupyter instance will
+            render the graph as an image in the cell.
         """
-        if exclude_vars is None:
-            exclude_vars = []
-        set_jupyter_format("png")
-        diagram, _ = reno.diagrams.stock_flow_diagram(
-            self,
-            show_vars,
-            exclude_vars,
-            sparklines,
-            sparkdensities,
-            sparkall,
-            g,
-            traces,
-            universe,
-            lr,
-            hide_groups,
-            show_groups,
-            group_colors,
+        config = reno.diagrams.RenderConfig(
+            vars=vars,
+            metrics=metrics,
+            show=show,
+            hide=hide,
+            show_groups=show_groups,
+            hide_groups=hide_groups,
+            universe=universe,
+            group_colors=group_colors,
+            var_sparklines=var_sparklines,
+            flow_sparklines=flow_sparklines,
+            stock_sparklines=stock_sparklines,
+            metric_sparklines=metric_sparklines,
+            sparklines=sparklines,
+            traces=traces,
+            lr=lr,
+            theme=theme,
         )
+        diagram = reno.diagrams.ModelDiagram(self)
+        diagram.to_graphviz(config)
         return diagram
 
     def latex(
@@ -944,8 +953,18 @@ class Model:
         # be 1 per step
         new_vars = {}
         for metric in self.metrics:
-            coords = ["sample"] if len(metric.value.shape) == 1 else ["sample", "step"]
-            new_vars[metric.qual_name()] = (coords, metric.value)
+            val = metric.value
+            if metric.is_static():  # noqa: SIM102
+                # bleh, see note above
+                if (
+                    isinstance(val, (int, float))
+                    or (isinstance(val, np.ndarray) and len(val.shape) == 0)
+                    or (len(val.shape) > 0 and val.shape[0] != self.last_n)
+                    or len(val.shape) == 0
+                ):
+                    val = np.broadcast_to(val, (self.last_n,))
+            coords = ["sample"] if len(val.shape) == 1 else ["sample", "step"]
+            new_vars[metric.qual_name()] = (coords, val)
         ds = ds.assign(new_vars)
 
         # merge in any sub datasets
@@ -1218,11 +1237,11 @@ class Model:
             list | np.ndarray | reno.components.Distribution,
         ] = None,
         smc: bool = True,
-        trace_prior: az.InferenceData = None,
+        trace_prior: xr.DataTree = None,
         compute_prior_only: bool = False,
         keep_config: bool = False,
         **free_refs: dict[str, int | float | np.ndarray | reno.EquationPart],
-    ) -> az.InferenceData:
+    ) -> xr.DataTree:
         """A PyMC equivalent version of a model's __call__, convert the model to PyMC
         and run the simulation/Bayesian analysis.
 
@@ -1253,7 +1272,7 @@ class Model:
                 default is to do so - the regular samplers in PyMC tend not to do well
                 if posterior distributions might have multiple peaks, see:
                 https://www.pymc.io/projects/examples/en/latest/samplers/SMC2_gaussians.html
-            trace_prior (az.InferenceData): If priors for this model have already been
+            trace_prior (xr.DataTree): If priors for this model have already been
                 run, pass in that arviz inference object here, and the prior xarray
                 dataset will be used in the output arviz object from this pymc run.
             compute_prior_only (bool): If set to ``True``, don't run the Bayesian
@@ -1315,8 +1334,14 @@ class Model:
                 sample_func = pm.sample_prior_predictive
                 sampling_kwargs = dict(draws=n)
             if trace_prior is None:
+                # forcing a FAST_COMPILE mode for prior predictive because
+                # compiling models with very large numbers of variables can
+                # take a significant amount of time (specifically just for
+                # sample_prior_predictive).
+                prior_compile_kwargs = deepcopy(compile_kwargs)
+                prior_compile_kwargs["mode"] = "FAST_COMPILE"
                 trace_prior = pm.sample_prior_predictive(
-                    n, compile_kwargs=dict(**compile_kwargs)
+                    n, compile_kwargs=dict(**prior_compile_kwargs)
                 )
                 # NOTE: sample_prior_predictive will mutate the passed in
                 # dictionary, since I'm using it later, I make a separate copy
@@ -1331,26 +1356,50 @@ class Model:
                         f"{n} is too few samples, run with a higher n parameter, e.g. ``.pymc(n=1000)``"
                     )
 
-                # leaving explicit compile_kwargs out for now because in an
-                # older pymc version it wasn't implemented for smc (specifically
-                # 5.12.0?) An older version of pymc is sometimes necessary if
-                # there's weird stalling issues:
-                # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
-                if len(compile_kwargs) > 0:
-                    sampling_kwargs["compile_kwargs"] = compile_kwargs
-                trace = sample_func(
-                    **sampling_kwargs
-                )  # , compile_kwargs=compile_kwargs)
+                if "mode" not in compile_kwargs:
+                    # FAST_RUN is the usual default. I'm separately defining
+                    # this because with the change_flags call below I want to
+                    # ensure the sample function always explicitly has a compile
+                    # mode passed to it (we don't want a FAST_COMPILE on the
+                    # main sample by default)
+                    compile_kwargs["mode"] = "FAST_RUN"
+
+                # this change_flags context manager is a workaround to https://github.com/pymc-devs/pymc/issues/8347
+                # Specifically, since the post smc sample compile steps don't
+                # accept any passed compile_kwargs from the parent sample
+                # function, it falls back to the pytensor config. While
+                # optimizer etc. can't directly be changed, the mode _can_ be
+                # changed in the change_flags, so by having FAST_COMPILE here,
+                # we still get custom modes passed to the main sample function,
+                # and FAST_COMPILE on the post trace compilation steps (which
+                # only need to compile to get variable information/the
+                # non-optimized compiled output doesn't matter)
+                with pytensor.config.change_flags(mode="FAST_COMPILE"):
+                    # TODO: we're forcing pymc>6 now anyway, can remove this
+                    # 5.12.0 issue?
+                    # leaving explicit compile_kwargs out for now because in an
+                    # older pymc version it wasn't implemented for smc (specifically
+                    # 5.12.0?) An older version of pymc is sometimes necessary if
+                    # there's weird stalling issues:
+                    # https://discourse.pymc.io/t/sample-smc-stalls-at-final-stage/15055/20
+                    if len(compile_kwargs) > 0:
+                        sampling_kwargs["compile_kwargs"] = compile_kwargs
+                    trace = sample_func(
+                        **sampling_kwargs
+                    )  # , compile_kwargs=compile_kwargs)
                 if observations is None:
-                    trace.add_groups(posterior=trace.prior)
+                    # trace.add_groups(posterior=trace.prior)
+                    trace["posterior"] = trace.prior
 
         if compute_prior_only:
             trace = trace_prior
         elif observations is not None:
-            trace.extend(trace_prior)
+            # trace.extend(trace_prior)
+            trace.update(trace_prior)
         elif observations is None:
-            del trace.prior
-            trace.add_groups(prior=trace_prior.prior)
+            trace["prior"] = trace_prior.prior
+            # del trace.prior
+            # trace.add_groups(prior=trace_prior.prior)
         self.trace = trace
         self.trace_RVs = [rv.name for rv in m.basic_RVs]
 

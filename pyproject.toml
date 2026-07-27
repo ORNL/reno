@@ -88,14 +88,16 @@ dependencies = [
     "numpy",
     "pandas",
     "xarray",
-    "panel<1.8",
-    "pymc",
+    # "panel<1.8",
+    "panel",
+    "pymc>=6",
+    "arviz",  # arviz 1.0 and up doesn't support below python 3.12
     "matplotlib",
     "selenium",
     "ipyvuetify",
     "graphviz"
 ]
-requires-python = ">=3.11"  # pymc/pytensor was initially having issues with 3.14
+requires-python = ">=3.12"
 readme = "README.md"
 authors = [
     {name = "Nathan Martindale, Jordan Stomps, Birdy Phathanapirom", email = "martindalena@ornl.gov"},
@@ -112,7 +114,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14"

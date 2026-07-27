@@ -1,0 +1,6 @@
+reno.utils.is\_ref\_in\_parent\_scope
+=====================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: is_ref_in_parent_scope
