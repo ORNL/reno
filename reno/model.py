@@ -408,6 +408,33 @@ class Model:
         for model in self.models:
             model._find_all_extended_op_implicit_components()
 
+    def simulate_timesteps(self, start: int = None, stop: int = None, quiet: bool = True, debug: bool = False, label: str = None, existing_dataset: xr.Dataset = None, existing_mask: xr.Dataset = None) -> Iterator:
+        """Assumes already populated"""
+        
+        ref_compute_order = self.dependency_compute_order(inits_order=False)
+
+        start = 1 if start is None else start
+        stop = self.steps if stop is None else stop
+
+        # TODO: compute initial values
+
+        for step in tqdm(range(start, stop), disable=quiet, desc=label):
+            for ref in ref_compute_order:
+                ref.eval(step, save=True)
+            yield
+
+        # TODO: compute metrics for just this one
+
+
+    def simulate_samples(self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False) -> Iterator:
+        if n is None:
+            n = self.n
+        if steps is None:
+            steps = self.steps
+        
+        pass
+            
+
     def simulator(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
     ) -> Iterator:
@@ -437,6 +464,7 @@ class Model:
 
         self.run_metrics(n, steps)
 
+    # TODO: this function feels unnecessary
     def simulate(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
     ) -> None:
