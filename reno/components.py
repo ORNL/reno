@@ -604,6 +604,9 @@ class Distribution(EquationPart):
     variable.)
     """
 
+    # TODO: probably need to throw a warning if any passed operands are _not_
+    # static.
+
     def __init__(
         self, *operands: list[EquationPart], per_timestep: bool = False, dim: int = 1
     ):
@@ -630,12 +633,11 @@ class Distribution(EquationPart):
         self._extra_pymc_kwargs: dict[str, Any] = {}
         # this is to help implement the observed keyword for Observations
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        """Generate n x dim samples based on this probability distribution, assigns
-        as a vector/matrix to ``self.value``.
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        """Generate 1 or dim samples based on this probability distribution, assigns
+        as a single value/vector/matrix to ``self.value``.
 
         Args:
-            n (int): Number of samples to draw.
             steps (int): Number of timesteps for which to draw samples for, only
                 relevant if ``per_timestep`` is ``True``.
             dim (int): If > 1, draw samples into a vector of this size for each n.
@@ -1753,11 +1755,10 @@ class TrackedReference(Reference):
         self._computing_type = False
         return type_
 
-    def populate(self, n: int, steps: int) -> None:
-        """Initialize the matrix of values with size ``n x steps``.
+    def populate(self, steps: int) -> None:
+        """Initialize the array of values with size ``steps``.
 
         Args:
-            n (int): The number of samples to simulate.
             steps (int): How many steps will be run in the simulation.
         """
         # TODO: not sure if auto checking for staticness _here_ is the correct
@@ -1772,25 +1773,28 @@ class TrackedReference(Reference):
 
         # value shape cases, see note in TrackedReference docstring
         try:
-            if self._static and not self._sample_dim:
+            if self._static:
                 # case 1, skip value, because assignment completely replaces value
                 self.computed_mask = False
-            elif self._static and self._sample_dim:
-                # case 2
-                self.computed_mask = np.zeros((n,), dtype=bool)
-                if self.dim == 1:
-                    self.value = np.zeros((n,), dtype=dtype)
-                    # self.value = np.zeros((n, 1), dtype=dtype)
-                else:
-                    self.value = np.zeros((n, self.dim), dtype=dtype)
+
+            # NOTE: keeping because not sure if we need the self.dim check in
+            # the first case? Didn't have it previously so I assume fine.
+            # elif self._static and self._sample_dim:
+            #     # case 2
+            #     self.computed_mask = np.zeros((n,), dtype=bool)
+            #     if self.dim == 1:
+            #         self.value = np.zeros((n,), dtype=dtype)
+            #         # self.value = np.zeros((n, 1), dtype=dtype)
+            #     else:
+            #         self.value = np.zeros((n, self.dim), dtype=dtype)
             else:
                 # case 3, non-static, always uses both sample and time dims
-                self.computed_mask = np.zeros((n, steps), dtype=bool)
+                self.computed_mask = np.zeros((steps,), dtype=bool)
                 if self.dim == 1:
-                    self.value = np.zeros((n, steps), dtype=dtype)
+                    self.value = np.zeros((steps,), dtype=dtype)
                     # self.value = np.zeros((n, steps, 1), dtype=dtype)
                 else:
-                    self.value = np.zeros((n, steps, self.dim), dtype=dtype)
+                    self.value = np.zeros((steps, self.dim), dtype=dtype)
             self.initial_vals()
         except Exception as e:
             e.add_note(f"Was trying to populate {self.qual_name()}")
@@ -1800,7 +1804,7 @@ class TrackedReference(Reference):
         """Used to help improve efficiency of static checks since done every
         single eval call.
 
-        Assigns _static and _sample_dim flags.
+        Assigns _static flag.
         """
         self._static = (
             not isinstance(self, Stock)
@@ -1808,16 +1812,6 @@ class TrackedReference(Reference):
             and is_static(self.min)
             and is_static(self.max)
         )
-        # TODO: unclear if I'm missing other potential conditions here
-        # TODO: check to make sure this is actually true when directly assigned
-        # a distribution, e.g. Variable(ops.Normal())
-        self._sample_dim = (
-            len(self.find_parts_of_type(Distribution)) > 0
-            or len(self.find_parts_of_type(Piecewise)) > 0
-            or not self._static
-        )
-        # including self._static condition for completeness, technically
-        # sample dim always exists when not static
 
     def resolve_init_array(
         self, obj_or_eq: int | float | np.ndarray | EquationPart
@@ -1832,11 +1826,9 @@ class TrackedReference(Reference):
         if isinstance(obj_or_eq, Distribution):
             dim = self.dim if obj_or_eq.dim == 1 else obj_or_eq.dim
             if obj_or_eq.per_timestep:
-                obj_or_eq.populate(
-                    self.value.shape[0], steps=self.value.shape[1], dim=dim
-                )
+                obj_or_eq.populate(steps=self.value.shape[0], dim=dim)
             else:
-                obj_or_eq.populate(self.value.shape[0], dim=dim)
+                obj_or_eq.populate(dim=dim)
             return obj_or_eq.eval(0)
         if isinstance(obj_or_eq, EquationPart):
             # this covers Scalar
@@ -2320,12 +2312,24 @@ class Flow(TrackedReference):
             resolved_init_value = self.resolve_init_array(init_eq)
 
             # value shape cases for value assignment
-            if self._static and not self._sample_dim:
+            if self._static:
                 # case 1, simplest, raw value or (dim,)
-                if self.dim > 1 and not isinstance(resolved_init_value, np.ndarray):
-                    resolved_init_value = np.repeat(
-                        [resolved_init_value], repeats=self.dim
+                # if self.dim > 1 and not isinstance(resolved_init_value, np.ndarray):
+                #     resolved_init_value = np.repeat(
+                #         [resolved_init_value], repeats=self.dim
+                #     )
+                # NOTE: I don't think the repeat is necessary? Pretty sure
+                # broadcast_to just handles it? The only thing this wouldn't
+                # handle is a legitimately repeating pattern, but...just pass
+                # in the correctly repeated value at that point? We shouldn't be
+                # responsible for that and it's a little weird.
+                # ensure the value matches a manually specified dimensionality
+                if self.dim > 1:
+                    # ensure
+                    resolved_init_value = np.broadcast_to(
+                        resolved_init_value, (self.dim,)
                     )
+
                 # ensure correct type (only needed in this case, other cases
                 # don't re-assign container value)
                 if isinstance(resolved_init_value, np.ndarray):
@@ -2334,26 +2338,22 @@ class Flow(TrackedReference):
                     resolved_init_value = self.dtype(resolved_init_value)
                 self.value = resolved_init_value
                 self.computed_mask = True
-            elif self._static and self._sample_dim:
-                # case 2, sample dimension, (sample,) or (sample, dim)
-                assignment_dims = [slice(None, None)]
-                # assignment_dims.append(slice(None, None))
-                if self.dim > 1:
-                    # see note about why this is necessary in
-                    # TrackedReference.eval assignment section
-                    assignment_dims.append(slice(None, None))
-                self.value[*assignment_dims] = resolved_init_value
-                self.computed_mask[:] = True
+
             else:
-                # case 3, non-statics
-                assignment_dims = [slice(None, None), 0]
-                # assignment_dims.append(slice(None, None))
-                if self.dim > 1:
-                    # see note about why this is necessary in
-                    # TrackedReference.eval assignment section
-                    assignment_dims.append(slice(None, None))
-                self.value[*assignment_dims] = resolved_init_value
-                self.computed_mask[:, 0] = True
+                self.value[0] = resolved_init_value
+                self.computed_mask[0] = True
+
+                # TODO: is there some case where the above doesn't work and the
+                # explicit : slice assignment for the final dims is necessary?
+                # # case 3, non-statics
+                # assignment_dims = [slice(None, None), 0]
+                # # assignment_dims.append(slice(None, None))
+                # if self.dim > 1:
+                #     # see note about why this is necessary in
+                #     # TrackedReference.eval assignment section
+                #     assignment_dims.append(slice(None, None))
+                # self.value[*assignment_dims] = resolved_init_value
+                # self.computed_mask[:, 0] = True
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
@@ -2501,16 +2501,13 @@ class Variable(TrackedReference):
                 init_eq = self._implied_eq()
             resolved_init_value = self.resolve_init_array(init_eq)
 
-            # TODO: should eventually move type to equation part instead of here
-            # exclusively
-
             # value shape cases for value assignment
-            if self._static and not self._sample_dim:
-                # case 1, simplest, raw value or (dim,)
-                if self.dim > 1 and not isinstance(resolved_init_value, np.ndarray):
-                    resolved_init_value = np.repeat(
-                        [resolved_init_value], repeats=self.dim
+            if self._static:
+                if self.dim > 1:
+                    resolved_init_value = np.broadcast_to(
+                        resolved_init_value, (self.dim,)
                     )
+
                 # ensure correct type (only needed in this case, other cases
                 # don't re-assign container value)
                 if isinstance(resolved_init_value, np.ndarray):
@@ -2519,26 +2516,10 @@ class Variable(TrackedReference):
                     resolved_init_value = self.dtype(resolved_init_value)
                 self.value = resolved_init_value
                 self.computed_mask = True
-            elif self._static and self._sample_dim:
-                # case 2, sample dimension, (sample,) or (sample, dim)
-                assignment_dims = [slice(None, None)]
-                # assignment_dims.append(slice(None, None))
-                if self.dim > 1:
-                    # see note about why this is necessary in
-                    # TrackedReference.eval assignment section
-                    assignment_dims.append(slice(None, None))
-                self.value[*assignment_dims] = resolved_init_value
-                self.computed_mask[:] = True
             else:
-                # case 3, non-statics
-                assignment_dims = [slice(None, None), 0]
-                # assignment_dims.append(slice(None, None))
-                if self.dim > 1:
-                    # see note about why this is necessary in
-                    # TrackedReference.eval assignment section
-                    assignment_dims.append(slice(None, None))
-                self.value[*assignment_dims] = resolved_init_value
-                self.computed_mask[:, 0] = True
+                self.value[0] = resolved_init_value
+                self.computed_mask[0] = True
+
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise
@@ -2760,10 +2741,10 @@ class Stock(TrackedReference):
         """Assign the starting values for t=0, the first step of the simulation."""
         try:
             if self.init is not None:
-                self.value[:, 0] = self.resolve_init_array(self._implied_eq(self.init))
+                self.value[0] = self.resolve_init_array(self._implied_eq(self.init))
             else:
-                self.value[:, 0] = 0
-            self.computed_mask[:, 0] = True
+                self.value[0] = 0
+            self.computed_mask[0] = True
         except Exception as e:
             e.add_note(f'Was attempting to compute initial values for "{self.name}"')
             raise

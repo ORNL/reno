@@ -1981,20 +1981,22 @@ class outflows(reno.components.Operation):
 # ==================================================
 
 
-def dist_shape(
-    dist: reno.components.Distribution, n: int, steps: int, dim: int
-) -> int | tuple:
+def dist_shape(dist: reno.components.Distribution, steps: int, dim: int) -> int | tuple:
     """Compute the shape/dimensions needed to populate the passed distribution."""
     if not dist.per_timestep and dim == 1:
-        shape = n
+        shape = None
+        # shape = n
         # shape = (n, 1)
     elif dist.per_timestep and dim == 1:
-        shape = (n, steps)
+        shape = (steps,)
+        # shape = (n, steps)
         # shape = (n, steps, 1)
     elif dist.per_timestep and dim > 1:
-        shape = (n, steps, dim)
+        shape = (steps, dim)
+        # shape = (n, steps, dim)
     else:
-        shape = (n, dim)
+        shape = dim
+        # shape = (n, dim)
     return shape
 
 
@@ -2095,8 +2097,8 @@ class Normal(reno.components.Distribution):
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\mathcal{{N}}({self.sub_equation_parts[0].latex(**kwargs)}, {self.sub_equation_parts[1].latex(**kwargs)}^2)"
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        dims = dist_shape(self, n, steps, dim)
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
         self.value = np.random.normal(
             self.sub_equation_parts[0].eval(),
             self.sub_equation_parts[1].eval(),
@@ -2148,8 +2150,8 @@ class Uniform(reno.components.Distribution):
     def get_type(self) -> type:
         return float
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        dims = dist_shape(self, n, steps, dim)
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
         self.value = np.random.uniform(
             self.sub_equation_parts[0].eval(),
             self.sub_equation_parts[1].eval(),
@@ -2194,8 +2196,8 @@ class DiscreteUniform(reno.components.Distribution):
     def get_type(self) -> type:
         return int
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        dims = dist_shape(self, n, steps, dim)
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
         self.value = np.random.randint(
             self.sub_equation_parts[0].eval(),
             self.sub_equation_parts[1].eval(),
@@ -2245,8 +2247,8 @@ class Bernoulli(reno.components.Distribution):
     def op_latex(self, **kwargs: dict) -> str:
         return f"\\text{{Bernoulli}}({self.sub_equation_parts[0].latex(**kwargs)})"
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        dims = dist_shape(self, n, steps, dim)
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
         self.value = np.random.binomial(1, self.sub_equation_parts[0].eval(), dims)
 
     def get_type(self) -> type:
@@ -2312,8 +2314,8 @@ class Categorical(reno.components.Distribution):
     def get_type(self) -> type:
         return int
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        dims = dist_shape(self, n, steps, dim)
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
         # TODO: how would p_dist apply here? Should it?
         self.value = np.argmax(
             np.random.multinomial(1, self.sub_equation_parts[0].eval(), dims), axis=-1
