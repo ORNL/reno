@@ -720,7 +720,7 @@ class Distribution(EquationPart):
         if not self.per_timestep:
             return self.value
         else:
-            return self.value[:, t]
+            return self.value[t]
 
     def clean_part_repr(self, part_index: int) -> str:
         """Get a non-"Scalar()" string version of a particular sub equation part.
@@ -1883,15 +1883,11 @@ class TrackedReference(Reference):
                     # case 1, raw or (dim,)
                     if self.computed_mask:
                         return self.value
-                if self._static and self._sample_dim:  # noqa: SIM102
-                    # case 2, (sample,) or (sample, dim)
-                    if self.computed_mask.all():
-                        return self.value[:]
 
                 if not self._static:  # noqa: SIM102
-                    # case 3, (sample, t) or (sample, t, dim)
-                    if self.computed_mask[:, t].all():
-                        return self.value[:, t]
+                    # case 3, (t) or (t, dim)
+                    if self.computed_mask[t].all():
+                        return self.value[t]
 
             # short-circuit not appropriate, run actual compute
             self._computing.append(t)
@@ -1912,16 +1908,17 @@ class TrackedReference(Reference):
             # (e.g. Variable(5, dim=6) needs to return [5, 5, 5, 5, 5, 5] both
             # times)
             if self.dim > 1:
-                if not isinstance(val, np.ndarray):
-                    val = np.array([val])
-                if val.shape[-1] == 1:
-                    val = np.repeat(val, repeats=self.dim, axis=-1)
+                val = np.broadcast_to(val, (self.dim,))
+                # if not isinstance(val, np.ndarray):
+                #     val = np.array([val])
+                # if val.shape[-1] == 1:
+                #     val = np.repeat(val, repeats=self.dim, axis=-1)
 
             # handle caching/storing result on the internal value for future
             # short-circuting and post-run analysis/dataset collection
             if save and not force:
                 # value shape cases for value _assignment_
-                if self._static and not self._sample_dim:
+                if self._static:
                     # case 1, simplest, just replace
                     # TODO: NOTE: that before we were always converting to a
                     # numpy array if was a static value - will not doing that
@@ -1929,28 +1926,30 @@ class TrackedReference(Reference):
                     # used to work, which was directly setting value
                     self.value = val
                     self.computed_mask = True
-                elif self._static and self._sample_dim:
-                    # case 2, sample dimension is assigned to
-                    assignment_dims = [slice(None, None)]
-                    if self.dim > 1:
-                        # this is only necessary because if val is a numpy array
-                        # and we're assigning to specific rows, it's not going
-                        # to automatically broadcast the full array, it'll prob
-                        # shape error.
-                        assignment_dims.append(slice(None, None))
-                    self.value[*assignment_dims] = val
-                    self.computed_mask[:] = True
+                # elif self._static and self._sample_dim:
+                #     # case 2, sample dimension is assigned to
+                #     assignment_dims = [slice(None, None)]
+                #     if self.dim > 1:
+                #         # this is only necessary because if val is a numpy array
+                #         # and we're assigning to specific rows, it's not going
+                #         # to automatically broadcast the full array, it'll prob
+                #         # shape error.
+                #         assignment_dims.append(slice(None, None))
+                #     self.value[*assignment_dims] = val
+                #     self.computed_mask[:] = True
                 else:
-                    # case 3, non-statics
-                    assignment_dims = [slice(None, None), t]
-                    if self.dim > 1:
-                        # this is only necessary because if val is a numpy array
-                        # and we're assigning to specific rows, it's not going
-                        # to automatically broadcast the full array, it'll prob
-                        # shape error.
-                        assignment_dims.append(slice(None, None))
-                    self.value[*assignment_dims] = val
-                    self.computed_mask[:, t] = True
+                    self.value[t] = val
+                    self.computed_mask[t] = True
+                    # # case 3, non-statics
+                    # assignment_dims = [slice(None, None), t]
+                    # if self.dim > 1:
+                    #     # this is only necessary because if val is a numpy array
+                    #     # and we're assigning to specific rows, it's not going
+                    #     # to automatically broadcast the full array, it'll prob
+                    #     # shape error.
+                    #     assignment_dims.append(slice(None, None))
+                    # self.value[*assignment_dims] = val
+                    # self.computed_mask[:, t] = True
 
             self._computing.remove(t)
             return val
@@ -2100,9 +2099,10 @@ class HistoricalValue(Reference):
         if self.tracked_ref._static:
             return self.tracked_ref.value
         # return self.tracked_ref.value[:, index]
-        return self.tracked_ref.value[
-            list(range(0, self.tracked_ref.value.shape[0])), index
-        ]
+        return self.tracked_ref.value[index]
+        # return self.tracked_ref.value[
+        #     list(range(0, self.tracked_ref.value.shape[0])), index
+        # ]
 
     def qual_name(self) -> str:
         """Get a string with both the model and the reference name
@@ -3076,7 +3076,7 @@ class Flag(Metric):
         val = self.eq.eval(t, save, force, **kwargs).astype(int)
         if save:
             self.internal_step = t
-            self.value[:, t] = val
+            self.value[t] = val
             self.internal_step += 1
         self._computing.remove(t)
         return val
