@@ -3035,7 +3035,7 @@ class Flag(Metric):
         # self.first.eval = lambda t, save, force: self.first.eq.eval(t, save, force)
         # self.first.eq = Function(self.first_event)
 
-    def populate(self, n: int, steps: int) -> None:
+    def populate(self, steps: int) -> None:
         """Initialize the matrix of values with size ``n x steps``.
 
         Args:
@@ -3044,7 +3044,7 @@ class Flag(Metric):
         """
         # TODO: TODO: this needs to act the same way as TrackedReference, using
         # NaN's instead of an internal step
-        self.value = np.zeros((n, steps))
+        self.value = np.zeros((steps,))
         self.internal_step = 0
 
     def eval(
