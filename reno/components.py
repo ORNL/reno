@@ -1507,6 +1507,7 @@ class TrackedReference(Reference):
     infinite recursion errors.)
 
     Note:
+        TODO: nope this is no longer the case, simplified by removing sample dimension entirely
         The shape of the value of a tracked reference depends on _sample_dim and
         _static with the following cases:
 
@@ -1620,11 +1621,6 @@ class TrackedReference(Reference):
         self.computed_mask: np.ndarray | bool = False
         """Follows same shape as value (up through first two dimensions), set of booleans
         indicating which values have already been evaluated and saved."""
-
-        self._sample_dim: bool = True
-        """Only used for statics, if a static equation has no row-index relevant
-        operations, no need to separately store an instance for every sample (the
-        batch dimension.)"""
 
         self._computing_shape: bool = False
         """Use to avoid infinite recursion on get_shape in a stock etc."""
@@ -1879,7 +1875,7 @@ class TrackedReference(Reference):
             # a re-compute wasn't explicitly requested
             if not force and self.value is not None:
                 # value/computed_mask shape cases
-                if self._static and not self._sample_dim:  # noqa: SIM102
+                if self._static:  # noqa: SIM102
                     # case 1, raw or (dim,)
                     if self.computed_mask:
                         return self.value
