@@ -132,8 +132,9 @@ class series_max(reno.components.AggregationOperation):
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
         axis = 0
-        if len(value.shape) != 1:
-            axis += 1
+        # NOTE: removed when sample dim removed
+        # if len(value.shape) != 1:
+        #     axis += 1
         return np.nanmax(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -187,8 +188,9 @@ class series_min(reno.components.AggregationOperation):
         if value is None:
             value = self.sub_equation_parts[0].eval(**kwargs)
         axis = 0
-        if len(value.shape) != 1:
-            axis += 1
+        # NOTE: removed when sample dim removed
+        # if len(value.shape) != 1:
+        #     axis += 1
         return np.nanmin(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -241,8 +243,9 @@ class mean(reno.components.AggregationOperation):
         # if value is None:
         value = self.sub_equation_parts[0].eval(**kwargs)
         axis = self.axis
-        if len(value.shape) != 1:
-            axis = self.axis + 1  # to account for "batch"/n dimension
+        # NOTE: removed when sample dim removed
+        # if len(value.shape) != 1:
+        #     axis = self.axis + 1  # to account for "batch"/n dimension
         return np.nanmean(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -283,8 +286,9 @@ class sum(reno.components.AggregationOperation):
         # if value is None:
         value = self.sub_equation_parts[0].eval(**kwargs)
         axis = self.axis
-        if len(value.shape) != 1:
-            axis = self.axis + 1  # to account for "batch"/n dimension
+        # NOTE: removed when sample dim removed
+        # if len(value.shape) != 1:
+        #     axis = self.axis + 1  # to account for "batch"/n dimension
         return np.nansum(value, axis=axis)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
@@ -323,6 +327,9 @@ class nonzero(reno.components.Operation):
 
         value = self.sub_equation_parts[0].eval(**kwargs)
         indices = np.nonzero(value)
+
+        # TODO: case where dim == 1 and we just have a time dim
+        # (we actually already have that case?)
 
         # say we start with
         # np.array([
@@ -436,8 +443,10 @@ class nanindex(reno.components.Operation):
         indices = np.where(
             indices < 0, (~np.isnan(value)).sum(axis=-1) + indices, indices
         )
-        # return value[..., indices]
-        return np.choose(indices, value.T)
+        if isinstance(indices, np.ndarray) and len(indices) > 1:
+            return np.choose(indices, value.T)
+        else:
+            return value[indices]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs)[
@@ -473,12 +482,12 @@ class index(reno.components.AggregationOperation):
         #     return value[self.sub_equation_parts[1].value]  # TODO: eval sub_eq_parts[1]?
 
         # return value[..., self.sub_equation_parts[1].value]
-        # TODO: does this need to use np.choose instead?
+        # TODO: which part of this is necessary for removing sample dim?
         indices = self.sub_equation_parts[1].eval(**kwargs)
         if isinstance(indices, np.ndarray) and len(indices) > 1:
             return np.choose(indices, value.T)
         else:
-            return value[..., indices]
+            return value[indices]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return self.sub_equation_parts[0].pt(**refs)[
@@ -559,7 +568,7 @@ class slice(reno.components.AggregationOperation):
         #     else:
         #         dims.append(slice(None, None))
         # print(dims)
-        return value[..., start:stop]
+        return value[start:stop]
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         if self.start is None and self.stop is None:
@@ -643,6 +652,11 @@ class orient_timeseries(reno.components.Operation):
             # do I instead need to ensure the save is true and then get .value?
             # this will only be relevant to solve when the pytensor general
             # history approach is solved
+
+            # NOTE: added during sample dim removal...
+            value = self.sub_equation_parts[0].value
+            # TODO: is it still the case that this will only work if we force
+            # pass a save param in the eval?
 
         count = t + 1
         if self.sub_equation_parts[0].is_static():
@@ -756,6 +770,8 @@ class orient_timeseries(reno.components.Operation):
 # ==================================================
 
 
+# NOTE: this might still be necessary even after removing sample dim,
+# for when dealing with timeseries and for eventual arbitrary multidim
 def adjust_shapes_for_n(
     *parts: list[reno.components.EquationPart], **kwargs: dict
 ) -> list[int | float | np.ndarray]:
