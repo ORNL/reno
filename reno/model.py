@@ -353,28 +353,28 @@ class Model:
             ref._shape = None
             ref._dtype = None
 
-    def _recursive_sub_populate_n_steps(self, n: int, steps: int) -> None:
-        """Recursively populate all submodel's n/steps settings."""
+    def _recursive_sub_populate_steps(self, steps: int) -> None:
+        """Recursively populate all submodel's steps settings."""
         # TODO: this feels like it shouldn't be necessary and also doesn't
         # handle if a ref is in another model that wasn't explicitly set as a
         # submodel of this one?
-        self.last_n = n
+        # self.last_n = n
         self.last_steps = steps
         for model in self.models:
-            model._recursive_sub_populate_n_steps(n, steps)
+            model._recursive_sub_populate_steps(steps)
 
-    def _populate(self, n: int, steps: int) -> None:
+    def _populate(self, steps: int) -> None:
         """Initialize all tracked references with appropriately sized numpy
         matrices.
         """
         self._reset_type_and_shape_info()
         self._find_all_extended_op_implicit_components()
-        self._recursive_sub_populate_n_steps(n, steps)
+        self._recursive_sub_populate_steps(steps)
 
         ref_compute_order = self.dependency_compute_order(inits_order=True)
 
         for ref in ref_compute_order:
-            ref.populate(n, steps)
+            ref.populate(steps)
 
     def _find_all_extended_op_implicit_components(self) -> None:
         """Go through every equation and assign any implicit components from
@@ -407,6 +407,14 @@ class Model:
         # recursively do this for submodels too
         for model in self.models:
             model._find_all_extended_op_implicit_components()
+
+
+    def sim_timestep_iter(self, steps: int = None, quiet: bool = True, debug: bool = False, label: str = None) -> Iterator:
+        # TODO: should this also take config? (no?)
+        # TODO: do we populate here? (no?)
+
+        # NOTE: should yield the global timestep float and level?
+        pass
 
     def simulate_timesteps(self, start: int = None, stop: int = None, quiet: bool = True, debug: bool = False, label: str = None, existing_dataset: xr.Dataset = None, existing_mask: xr.Dataset = None) -> Iterator:
         """Assumes already populated"""
