@@ -408,41 +408,83 @@ class Model:
         for model in self.models:
             model._find_all_extended_op_implicit_components()
 
-
-    def sim_timestep_iter(self, steps: int = None, quiet: bool = True, debug: bool = False, label: str = None) -> Iterator:
+    def sim_timestep_iter(
+        self,
+        steps: int = None,
+        quiet: bool = True,
+        debug: bool = False,
+        label: str = None,
+    ) -> Iterator:
         # TODO: should this also take config? (no?)
         # TODO: do we populate here? (no?)
 
-        # NOTE: should yield the global timestep float and level?
-        pass
-
-    def simulate_timesteps(self, start: int = None, stop: int = None, quiet: bool = True, debug: bool = False, label: str = None, existing_dataset: xr.Dataset = None, existing_mask: xr.Dataset = None) -> Iterator:
-        """Assumes already populated"""
-        
         ref_compute_order = self.dependency_compute_order(inits_order=False)
-
-        start = 1 if start is None else start
-        stop = self.steps if stop is None else stop
-
-        # TODO: compute initial values
-
-        for step in tqdm(range(start, stop), disable=quiet, desc=label):
+        for step in tqdm(range(steps), disable=quiet, desc=label):
             for ref in ref_compute_order:
                 ref.eval(step, save=True)
             yield
 
-        # TODO: compute metrics for just this one
+        # NOTE: should yield the global timestep float and level?
 
+    # def simulate_timesteps(self, start: int = None, stop: int = None, quiet: bool = True, debug: bool = False, label: str = None, existing_dataset: xr.Dataset = None, existing_mask: xr.Dataset = None) -> Iterator:
+    #     """Assumes already populated"""
+    #
+    #     ref_compute_order = self.dependency_compute_order(inits_order=False)
+    #
+    #     start = 1 if start is None else start
+    #     stop = self.steps if stop is None else stop
+    #
+    #     # TODO: compute initial values
+    #
+    #     for step in tqdm(range(start, stop), disable=quiet, desc=label):
+    #         for ref in ref_compute_order:
+    #             ref.eval(step, save=True)
+    #         yield
+    #
+    #    # TODO: compute metrics for just this one
 
-    def simulate_samples(self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False) -> Iterator:
+    def _run_sample(
+        self,
+        sample_index: int,
+        steps: int = None,
+        quiet: bool = True,
+        debug: bool = False,
+    ):
+        if steps is None:
+            steps = self.steps
+        self._populate(steps)
+
+        for step in self.sim_timestep_iter(
+            steps, True, debug, f"Sample {sample_index}"
+        ):
+            pass
+
+        self.run_metrics(steps)
+
+        # STRT: grab the XArray for this sample?
+        ds = self.sample_dataset()
+        return ds
+
+    def sim_sample_iter(
+        self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
+    ) -> Iterator:
         if n is None:
             n = self.n
         if steps is None:
             steps = self.steps
-        
-        pass
-            
 
+        for sample_index in tqdm(range(n), disable=quiet, total=n):
+            yield self._run_sample(sample_index)
+
+    # def simulate_samples(self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False) -> Iterator:
+    #     if n is None:
+    #         n = self.n
+    #     if steps is None:
+    #         steps = self.steps
+    #
+    #     pass
+    #
+    #
     def simulator(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
     ) -> Iterator:
@@ -479,15 +521,18 @@ class Model:
         """Run each step of the the full simulation. Leaving n and/or
         steps None will use the model's default (as defined in constructor).
         """
-        for step in self.simulator(n, steps, quiet, debug):
-            pass
+        # for step in self.simulator(n, steps, quiet, debug):
+        #     pass
+        sample_datasets = []
+        for sample_ds in self.sim_sample_iter(n, steps, quiet, debug):
+            sample_datasets.append(sample_ds)
 
-    def run_metrics(self, n: int = None, steps: int = None) -> None:
+        return xr.concat(sample_datasets, dim="sample")
+
+    def run_metrics(self, steps: int = None) -> None:
         """Run all metric equations on a completed simulation. Calling this
         function assumes the full simulation has already run.
         """
-        if n is None:
-            n = self.n
         if steps is None:
             steps = self.steps
 
@@ -496,7 +541,7 @@ class Model:
         # populate any metrics (only flags apply to every timestep currently)
         for metric in metrics:
             if isinstance(metric, reno.components.Flag):
-                metric.populate(n, steps)
+                metric.populate(steps)
 
         # compute flag boolean values for each sample at each timestep
         for step in range(1, steps):
@@ -886,6 +931,102 @@ class Model:
                 ref.populate(n, steps)
 
         # TODO: collect config as well?
+
+    def sample_dataset(self) -> xr.Dataset:
+        """Get the dataset from a single sample run."""
+        sub_dses = {}
+        if len(self.models) > 0:
+            for model in self.models:
+                sub_dses[model.name] = model.sample_dataset()
+        all_refs = self.stocks + self.flows + self.vars
+        all_refs = [ref for ref in all_refs if not ref.implicit]
+
+        # add non-static non-dim base refs (stocks, flows, vars)
+        # partial case 1, (sample, t)  (see TrackedReference for cases
+        # explanation)
+        ds = xr.Dataset(
+            {
+                ref.qual_name(): (
+                    ["sample", "step"],
+                    [ref.value],
+                )  # latter array wrap is for sample dim
+                for ref in all_refs
+                if not ref.is_static() and ref.dim == 1
+            },
+            coords={"step": (["step"], list(range(self.last_steps)))},
+            # attrs=self.get_nonrecursive_config(),  # this should only be dealt
+            # with at the very end of a sampling run
+        )
+
+        # handle any multi-dim refs
+        multidim_vars = {}
+        for ref in all_refs:
+            if ref.dim > 1:
+                vec_name = f"{ref.qual_name()}_vec"
+                if ref.is_static():
+                    # case 1, (dim,)
+                    dims = ["sample", vec_name]
+                    coords = {
+                        vec_name: ([vec_name], list(range(ref.dim))),
+                    }
+                    val = ref.value
+                    # TODO: I'm pretty sure this needs a repeat per last_n
+                    # with axis=0...a broadcast may not work
+                    val = np.broadcast_to(val, (ref.dim,))
+                    val = [val]  # sample dim
+                else:
+                    # partial case 1, (t, dim)
+                    dims = ["sample", "step", vec_name]
+                    coords = {
+                        "step": (["step"], list(range(self.last_steps))),
+                        vec_name: ([vec_name], list(range(ref.dim))),
+                    }
+                    val = [ref.value]  # sample dim
+
+                da = xr.DataArray(data=val, dims=dims, coords=coords)
+                multidim_vars[ref.qual_name()] = da
+        ds = ds.assign(multidim_vars)
+
+        # handle any static refs (don't change wrt to step)
+        # NOTE: this is only dealing with vectors right now, not single nums?
+        static_refs = {}
+        for ref in all_refs:
+            if ref.is_static() and ref.dim == 1:
+                val = [ref.value]  # sample dim?
+                # # TODO: geeeez there's got to be a better way?? np.min/max etc.
+                # # will return a numpy.int even if the inputs are not numpy
+                # # types (e.g. python int)
+                # if (
+                #     isinstance(ref.value, (int, float))
+                #     or (isinstance(ref.value, np.ndarray) and len(ref.value.shape) == 0)
+                # ):
+                #     #val = np.broadcast_to(ref.value, (self.last_n,))
+                #     val = [ref.value]  # sample dim?
+                static_refs[ref.qual_name()] = (["sample"], val)
+        ds = ds.assign(static_refs)
+
+        # add metrics, note that some metrics will be 1 per sample, others will
+        # be 1 per step
+        new_vars = {}
+        for metric in self.metrics:
+            val = [metric.value]  # sample dim
+            # if metric.is_static():
+            #     # bleh, see note above
+            #     if (
+            #         isinstance(val, (int, float))
+            #         or (isinstance(val, np.ndarray) and len(val.shape) == 0)
+            #         or (len(val.shape) > 0 and val.shape[0] != self.last_n)
+            #         or len(val.shape) == 0
+            #     ):
+            #         val = np.broadcast_to(val, (self.last_n,))
+            coords = ["sample"] if metric.is_static() else ["sample", "step"]
+            new_vars[metric.qual_name()] = (coords, val)
+        ds = ds.assign(new_vars)
+
+        ds_to_merge = [ds]  # , *list(sub_dses.values())]
+        ds_to_merge.extend(sub_dses.values())
+        ds_merged = xr.merge(ds_to_merge)
+        return ds_merged
 
     def dataset(self) -> xr.Dataset:  # noqa: C901
         """Turn all of the model's tracked reference values into an xarray dataset,
