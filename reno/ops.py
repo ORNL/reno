@@ -2394,25 +2394,31 @@ class List(reno.components.Distribution):
             return bool
         return type(value)
 
-    def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
-        repetitions = n / len(self.values)
-        # if the specified value is _larger_ than the samples, we have to
-        # truncate (and warn, does the user know this is what's happening?)
-        if repetitions < 1:
-            warnings.warn(
-                f"Not enough samples in simulation to hit every value in list '{self.values}', would require at least `n={len(self.values)}`",
-                RuntimeWarning,
-            )
-            expanded = np.array(self.values)
-        else:
-            expanded = np.tile(self.values, math.ceil(repetitions))
-        self.value = expanded[:n]
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        index = 0
+        if self.model is not None:
+            index = self.model._current_sample_index
+        # repetitions = n / len(self.values)
+        # # if the specified value is _larger_ than the samples, we have to
+        # # truncate (and warn, does the user know this is what's happening?)
+        # if repetitions < 1:
+        #     warnings.warn(
+        #         f"Not enough samples in simulation to hit every value in list '{self.values}', would require at least `n={len(self.values)}`",
+        #         RuntimeWarning,
+        #     )
+        #     expanded = np.array(self.values)
+        # else:
+        #     expanded = np.tile(self.values, math.ceil(repetitions))
+        # self.value = expanded[:n][index]
+
+        self.value = self.values[index % len(self.values)]
+        
         # handle repetitions for multidim lists
-        if dim > 1:  # noqa: SIM102
-            if (
-                isinstance(self.values, np.ndarray) and len(self.values.shape) == 1
-            ) or not isinstance(self.values[0], (list, set)):
-                self.value = np.repeat(np.expand_dims(self.value, axis=1), dim, axis=1)
+        # if dim > 1:  # noqa: SIM102
+        #     if (
+        #         isinstance(self.values, np.ndarray) and len(self.values.shape) == 1
+        #     ) or not isinstance(self.values[0], (list, set)):
+        #         self.value = np.repeat(np.expand_dims(self.value, axis=1), dim, axis=1)[index]
 
     def __repr__(self) -> str:
         return f"List({self.values})"

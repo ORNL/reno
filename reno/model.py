@@ -155,6 +155,10 @@ class Model:
         """If there are any groups/cgroups that shouldn't be displayed in the stock
         flow diagram by default, list them here."""
 
+        self._current_sample_index: int = 0
+        """Running a sample will track the current index here, specifically so that list distributions
+        can determine which value to return."""
+
         if Model.get_context() is not None:
             Model.get_context()._unnamed_references.append(self)
 
@@ -443,6 +447,12 @@ class Model:
     #
     #    # TODO: compute metrics for just this one
 
+    def _set_sample_index(self, sample_index: int):
+        """Recursively pass sample index down into every submodel."""
+        self._current_sample_index = sample_index
+        for model in self.models:
+            model._set_sample_index(sample_index)
+    
     def _run_sample(
         self,
         sample_index: int,
@@ -452,6 +462,7 @@ class Model:
     ):
         if steps is None:
             steps = self.steps
+        self._set_sample_index(sample_index)
         self._populate(steps)
 
         for step in self.sim_timestep_iter(
