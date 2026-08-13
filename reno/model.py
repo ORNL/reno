@@ -485,35 +485,35 @@ class Model:
     #     pass
     #
     #
-    def simulator(
-        self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
-    ) -> Iterator:
-        """An iterator to use for running the simulation step by step. Leaving n and/or
-        steps None will use the model's default (as defined in constructor).
-        """
-        if n is None:
-            n = self.n
-        if steps is None:
-            steps = self.steps
-
-        self._recursive_sub_populate_n_steps(
-            n, steps
-        )  # TODO: (2025.07.28) isn't this redundant?
-        # (should already be being handled in _populate?)
-        self._populate(n, steps)
-
-        # note that dependency_compute_order includes all submodels' refs
-        ref_compute_order = self.dependency_compute_order(inits_order=False)
-
-        for step in tqdm(range(1, steps), disable=quiet, desc=self.name):
-            if debug:
-                print("Beginning step", step, self.name)
-            for ref in ref_compute_order:
-                ref.eval(step, save=True)
-            yield
-
-        self.run_metrics(n, steps)
-
+    # def simulator(
+    #     self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
+    # ) -> Iterator:
+    #     """An iterator to use for running the simulation step by step. Leaving n and/or
+    #     steps None will use the model's default (as defined in constructor).
+    #     """
+    #     if n is None:
+    #         n = self.n
+    #     if steps is None:
+    #         steps = self.steps
+    #
+    #     self._recursive_sub_populate_n_steps(
+    #         n, steps
+    #     )  # TODO: (2025.07.28) isn't this redundant?
+    #     # (should already be being handled in _populate?)
+    #     self._populate(n, steps)
+    #
+    #     # note that dependency_compute_order includes all submodels' refs
+    #     ref_compute_order = self.dependency_compute_order(inits_order=False)
+    #
+    #     for step in tqdm(range(1, steps), disable=quiet, desc=self.name):
+    #         if debug:
+    #             print("Beginning step", step, self.name)
+    #         for ref in ref_compute_order:
+    #             ref.eval(step, save=True)
+    #         yield
+    #
+    #     self.run_metrics(n, steps)
+    #
     # TODO: this function feels unnecessary
     def simulate(
         self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
@@ -527,7 +527,26 @@ class Model:
         for sample_ds in self.sim_sample_iter(n, steps, quiet, debug):
             sample_datasets.append(sample_ds)
 
-        return xr.concat(sample_datasets, dim="sample")
+        full_ds = xr.concat(sample_datasets, dim="sample")
+        full_ds = full_ds.assign_attrs(self.get_attrs())
+        full_ds = full_ds.assign_coords(
+            {"sample": (["sample"], list(range(len(sample_datasets))))}
+        )
+        return full_ds
+
+    def get_attrs(self) -> dict:
+        self_attrs = self.get_nonrecursive_config()
+
+        all_attrs = {}
+        for model in self.models:
+            sub_attrs = model.get_attrs()
+            renamed_sub_attrs = {}
+            for attr in sub_attrs:
+                renamed_sub_attrs[f"{model.name}.{attr}"] = sub_attrs[attr]
+            all_attrs.update(renamed_sub_attrs)
+
+        all_attrs.update(self_attrs)
+        return all_attrs
 
     def run_metrics(self, steps: int = None) -> None:
         """Run all metric equations on a completed simulation. Calling this
