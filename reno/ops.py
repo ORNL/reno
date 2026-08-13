@@ -5,8 +5,6 @@ similar in principle to what something like PyTensor is doing.
 # make it so we don't have to quote every type annotation ever
 from __future__ import annotations
 
-import math
-import warnings
 from typing import Any, TypeAlias
 
 import numpy as np
@@ -2366,6 +2364,7 @@ class List(reno.components.Distribution):
     def __init__(self, values: list | np.ndarray | set):
         super().__init__()
         self.values = values
+        self._sample_index = 0
 
     def op_latex(self, **kwargs: dict) -> str:
         return f"{self.values}"
@@ -2395,9 +2394,7 @@ class List(reno.components.Distribution):
         return type(value)
 
     def populate(self, steps: int = 0, dim: int = 1) -> None:
-        index = 0
-        if self.model is not None:
-            index = self.model._current_sample_index
+        index = self._sample_index
         # repetitions = n / len(self.values)
         # # if the specified value is _larger_ than the samples, we have to
         # # truncate (and warn, does the user know this is what's happening?)
@@ -2412,9 +2409,9 @@ class List(reno.components.Distribution):
         # self.value = expanded[:n][index]
 
         self.value = self.values[index % len(self.values)]
-        
+
         # handle repetitions for multidim lists
-        # if dim > 1:  # noqa: SIM102
+        # if dim > 1:
         #     if (
         #         isinstance(self.values, np.ndarray) and len(self.values.shape) == 1
         #     ) or not isinstance(self.values[0], (list, set)):

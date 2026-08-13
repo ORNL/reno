@@ -452,7 +452,14 @@ class Model:
         self._current_sample_index = sample_index
         for model in self.models:
             model._set_sample_index(sample_index)
-    
+
+        list_dists = []
+        for ref in self.flows + self.vars + self.stocks:
+            list_dists.extend(ref.find_parts_of_type(reno.ops.List))
+
+        for list_dist in list_dists:
+            list_dist._sample_index = sample_index
+
     def _run_sample(
         self,
         sample_index: int,
@@ -485,7 +492,7 @@ class Model:
             steps = self.steps
 
         for sample_index in tqdm(range(n), disable=quiet, total=n):
-            yield self._run_sample(sample_index)
+            yield self._run_sample(sample_index, steps=steps)
 
     # def simulate_samples(self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False) -> Iterator:
     #     if n is None:
@@ -1238,9 +1245,9 @@ class Model:
             steps = self.steps
 
         # run the simulation
-        self.simulate(n, steps)
+        ds = self.simulate(n, steps)
 
-        ds = self.dataset()
+        # ds = self.dataset()
 
         # revert config unless explicitly requested to keep it
         if not keep_config:

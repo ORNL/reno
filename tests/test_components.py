@@ -21,42 +21,50 @@ def test_list_dist(input_list, sample_size, expected_output):
     """Specifying a list distribution and populating with various sample sizes
     should tile appropriately."""
 
-    ldist = ops.List(input_list)
-    if sample_size < len(input_list):
-        with pytest.warns(RuntimeWarning):
-            ldist.populate(sample_size)
-    else:
-        ldist.populate(sample_size)
-    assert (ldist.value == expected_output).all()
+    m = Model()
+    with m:
+        ldist = ops.List(input_list)
+        v = Variable(ldist)
+    ds = m(n=sample_size)
+    print(ds.v.values)
+    print(expected_output)
+    assert (ds.v.values == expected_output).all()
+
+    # if sample_size < len(input_list):
+    #     with pytest.warns(RuntimeWarning):
+    #         ldist.populate(sample_size)
+    # else:
+    #     ldist.populate(sample_size)
+    # assert (ldist.value == expected_output).all()
 
 
 def test_static_check_scalar():
     """Flows and variables whose equations are just a scalar should be static."""
 
     f0 = Flow(Scalar(5))
-    f0.populate(5, 5)
+    f0.populate(5)
     assert f0._static
 
 
 def test_static_check_dist():
     """Flows and variables whose equations are just distributions should be static."""
     v0 = Variable(ops.List([1, 2]))
-    v0.populate(5, 5)
+    v0.populate(5)
     assert v0._static
 
     f0 = Flow(ops.List([1, 2]))
-    f0.populate(5, 5)
+    f0.populate(5)
     assert f0._static
 
 
 def test_static_check_static_eq():
     """Flows and variables whose equations are purely static should be static."""
     v0 = Variable(Scalar(2) + 1)
-    v0.populate(5, 5)
+    v0.populate(5)
     assert v0._static
 
     f0 = Flow(Scalar(2) + 1)
-    f0.populate(5, 5)
+    f0.populate(5)
     assert f0._static
 
 
@@ -71,7 +79,7 @@ def test_static_check_static_eq_w_refs():
 
     m.f0 = Flow(Scalar(2) + 1 + m.v)
 
-    m._populate(5, 5)
+    m._populate(5)
 
     assert m.v0._static
     assert m.f0._static
@@ -87,11 +95,11 @@ def test_static_check_eq_w_refs():
     t = TimeRef()
 
     v0 = Variable(Scalar(2) + 1 + t)
-    v0.populate(5, 5)
+    v0.populate(5)
     assert not v0._static
 
     f0 = Flow(Scalar(2) + 1 + t)
-    f0.populate(5, 5)
+    f0.populate(5)
     assert not f0._static
 
 
@@ -132,8 +140,8 @@ def test_static_check_static_flow_but_dynamic_limits():
     m.v = Variable(Scalar(1), max=t)
     m.f = Flow(Scalar(1), max=t)
 
-    m.v.populate(5, 5)
-    m.f.populate(5, 5)
+    m.v.populate(5)
+    m.f.populate(5)
 
     assert not m.v._static
     assert not m.f._static
@@ -160,9 +168,8 @@ def test_static_check_eq_with_historical_value():
     v1.name = "v1"
     f0.name = "f0"
 
-    v0.populate(5, 5)
-    # v1.populate(5, 5)
-    f0.populate(5, 5)
+    v0.populate(5)
+    f0.populate(5)
 
     assert not v1.is_static()
     assert not f0.is_static()
@@ -277,7 +284,7 @@ def test_populate_scalar_w_dims():
     """Populating a variable that is assigned a static single value but provided a dim > 1 should
     correctly broadcast to a full dim sized repeat of that value."""
     thing = Variable(5, dim=4)
-    thing.populate(1, 5)
+    thing.populate(5)
     print(thing.value)
     assert thing.value.shape == (4,)
 
@@ -286,8 +293,8 @@ def test_multidim_scalar_eval():
     """Running eval on a static scalar with additional dim should return the expanded array I think."""
     thing1 = Variable([1, 2, 3, 4], dim=4)
     thing2 = Variable(2, dim=4)
-    thing1.populate(1, 1)
-    thing2.populate(1, 1)
+    thing1.populate(1)
+    thing2.populate(1)
 
     assert (thing1.value == [1, 2, 3, 4]).all()
     assert (thing1.eval(0) == [1, 2, 3, 4]).all()
@@ -347,10 +354,10 @@ def test_dtype_transfer():
     assert v5.dtype == bool
     assert v6.dtype == float
 
-    v1.populate(1, 1)
-    v2.populate(1, 1)
-    v6.populate(1, 1)
-    v7.populate(1, 1)
+    v1.populate(1)
+    v2.populate(1)
+    v6.populate(1)
+    v7.populate(1)
     assert v7.dtype == int
     assert v7.value == 2
     assert type(v7.value) is int
