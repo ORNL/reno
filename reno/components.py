@@ -1927,7 +1927,11 @@ class TrackedReference(Reference):
             # (e.g. Variable(5, dim=6) needs to return [5, 5, 5, 5, 5, 5] both
             # times)
             if self.dim > 1:
-                val = np.broadcast_to(val, (self.dim,))
+                if not isinstance(val, np.ndarray):
+                    val = np.broadcast_to(val, (self.dim,))
+                else:
+                    val = np.pad(val, (0, self.dim - val.shape[0]))
+
                 # if not isinstance(val, np.ndarray):
                 #     val = np.array([val])
                 # if val.shape[-1] == 1:
@@ -2330,6 +2334,19 @@ class Flow(TrackedReference):
                 init_eq = self._implied_eq()
             resolved_init_value = self.resolve_init_array(init_eq)
 
+            if self.dim > 1:
+                # TODO: make sure this logic is replicated into flow as
+                # well?
+                if not isinstance(resolved_init_value, np.ndarray):
+                    resolved_init_value = np.broadcast_to(
+                        resolved_init_value, (self.dim,)
+                    )
+                else:
+                    resolved_init_value = np.pad(
+                        resolved_init_value,
+                        (0, self.dim - resolved_init_value.shape[0]),
+                    )
+
             # value shape cases for value assignment
             if self._static:
                 # case 1, simplest, raw value or (dim,)
@@ -2343,11 +2360,10 @@ class Flow(TrackedReference):
                 # in the correctly repeated value at that point? We shouldn't be
                 # responsible for that and it's a little weird.
                 # ensure the value matches a manually specified dimensionality
-                if self.dim > 1:
-                    # ensure
-                    resolved_init_value = np.broadcast_to(
-                        resolved_init_value, (self.dim,)
-                    )
+                # # ensure
+                # resolved_init_value = np.broadcast_to(
+                #     resolved_init_value, (self.dim,)
+                # )
 
                 # ensure correct type (only needed in this case, other cases
                 # don't re-assign container value)
@@ -2520,12 +2536,25 @@ class Variable(TrackedReference):
                 init_eq = self._implied_eq()
             resolved_init_value = self.resolve_init_array(init_eq)
 
-            # value shape cases for value assignment
-            if self._static:
-                if self.dim > 1:
+            if self.dim > 1:
+                # TODO: make sure this logic is replicated into flow as
+                # well?
+                if not isinstance(resolved_init_value, np.ndarray):
                     resolved_init_value = np.broadcast_to(
                         resolved_init_value, (self.dim,)
                     )
+                else:
+                    resolved_init_value = np.pad(
+                        resolved_init_value,
+                        (0, self.dim - resolved_init_value.shape[0]),
+                    )
+
+            # value shape cases for value assignment
+            if self._static:
+                # if self.dim > 1:
+                #     resolved_init_value = np.broadcast_to(
+                #         resolved_init_value, (self.dim,)
+                #     )
 
                 # ensure correct type (only needed in this case, other cases
                 # don't re-assign container value)

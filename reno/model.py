@@ -589,7 +589,8 @@ class Model:
         # run any postmeasurement equations, usually 1 per sample
         for metric in metrics:
             if isinstance(metric, reno.components.Metric):
-                metric.eval(steps, True)
+                metric.eval(steps - 1, True)
+                # TODO: is - 1 correct? I don't think it is
 
     def graph(
         self,

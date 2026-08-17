@@ -642,17 +642,25 @@ class orient_timeseries(reno.components.Operation):
         return True
 
     def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
-        full_steps = self.sub_equation_parts[0].model.steps
+        # if self.sub_equation_parts[0].model is not None:
+        #     full_steps = self.sub_equation_parts[0].model.steps
+        # elif self.sub_equation_parts[0].value is not None and reno.utils.shapiness(self.sub_equation_parts[0].value) > 0 and not self.sub_equation_parts[0].is_static():
+        #     full_steps = len(self.sub_equation_parts[0].value)
+        # else:
+        #     full_steps = 10
+        #
+
         values = []
-        for i in range(t):
+        for i in range(t + 1):
             values.append(self.sub_equation_parts[0].eval(i, **kwargs))
 
-        remainder = full_steps - t
+        # remainder = full_steps - (t + 1)
         # NOTE: ...this is the dumbest way possible to ensure type is kept...but
-        # it works?
+        # it works? I'm going to claim that with horseshoe theory, this is so
+        # dumb that it's actually smart.
         zero_value = values[0] * 0
-        for i in range(remainder):
-            values.append(zero_value)
+        # for i in range(remainder):
+        #     values.append(zero_value)
 
         return np.array(values)
 
