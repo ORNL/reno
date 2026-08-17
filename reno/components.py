@@ -1627,6 +1627,12 @@ class TrackedReference(Reference):
         self._computing_type: bool = False
         """Use to avoid infinite recursion on get_type in a stock etc."""
 
+        self._populated: bool = False
+        """We use this to help force population if manually running an eval
+        on a tracked reference before it's been populated (e.g. if you're testing
+        how an equation works). Relying on this for anything outside of that
+        case is probably unwise."""
+
         # handle if within a context_manager, tell the manager to eventually
         # appropriately find the name for this reference and add it to the
         # model.
@@ -1751,6 +1757,17 @@ class TrackedReference(Reference):
         self._computing_type = False
         return type_
 
+    def _default_populate(self) -> None:
+        """Used to force populate if eval called on a tracked ref outside
+        of the context of a model or before a model has been populated.
+
+        (e.g. if testing operations out.)
+        """
+        steps = 10
+        if self.model is not None:
+            steps = self.model.steps
+        self.populate(steps)
+
     def populate(self, steps: int) -> None:
         """Initialize the array of values with size ``steps``.
 
@@ -1759,6 +1776,7 @@ class TrackedReference(Reference):
         """
         # TODO: not sure if auto checking for staticness _here_ is the correct
         # place
+        self._populated = True
         self._determine_if_static()
         dtype = self.dtype
         if dtype is None:
@@ -1856,6 +1874,11 @@ class TrackedReference(Reference):
         passed through all other ``.eval()`` methods.
         """
         try:
+            if not self._populated:
+                # NOTE: this should only occur if manually testing evaluating
+                # an equation with a tracked reference in it.
+                self._default_populate()
+
             # dims = [slice(None, None), t]  # value[:, t]
             # # if self.dim > 1:
             # #     dims = [slice(None, None), t, slice(None, None)]  # value[:, :, t]

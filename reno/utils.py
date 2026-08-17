@@ -19,6 +19,30 @@ EQ_HIGHLIGHT_COLOR = "cyan"
 VAL_COLOR = "lime"
 
 
+def shapiness(value: Any) -> int:
+    """Returns the number of dimensions of a thing, regardless of whether it's a list,
+    numpy array, or single value.
+
+    It's like thruthiness, but for size!
+    """
+    if isinstance(
+        value, (int, float, bool, np.int32, np.int64, np.bool, np.float32, np.float64)
+    ):
+        return 0
+
+    if isinstance(value, list):
+        dims = 1
+        next_sub_val = value[0]
+        while isinstance(next_sub_val, list):
+            dims += 1
+            next_sub_val = next_sub_val[0]
+
+    if isinstance(value, np.ndarray):
+        return len(value.shape)
+
+    return -1
+
+
 def _get_assigned_var_name(var: Any) -> str | None:
     """Inspect the current frame (e.g. within a context manager) and find the variable
     name of the passed variable.

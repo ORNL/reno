@@ -589,8 +589,7 @@ class Model:
         # run any postmeasurement equations, usually 1 per sample
         for metric in metrics:
             if isinstance(metric, reno.components.Metric):
-                metric.eval(steps - 1, True)
-                # TODO: is - 1 correct? I don't think it is
+                metric.eval(steps, True)
 
     def graph(
         self,
@@ -1056,7 +1055,14 @@ class Model:
             #         or len(val.shape) == 0
             #     ):
             #         val = np.broadcast_to(val, (self.last_n,))
-            coords = ["sample"] if metric.is_static() else ["sample", "step"]
+
+            if metric.is_static or reno.utils.shapiness(metric.value) == 0:
+                coords = ["sample"]
+            else:
+                coords = ["sample", "step"]
+
+            # coords = ["sample"] if metric.is_static() else ["sample", "step"]
+
             new_vars[metric.qual_name()] = (coords, val)
         ds = ds.assign(new_vars)
 

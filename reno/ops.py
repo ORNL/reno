@@ -642,39 +642,19 @@ class orient_timeseries(reno.components.Operation):
         return True
 
     def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
-        value = self.sub_equation_parts[0].value
-        if value is None:
-            value = self.sub_equation_parts[0].eval(t, **kwargs)
-            # TODO: is this right?? This isn't the same as getting .value because may
-            # not include full time series...
-            # do I instead need to ensure the save is true and then get .value?
-            # this will only be relevant to solve when the pytensor general
-            # history approach is solved
+        full_steps = self.sub_equation_parts[0].model.steps
+        values = []
+        for i in range(t):
+            values.append(self.sub_equation_parts[0].eval(i, **kwargs))
 
-            # NOTE: added during sample dim removal...
-            value = self.sub_equation_parts[0].value
-            # TODO: is it still the case that this will only work if we force
-            # pass a save param in the eval?
+        remainder = full_steps - t
+        # NOTE: ...this is the dumbest way possible to ensure type is kept...but
+        # it works?
+        zero_value = values[0] * 0
+        for i in range(remainder):
+            values.append(zero_value)
 
-        count = t + 1
-        if self.sub_equation_parts[0].is_static():
-            remaining = 0
-            if (
-                hasattr(self.sub_equation_parts[0], "model")
-                and self.sub_equation_parts[0].model is not None
-            ):
-                remaining = self.sub_equation_parts[0].model.steps - count
-            if isinstance(value, (float, int)):
-                return np.concatenate(
-                    [
-                        np.array([np.array([value]).repeat(count)]),
-                        np.array([np.array([0]).repeat(remaining)]),
-                    ],
-                    axis=1,
-                )
-            if len(value.shape) == 1:
-                return value[:, None].repeat(count, axis=1)
-        return value
+        return np.array(values)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         # NOTE: have to have a time ref for this to work, so we add one if none

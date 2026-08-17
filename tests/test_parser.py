@@ -116,7 +116,7 @@ def test_prefix_parsing_w_resolution():
     """References should correctly resolve during prefix parsing."""
     v = Variable(Scalar(2))
     v.name = "v"
-    v.populate(1, 1)
+    v.populate(1)
 
     op = parser.parse("(+ 3 'v')", {"v": v})
     assert op.eval(0) == 5

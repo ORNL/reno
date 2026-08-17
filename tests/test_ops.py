@@ -19,8 +19,9 @@ def test_sum_on_matrix():
 def test_sum_on_vector():
     """Running ops.sum on a vector (static variable) should give you the row-wise
     "sum" which is just the value times the number of timesteps."""
-    v = Variable()
-    v.value = np.array([2, 3])
+    v = Variable(2)
+    # v.value = np.array([2, 3])
+    print(ops.sum(ops.orient_timeseries(v)).eval(3))
 
     assert (ops.sum(ops.orient_timeseries(v)).eval(3) == np.array([[8, 12]])).all()
 
