@@ -1046,7 +1046,7 @@ class Model:
         # be 1 per step
         new_vars = {}
         for metric in self.metrics:
-            val = [metric.value]  # sample dim
+            val = np.asarray([metric.value])  # sample dim
             # if metric.is_static():
             #     # bleh, see note above
             #     if (
@@ -1057,10 +1057,17 @@ class Model:
             #     ):
             #         val = np.broadcast_to(val, (self.last_n,))
 
-            if metric.is_static or reno.utils.shapiness(metric.value) == 0:
+            # if metric.is_static or reno.utils.shapiness(metric.value) == 0:
+            if reno.utils.shapiness(val) == 1:
                 coords = ["sample"]
-            else:
+            elif reno.utils.shapiness(val) == 2 and isinstance(
+                metric, reno.components.Flag
+            ):
                 coords = ["sample", "step"]
+            elif reno.utils.shapiness(val) == 2:
+                coords = ["sample", f"{metric.qual_name()}_vec"]
+            else:
+                coords = ["sample", "step", f"{metric.qual_name()}_vec"]
 
             # coords = ["sample"] if metric.is_static() else ["sample", "step"]
 

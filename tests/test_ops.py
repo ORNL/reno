@@ -200,8 +200,8 @@ def test_slice_on_scalar():
     """Slicing a scalar should result in a 2d array. (Otherwise
     series ops won't work correctly on the expanded slice.)"""
     v = Variable(Scalar(5))
-    assert (v.timeseries[:].eval(4) == np.array([[5, 5, 5, 5, 5]])).all()
-    assert v.timeseries[:].eval(4).shape == np.array([[5, 5, 5, 5, 5]]).shape
+    assert (v.timeseries[:].eval(4) == np.array([5, 5, 5, 5, 5])).all()
+    assert v.timeseries[:].eval(4).shape == np.array([5, 5, 5, 5, 5]).shape
 
 
 def test_index_directly_on_scalar():
@@ -333,8 +333,8 @@ def test_slice_end_t_is_correct_simpler():
     """A slice stop of none should actually technically be t+1 to be inclusive of current timestep? (This test is
     proof of why, getting index 0 shouldn't be nothing)"""
     v = Variable(Scalar(np.array([2, 3])))
-    assert (v.timeseries[:].eval(0) == np.array([[2], [3]])).all()
-    assert v.timeseries[:].eval(0).shape == np.array([[2], [3]]).shape
+    assert (v.timeseries[:].eval(0) == np.array([[2, 3]])).all()
+    assert v.timeseries[:].eval(0).shape == np.array([[2, 3]]).shape
 
 
 def test_slice_end_t_is_correct():
