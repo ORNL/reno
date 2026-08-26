@@ -1260,7 +1260,8 @@ class Model:
             sample_func = pm.sample_smc if smc else pm.sample
             if observations is None:
                 sample_func = pm.sample_prior_predictive
-                sampling_kwargs = dict(draws=n)
+                # sampling_kwargs = dict(draws=n)
+                sampling_kwargs["draws"] = n
             if trace_prior is None:
                 # forcing a FAST_COMPILE mode for prior predictive because
                 # compiling models with very large numbers of variables can
@@ -1268,8 +1269,12 @@ class Model:
                 # sample_prior_predictive).
                 prior_compile_kwargs = deepcopy(compile_kwargs)
                 prior_compile_kwargs["mode"] = "FAST_COMPILE"
+
+                prior_sample_kwargs = deepcopy(sampling_kwargs)
+                prior_sample_kwargs["draws"] = n
+                del prior_sample_kwargs["cores"]
                 trace_prior = pm.sample_prior_predictive(
-                    n, compile_kwargs=dict(**prior_compile_kwargs)
+                    compile_kwargs=dict(**prior_compile_kwargs), **prior_sample_kwargs
                 )
                 # NOTE: sample_prior_predictive will mutate the passed in
                 # dictionary, since I'm using it later, I make a separate copy
