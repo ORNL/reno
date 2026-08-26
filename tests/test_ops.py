@@ -509,12 +509,16 @@ def test_delays_against_insight_maker():
 
 def test_multidim_list():
     """Adding a dim to the List distribution should repeat each "row" value to the given number of columns."""
-    my_list = ops.List([0, 1, 2])
-    my_list.populate(3)
-    assert (my_list.value == np.array([0, 1, 2])).all()
+    m = model.Model()
+    with m:
+        my_list = Variable(ops.List([0, 1, 2]))
+    # my_list.populate(3)
+    ds = m(n=3)
+    assert (ds.my_list.values == np.array([0, 1, 2])).all()
 
-    my_list.populate(3, dim=2)
-    assert (my_list.value == np.array([[0, 0], [1, 1], [2, 2]])).all()
+    my_list.dim = 2
+    ds = m(n=3)
+    assert (ds.my_list.values == np.array([[0, 0], [1, 1], [2, 2]])).all()
 
 
 def test_multidim_categorical():
