@@ -523,12 +523,16 @@ def test_multidim_list():
 
 def test_multidim_categorical():
     """Adding a dim to the Categorical distribution should return a randomized category matrix."""
-    my_cats = ops.Categorical([0.25, 0.25, 0.25, 0.25])
-    my_cats.populate(4)
-    assert my_cats.value.shape == (4,)
+    m = model.Model()
+    with m:
+        my_cats = Variable(ops.Categorical([0.25, 0.25, 0.25, 0.25]))
+    # my_cats.populate(4)
+    ds = m(n=4)
+    assert ds.my_cats.values.shape == (4,)
 
-    my_cats.populate(4, dim=3)
-    assert my_cats.value.shape == (4, 3)
+    my_cats.dim = 3
+    ds = m(n=4)
+    assert ds.my_cats.values.shape == (4, 3)
 
 
 def test_multidim_vector():
