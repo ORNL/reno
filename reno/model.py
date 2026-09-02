@@ -1224,6 +1224,9 @@ class Model:
 
         if sampling_kwargs is None:
             sampling_kwargs = dict()
+        else:
+            # make sure we don't mutate the passer's dictionary...
+            sampling_kwargs = deepcopy(sampling_kwargs)
 
         if "cores" not in sampling_kwargs:
             sampling_kwargs["cores"] = 4
@@ -1262,6 +1265,7 @@ class Model:
                 sample_func = pm.sample_prior_predictive
                 # sampling_kwargs = dict(draws=n)
                 sampling_kwargs["draws"] = n
+                del sampling_kwargs["cores"]
             if trace_prior is None:
                 # forcing a FAST_COMPILE mode for prior predictive because
                 # compiling models with very large numbers of variables can
@@ -1272,7 +1276,8 @@ class Model:
 
                 prior_sample_kwargs = deepcopy(sampling_kwargs)
                 prior_sample_kwargs["draws"] = n
-                del prior_sample_kwargs["cores"]
+                if "cores" in prior_sample_kwargs:
+                    del prior_sample_kwargs["cores"]
                 trace_prior = pm.sample_prior_predictive(
                     compile_kwargs=dict(**prior_compile_kwargs), **prior_sample_kwargs
                 )
