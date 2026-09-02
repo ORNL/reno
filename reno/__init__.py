@@ -98,7 +98,7 @@ from reno.viz import (
 
 warnings.simplefilter("always", RuntimeWarning)
 
-__version__ = "0.14.0"
+__version__ = "0.14.1"
 
 __all__ = [
     "Bernoulli",
