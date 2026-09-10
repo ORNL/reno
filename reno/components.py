@@ -449,6 +449,8 @@ class EquationPart:
             if isinstance(part, search_type):
                 matching_parts.append(part)
 
+            # if isinstance(part, str):
+            # print(part)
             matching_parts.extend(part.find_parts_of_type(search_type, already_checked))
         return matching_parts
 
@@ -2643,7 +2645,7 @@ class Stock(TrackedReference):
             implicit_inflow.implicit = True
             implicit_inflow._implicit_target = self
             implicit_inflow._implicit_target_index = len(self.in_flows)
-            name = f"_implicit_inflow_{self.name}_{len(self.in_flows)}"  # + str(id(implicit_inflow))
+            name = f"_implicit_inflow_{self.qual_name()}_{len(self.in_flows)}"  # + str(id(implicit_inflow))
             implicit_inflow.name = name
             self.add_inflow(implicit_inflow)
             if self.model is not None:

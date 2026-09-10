@@ -2052,6 +2052,12 @@ class Normal(reno.components.Distribution):
 
     def populate(self, n: int, steps: int = 0, dim: int = 1) -> None:
         dims = dist_shape(self, n, steps, dim)
+        print(
+            "Trying to populate with ",
+            self.sub_equation_parts[0].eval(),
+            self.sub_equation_parts[1].eval(),
+        )
+
         self.value = np.random.normal(
             self.sub_equation_parts[0].eval(),
             self.sub_equation_parts[1].eval(),

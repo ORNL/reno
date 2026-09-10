@@ -30,6 +30,7 @@ def parse(
     Returns:
         An EquationPart populated with recursive sub_equation_parts.
     """
+    # print(f"Parsing '{string}'")
     try:
         string = string.strip()
 
@@ -40,9 +41,9 @@ def parse(
 
         # check if we need to do python style parsing (e.g. a distribution definition)
         try:
-            class_or_scalar_conversion = parse_class_or_scalar(string)
-            if isinstance(class_or_scalar_conversion, (float, int)):
-                return reno.components.Scalar(class_or_scalar_conversion)
+            class_or_scalar_conversion = parse_class_or_scalar(string, refs)
+            # if isinstance(class_or_scalar_conversion, (float, int)):
+            #     return reno.components.Scalar(class_or_scalar_conversion)
             return class_or_scalar_conversion
         except SyntaxError:
             # no handling needed, this just means we couldn't parse a python
@@ -213,7 +214,9 @@ def parser_table() -> dict[str, type]:
 # vvv -- python func syntax parsing -- vvv
 
 
-def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, int]:  # noqa: C901
+def parse_function_args(
+    string: str, refs: dict[str, reno.components.Reference] = None
+) -> tuple[list[any], dict[str, any], int, int]:
     """Pull out any python formatted args or kwargs for a function.
 
     e.g. 'Normal(5.0, std=1.0)'
@@ -247,28 +250,35 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
     kwargs = {}
     # pieces = string[start:end].split(",")  # doesn't account for array args
     for piece in pieces:
+        # print(f"In arg '{piece}' of '{string}'")
         # check if arg or kwarg
         if "=" in piece:
             key = piece[: piece.index("=")].strip()
+            if key == "":
+                raise SyntaxError(f"Invalid keyword arg '{piece}' in '{string}'")
             value = piece[piece.index("=") + 1 :].strip()
-            try:
-                # try to recursively parse (e.g. Normal(Scalar(1.0)))
-                sub_value = parse_class_or_scalar(value)
-                kwargs[key] = sub_value
-            except SyntaxError:
-                kwargs[key] = parse_value(value)
+            kwargs[key] = parse(value, refs)
+            # try:
+            #     # try to recursively parse (e.g. Normal(Scalar(1.0)))
+            #     sub_value = parse_class_or_scalar(value)
+            #     kwargs[key] = sub_value
+            # except SyntaxError:
+            #     kwargs[key] = parse_value(value)
             # TODO: missing parsing of lists, bools, etc.
         else:
-            try:
-                sub_value = parse_class_or_scalar(piece)
-                args.append(sub_value)
-            except SyntaxError:
-                args.append(parse_value(piece))
+            args.append(parse(piece, refs))
+            # try:
+            #     sub_value = parse_class_or_scalar(piece)
+            #     args.append(sub_value)
+            # except SyntaxError:
+            #     args.append(parse_value(piece))
 
     return args, kwargs, start, end
 
 
-def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
+def parse_class_or_scalar(
+    string: str, refs: dict[str, reno.components.Reference] = None
+) -> reno.components.EquationPart:
     """Parse a single non-math op concatenated equation part, e.g.
     a scalar (float or int) or distribution with parameters.
     """
@@ -278,11 +288,11 @@ def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
 
     # check if it's just a float or int
     try_simple_convert_first = parse_value(string)
-    if isinstance(try_simple_convert_first, (float, int, bool)):
+    if isinstance(try_simple_convert_first, (float, int, bool, list)):
         return try_simple_convert_first
 
     # must be an op, pull the params
-    args, kwargs, start, _ = parse_function_args(string)
+    args, kwargs, start, _ = parse_function_args(string, refs)
     op_name = string[: start - 1].strip()
 
     classes = [

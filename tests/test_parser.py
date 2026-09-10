@@ -65,6 +65,14 @@ def test_full_op_parse():
     assert out.sub_equation_parts[1].value == 13.2
 
 
+def test_full_scalar_parse():
+    """Parsing an explicit Scalar shouldn't result in Scalar(Scalar)"""
+    out = parser.parse("Scalar(3)")
+    print(out)
+    assert not isinstance(out.value, Scalar)
+    assert out.value == 3
+
+
 def test_full_assignment_op_parse():
     out = parser.parse(" (= (= Scalar(5.0)))")
     assert isinstance(out, ops.assign)
@@ -180,7 +188,6 @@ def test_to_string_of_array():
     assert str(m.v1.eq) == "Categorical([0.5, 0.5], False, False)"
 
 
-
 def test_parse_component_with_array_arg():
     """An op that contains an array should correctly parse back in, commas and all."""
 
@@ -190,3 +197,20 @@ def test_parse_component_with_array_arg():
     op = parser.parse(str(m.v1.eq), {})
     assert isinstance(op, ops.Categorical)
     assert (op.sub_equation_parts[0].value == m.v1.eq.sub_equation_parts[0].value).all()
+
+
+def test_parse_ref_nested_in_classyntax():
+    """Using references (e.g. variables) inside e.g. distributions, should
+    correctly parse out from the strings."""
+    m = Model()
+    m.a = Variable(3)
+    m.b = Variable(ops.Normal(m.a))
+
+    m()
+
+    print(m.to_dict())
+    m2 = Model.from_dict(m.to_dict())
+    print(m2.b.eq)
+    print(m2.a.eq)
+    print(m.a.eq)
+    m2()
