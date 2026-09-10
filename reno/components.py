@@ -1938,6 +1938,7 @@ class TrackedReference(Reference):
             "min": str(self.min),
             "max": str(self.max),
             "group": self.group,
+            "cgroup": self.cgroup,
             "eq": str(self.eq),
             "implicit": self.implicit,
         }
@@ -1952,6 +1953,8 @@ class TrackedReference(Reference):
         self.min = reno.parser.parse(data["min"], refs)
         self.max = reno.parser.parse(data["max"], refs)
         self.group = data["group"]
+        if "cgroup" in data:
+            self.cgroup = data["cgroup"]
         self.implicit = data["implicit"]
         if "eq" in data:
             # print(f"Trying to parse: {data['eq']}")

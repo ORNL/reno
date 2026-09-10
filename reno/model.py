@@ -1368,6 +1368,8 @@ class Model:
             "flows": {flow.name: flow.to_dict() for flow in self.flows},
             "vars": {var.name: var.to_dict() for var in self.vars},
             "metrics": {metric.name: metric.to_dict() for metric in self.metrics},
+            "group_colors": self.group_colors,
+            "default_hide_groups": self.default_hide_groups,
         }
         if root:
             data["timeref_name"] = self.find_timeref_name()
@@ -1432,6 +1434,13 @@ class Model:
         for model_name in data["models"]:
             submodel = getattr(self, model_name)
             submodel._load_refs(data["models"][model_name], refs)
+
+        # other metadata, needs to be done recursively but not relevant to refs
+        # specifically
+        if "group_colors" in data:
+            self.group_colors = data["group_colors"]
+        if "default_hide_groups" in data:
+            self.default_hide_groups = data["default_hide_groups"]
 
     @staticmethod
     def from_dict(data: dict) -> Model:
