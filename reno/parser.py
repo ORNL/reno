@@ -30,62 +30,69 @@ def parse(
     Returns:
         An EquationPart populated with recursive sub_equation_parts.
     """
-    string = string.strip()
-
-    if refs is None:
-        refs = {}
-
-    table = parser_table()
-
-    # check if we need to do python style parsing (e.g. a distribution definition)
     try:
-        class_or_scalar_conversion = parse_class_or_scalar(string)
-        if isinstance(class_or_scalar_conversion, (float, int)):
-            return reno.components.Scalar(class_or_scalar_conversion)
-        return class_or_scalar_conversion
-    except SyntaxError:
-        # no handling needed, this just means we couldn't parse a python
-        # constructor call out of the string, continue with normal prefix
-        # parsing
-        pass
-    # TODO: missing handling of bool/int etc? Why am I not doing
-    # parse_value here?
-    # try_simple_convert_first = parse_value(string)
-    # if isinstance(try_simple_convert_first, (float, int)):
-    #     print("Found float/int")
-    #     return reno.components.Scalar(try_simple_convert_first)
+        string = string.strip()
 
-    # check for string (likely a reference?)
-    if (string.startswith('"') and string.endswith('"')) or (
-        string.startswith("'") and string.endswith("'")
-    ):
-        if string[1:-1] in refs:
-            return refs[string[1:-1]]
-        return string[1:-1]
-        # TODO: not clear if this should actually error or throw a warning or
-        # what. Probably at least a warning is warranted.
-        # if string[1:-1] not in refs:
-        #     raise SyntaxError(f"Reference {string} not found/undefined")
+        if refs is None:
+            refs = {}
 
-    op_name, arg_strs = parse_op_str(string)
-    if op_name not in table:
-        raise SyntaxError(f"Invalid operation or reference '{op_name}'")
+        table = parser_table()
 
-    # pull out the corresponding python class for this operation
-    op_class = table[op_name]
+        # check if we need to do python style parsing (e.g. a distribution definition)
+        try:
+            class_or_scalar_conversion = parse_class_or_scalar(string)
+            if isinstance(class_or_scalar_conversion, (float, int)):
+                return reno.components.Scalar(class_or_scalar_conversion)
+            return class_or_scalar_conversion
+        except SyntaxError:
+            # no handling needed, this just means we couldn't parse a python
+            # constructor call out of the string, continue with normal prefix
+            # parsing
+            # (unfortunately this does mean that a malformed constructor will fall
+            # through to parse_op_str and error _there_, with a seemingly unrelated
+            # exception.)
+            pass
+        # TODO: missing handling of bool/int etc? Why am I not doing
+        # parse_value here?
+        # try_simple_convert_first = parse_value(string)
+        # if isinstance(try_simple_convert_first, (float, int)):
+        #     print("Found float/int")
+        #     return reno.components.Scalar(try_simple_convert_first)
 
-    # if a class has a specific way it needs to parse, use that (e.g. piecewise
-    # and history)
-    if hasattr(op_class, "parse"):
-        return op_class.parse(arg_strs, refs)
+        # check for string (likely a reference?)
+        if (string.startswith('"') and string.endswith('"')) or (
+            string.startswith("'") and string.endswith("'")
+        ):
+            if string[1:-1] in refs:
+                return refs[string[1:-1]]
+            return string[1:-1]
+            # TODO: not clear if this should actually error or throw a warning or
+            # what. Probably at least a warning is warranted.
+            # if string[1:-1] not in refs:
+            #     raise SyntaxError(f"Reference {string} not found/undefined")
 
-    # otherwise do a normal recursive parse of any arguments
-    parsed_args = []
-    for arg_str in arg_strs:
-        parsed_args.append(parse(arg_str, refs))
+        op_name, arg_strs = parse_op_str(string)
+        if op_name not in table:
+            raise SyntaxError(f"Invalid operation or reference '{op_name}'")
 
-    # initialize the actual operation object (EquationPart)
-    return op_class(*parsed_args)
+        # pull out the corresponding python class for this operation
+        op_class = table[op_name]
+
+        # if a class has a specific way it needs to parse, use that (e.g. piecewise
+        # and history)
+        if hasattr(op_class, "parse"):
+            return op_class.parse(arg_strs, refs)
+
+        # otherwise do a normal recursive parse of any arguments
+        parsed_args = []
+        for arg_str in arg_strs:
+            parsed_args.append(parse(arg_str, refs))
+
+        # initialize the actual operation object (EquationPart)
+        return op_class(*parsed_args)
+    except Exception as e:
+        e.add_note(f"Was trying to parse: '{string}'")
+        raise
 
 
 def parse_value(string: str) -> float | int | str:  # noqa: C901

@@ -39,6 +39,7 @@ def test_int_float_parsing(string, expected, expected_type):
         ("Normal(Scalar(5.0), 10.0)", [Scalar(5.0), 10.0], {}),
         ("Normal(Scalar(5.0), std=Scalar(10.0))", [Scalar(5.0)], {"std": Scalar(10.0)}),
         ("Normal(Scalar(5.0), 10.0, False)", [Scalar(5.0), 10.0, False], {}),
+        ("Categorical([0.5, 0.5], False, False)", [[0.5, 0.5], False, False], {}),
     ],
 )
 def test_param_parsing(string, expected_args, expected_kwargs):
@@ -169,3 +170,23 @@ def test_parse_multiple_arrays():
         op.sub_equation_parts[1].value
         == [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ).all()
+
+
+def test_to_string_of_array():
+    """Arrays in arguments in string outputs need to have commas, which numpy leaves out by default."""
+    m = Model()
+    m.v1 = Variable(ops.Categorical([0.5, 0.5], False, False))
+
+    assert str(m.v1.eq) == "Categorical([0.5, 0.5], False, False)"
+
+
+
+def test_parse_component_with_array_arg():
+    """An op that contains an array should correctly parse back in, commas and all."""
+
+    m = Model()
+    m.v1 = Variable(ops.Categorical([0.5, 0.5], False, False))
+
+    op = parser.parse(str(m.v1.eq), {})
+    assert isinstance(op, ops.Categorical)
+    assert (op.sub_equation_parts[0].value == m.v1.eq.sub_equation_parts[0].value).all()
