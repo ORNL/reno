@@ -30,62 +30,70 @@ def parse(
     Returns:
         An EquationPart populated with recursive sub_equation_parts.
     """
-    string = string.strip()
-
-    if refs is None:
-        refs = {}
-
-    table = parser_table()
-
-    # check if we need to do python style parsing (e.g. a distribution definition)
+    # print(f"Parsing '{string}'")
     try:
-        class_or_scalar_conversion = parse_class_or_scalar(string)
-        if isinstance(class_or_scalar_conversion, (float, int)):
-            return reno.components.Scalar(class_or_scalar_conversion)
-        return class_or_scalar_conversion
-    except SyntaxError:
-        # no handling needed, this just means we couldn't parse a python
-        # constructor call out of the string, continue with normal prefix
-        # parsing
-        pass
-    # TODO: missing handling of bool/int etc? Why am I not doing
-    # parse_value here?
-    # try_simple_convert_first = parse_value(string)
-    # if isinstance(try_simple_convert_first, (float, int)):
-    #     print("Found float/int")
-    #     return reno.components.Scalar(try_simple_convert_first)
+        string = string.strip()
 
-    # check for string (likely a reference?)
-    if (string.startswith('"') and string.endswith('"')) or (
-        string.startswith("'") and string.endswith("'")
-    ):
-        if string[1:-1] in refs:
-            return refs[string[1:-1]]
-        return string[1:-1]
-        # TODO: not clear if this should actually error or throw a warning or
-        # what. Probably at least a warning is warranted.
-        # if string[1:-1] not in refs:
-        #     raise SyntaxError(f"Reference {string} not found/undefined")
+        if refs is None:
+            refs = {}
 
-    op_name, arg_strs = parse_op_str(string)
-    if op_name not in table:
-        raise SyntaxError(f"Invalid operation or reference '{op_name}'")
+        table = parser_table()
 
-    # pull out the corresponding python class for this operation
-    op_class = table[op_name]
+        # check if we need to do python style parsing (e.g. a distribution definition)
+        try:
+            class_or_scalar_conversion = parse_class_or_scalar(string, refs)
+            # if isinstance(class_or_scalar_conversion, (float, int)):
+            #     return reno.components.Scalar(class_or_scalar_conversion)
+            return class_or_scalar_conversion
+        except SyntaxError:
+            # no handling needed, this just means we couldn't parse a python
+            # constructor call out of the string, continue with normal prefix
+            # parsing
+            # (unfortunately this does mean that a malformed constructor will fall
+            # through to parse_op_str and error _there_, with a seemingly unrelated
+            # exception.)
+            pass
+        # TODO: missing handling of bool/int etc? Why am I not doing
+        # parse_value here?
+        # try_simple_convert_first = parse_value(string)
+        # if isinstance(try_simple_convert_first, (float, int)):
+        #     print("Found float/int")
+        #     return reno.components.Scalar(try_simple_convert_first)
 
-    # if a class has a specific way it needs to parse, use that (e.g. piecewise
-    # and history)
-    if hasattr(op_class, "parse"):
-        return op_class.parse(arg_strs, refs)
+        # check for string (likely a reference?)
+        if (string.startswith('"') and string.endswith('"')) or (
+            string.startswith("'") and string.endswith("'")
+        ):
+            if string[1:-1] in refs:
+                return refs[string[1:-1]]
+            return string[1:-1]
+            # TODO: not clear if this should actually error or throw a warning or
+            # what. Probably at least a warning is warranted.
+            # if string[1:-1] not in refs:
+            #     raise SyntaxError(f"Reference {string} not found/undefined")
 
-    # otherwise do a normal recursive parse of any arguments
-    parsed_args = []
-    for arg_str in arg_strs:
-        parsed_args.append(parse(arg_str, refs))
+        op_name, arg_strs = parse_op_str(string)
+        if op_name not in table:
+            raise SyntaxError(f"Invalid operation or reference '{op_name}'")
 
-    # initialize the actual operation object (EquationPart)
-    return op_class(*parsed_args)
+        # pull out the corresponding python class for this operation
+        op_class = table[op_name]
+
+        # if a class has a specific way it needs to parse, use that (e.g. piecewise
+        # and history)
+        if hasattr(op_class, "parse"):
+            return op_class.parse(arg_strs, refs)
+
+        # otherwise do a normal recursive parse of any arguments
+        parsed_args = []
+        for arg_str in arg_strs:
+            parsed_args.append(parse(arg_str, refs))
+
+        # initialize the actual operation object (EquationPart)
+        return op_class(*parsed_args)
+    except Exception as e:
+        e.add_note(f"Was trying to parse: '{string}'")
+        raise
 
 
 def parse_value(string: str) -> float | int | str:  # noqa: C901
@@ -206,7 +214,9 @@ def parser_table() -> dict[str, type]:
 # vvv -- python func syntax parsing -- vvv
 
 
-def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, int]:  # noqa: C901
+def parse_function_args(
+    string: str, refs: dict[str, reno.components.Reference] = None
+) -> tuple[list[any], dict[str, any], int, int]:
     """Pull out any python formatted args or kwargs for a function.
 
     e.g. 'Normal(5.0, std=1.0)'
@@ -240,28 +250,35 @@ def parse_function_args(string: str) -> tuple[list[any], dict[str, any], int, in
     kwargs = {}
     # pieces = string[start:end].split(",")  # doesn't account for array args
     for piece in pieces:
+        # print(f"In arg '{piece}' of '{string}'")
         # check if arg or kwarg
         if "=" in piece:
             key = piece[: piece.index("=")].strip()
+            if key == "":
+                raise SyntaxError(f"Invalid keyword arg '{piece}' in '{string}'")
             value = piece[piece.index("=") + 1 :].strip()
-            try:
-                # try to recursively parse (e.g. Normal(Scalar(1.0)))
-                sub_value = parse_class_or_scalar(value)
-                kwargs[key] = sub_value
-            except SyntaxError:
-                kwargs[key] = parse_value(value)
+            kwargs[key] = parse(value, refs)
+            # try:
+            #     # try to recursively parse (e.g. Normal(Scalar(1.0)))
+            #     sub_value = parse_class_or_scalar(value)
+            #     kwargs[key] = sub_value
+            # except SyntaxError:
+            #     kwargs[key] = parse_value(value)
             # TODO: missing parsing of lists, bools, etc.
         else:
-            try:
-                sub_value = parse_class_or_scalar(piece)
-                args.append(sub_value)
-            except SyntaxError:
-                args.append(parse_value(piece))
+            args.append(parse(piece, refs))
+            # try:
+            #     sub_value = parse_class_or_scalar(piece)
+            #     args.append(sub_value)
+            # except SyntaxError:
+            #     args.append(parse_value(piece))
 
     return args, kwargs, start, end
 
 
-def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
+def parse_class_or_scalar(
+    string: str, refs: dict[str, reno.components.Reference] = None
+) -> reno.components.EquationPart:
     """Parse a single non-math op concatenated equation part, e.g.
     a scalar (float or int) or distribution with parameters.
     """
@@ -271,11 +288,11 @@ def parse_class_or_scalar(string: str) -> reno.components.EquationPart:
 
     # check if it's just a float or int
     try_simple_convert_first = parse_value(string)
-    if isinstance(try_simple_convert_first, (float, int, bool)):
+    if isinstance(try_simple_convert_first, (float, int, bool, list)):
         return try_simple_convert_first
 
     # must be an op, pull the params
-    args, kwargs, start, _ = parse_function_args(string)
+    args, kwargs, start, _ = parse_function_args(string, refs)
     op_name = string[: start - 1].strip()
 
     classes = [

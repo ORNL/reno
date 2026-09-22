@@ -1531,6 +1531,9 @@ class Model:
 
         if sampling_kwargs is None:
             sampling_kwargs = dict()
+        else:
+            # make sure we don't mutate the passer's dictionary...
+            sampling_kwargs = deepcopy(sampling_kwargs)
 
         if "cores" not in sampling_kwargs:
             sampling_kwargs["cores"] = 4
@@ -1560,7 +1563,9 @@ class Model:
             sample_func = pm.sample_smc if smc else pm.sample
             if observations is None:
                 sample_func = pm.sample_prior_predictive
-                sampling_kwargs = dict(draws=n)
+                # sampling_kwargs = dict(draws=n)
+                sampling_kwargs["draws"] = n
+                del sampling_kwargs["cores"]
             if trace_prior is None:
                 # forcing a FAST_COMPILE mode for prior predictive because
                 # compiling models with very large numbers of variables can
@@ -1568,8 +1573,13 @@ class Model:
                 # sample_prior_predictive).
                 prior_compile_kwargs = deepcopy(compile_kwargs)
                 prior_compile_kwargs["mode"] = "FAST_COMPILE"
+
+                prior_sample_kwargs = deepcopy(sampling_kwargs)
+                prior_sample_kwargs["draws"] = n
+                if "cores" in prior_sample_kwargs:
+                    del prior_sample_kwargs["cores"]
                 trace_prior = pm.sample_prior_predictive(
-                    n, compile_kwargs=dict(**prior_compile_kwargs)
+                    compile_kwargs=dict(**prior_compile_kwargs), **prior_sample_kwargs
                 )
                 # NOTE: sample_prior_predictive will mutate the passed in
                 # dictionary, since I'm using it later, I make a separate copy
@@ -1658,6 +1668,8 @@ class Model:
             "flows": {flow.name: flow.to_dict() for flow in self.flows},
             "vars": {var.name: var.to_dict() for var in self.vars},
             "metrics": {metric.name: metric.to_dict() for metric in self.metrics},
+            "group_colors": self.group_colors,
+            "default_hide_groups": self.default_hide_groups,
         }
         if root:
             data["timeref_name"] = self.find_timeref_name()
@@ -1722,6 +1734,13 @@ class Model:
         for model_name in data["models"]:
             submodel = getattr(self, model_name)
             submodel._load_refs(data["models"][model_name], refs)
+
+        # other metadata, needs to be done recursively but not relevant to refs
+        # specifically
+        if "group_colors" in data:
+            self.group_colors = data["group_colors"]
+        if "default_hide_groups" in data:
+            self.default_hide_groups = data["default_hide_groups"]
 
     @staticmethod
     def from_dict(data: dict) -> Model:

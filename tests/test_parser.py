@@ -39,6 +39,7 @@ def test_int_float_parsing(string, expected, expected_type):
         ("Normal(Scalar(5.0), 10.0)", [Scalar(5.0), 10.0], {}),
         ("Normal(Scalar(5.0), std=Scalar(10.0))", [Scalar(5.0)], {"std": Scalar(10.0)}),
         ("Normal(Scalar(5.0), 10.0, False)", [Scalar(5.0), 10.0, False], {}),
+        ("Categorical([0.5, 0.5], False, False)", [[0.5, 0.5], False, False], {}),
     ],
 )
 def test_param_parsing(string, expected_args, expected_kwargs):
@@ -62,6 +63,14 @@ def test_full_op_parse():
     assert isinstance(out, ops.Normal)
     assert out.sub_equation_parts[0].value == 5.0
     assert out.sub_equation_parts[1].value == 13.2
+
+
+def test_full_scalar_parse():
+    """Parsing an explicit Scalar shouldn't result in Scalar(Scalar)"""
+    out = parser.parse("Scalar(3)")
+    print(out)
+    assert not isinstance(out.value, Scalar)
+    assert out.value == 3
 
 
 def test_full_assignment_op_parse():
@@ -169,3 +178,39 @@ def test_parse_multiple_arrays():
         op.sub_equation_parts[1].value
         == [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ).all()
+
+
+def test_to_string_of_array():
+    """Arrays in arguments in string outputs need to have commas, which numpy leaves out by default."""
+    m = Model()
+    m.v1 = Variable(ops.Categorical([0.5, 0.5], False, False))
+
+    assert str(m.v1.eq) == "Categorical([0.5, 0.5], False, False)"
+
+
+def test_parse_component_with_array_arg():
+    """An op that contains an array should correctly parse back in, commas and all."""
+
+    m = Model()
+    m.v1 = Variable(ops.Categorical([0.5, 0.5], False, False))
+
+    op = parser.parse(str(m.v1.eq), {})
+    assert isinstance(op, ops.Categorical)
+    assert (op.sub_equation_parts[0].value == m.v1.eq.sub_equation_parts[0].value).all()
+
+
+def test_parse_ref_nested_in_classyntax():
+    """Using references (e.g. variables) inside e.g. distributions, should
+    correctly parse out from the strings."""
+    m = Model()
+    m.a = Variable(3)
+    m.b = Variable(ops.Normal(m.a))
+
+    m()
+
+    print(m.to_dict())
+    m2 = Model.from_dict(m.to_dict())
+    print(m2.b.eq)
+    print(m2.a.eq)
+    print(m.a.eq)
+    m2()

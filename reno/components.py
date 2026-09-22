@@ -476,6 +476,8 @@ class EquationPart:
             if isinstance(part, search_type):
                 matching_parts.append(part)
 
+            # if isinstance(part, str):
+            # print(part)
             matching_parts.extend(part.find_parts_of_type(search_type, already_checked))
         return matching_parts
 
@@ -731,6 +733,8 @@ class Distribution(EquationPart):
         """
         part = self.sub_equation_parts[part_index]
         if isinstance(part, Scalar):
+            if isinstance(part.value, np.ndarray):
+                return str(part.value.tolist())
             return str(part.value)
         return part
 
@@ -2045,6 +2049,7 @@ class TrackedReference(Reference):
             "min": str(self.min),
             "max": str(self.max),
             "group": self.group,
+            "cgroup": self.cgroup,
             "eq": str(self.eq),
             "implicit": self.implicit,
         }
@@ -2059,9 +2064,11 @@ class TrackedReference(Reference):
         self.min = reno.parser.parse(data["min"], refs)
         self.max = reno.parser.parse(data["max"], refs)
         self.group = data["group"]
+        if "cgroup" in data:
+            self.cgroup = data["cgroup"]
         self.implicit = data["implicit"]
         if "eq" in data:
-            print(f"Trying to parse: {data['eq']}")
+            # print(f"Trying to parse: {data['eq']}")
             self.eq = reno.parser.parse(data["eq"], refs)
 
     def __repr__(self) -> str:
@@ -2767,7 +2774,7 @@ class Stock(TrackedReference):
             implicit_inflow.implicit = True
             implicit_inflow._implicit_target = self
             implicit_inflow._implicit_target_index = len(self.in_flows)
-            name = "_implicit_inflow_" + str(id(implicit_inflow))
+            name = f"_implicit_inflow_{self.qual_name()}_{len(self.in_flows)}"  # + str(id(implicit_inflow))
             implicit_inflow.name = name
             self.add_inflow(implicit_inflow)
             if self.model is not None:
