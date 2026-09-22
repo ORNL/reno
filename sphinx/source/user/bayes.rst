@@ -99,7 +99,7 @@ the ``final_water_level`` metric:
     trace = tub.pymc(
         n=1000,
         faucet_off_time=reno.Normal(10, 5),
-        observations=[reno.Observation(tub.final_water_level, 2.0, [12.0])]
+        observations=[reno.Observation(tub.final_water_level, [12.0], 2.0)]
     )
 
 And observe the change from prior to posterior:
@@ -115,6 +115,53 @@ And observe the change from prior to posterior:
 
 .. figure:: ../_static/tub_posteriors.png
    :align: center
+
+
+Implied observations
+====================
+
+(TODO)
+
+
+Observations and config via ``data``
+====================================
+
+The ``.pymc`` function has a ``data`` parameter, which can be used as an
+alternative parameter to ``observations``. Passing a dictionary of references
+and/or equation parts to this parameter will populate both model free reference
+configuration as well as observed values, in a way that's more convenient if you
+have a dataset in a pandas dataframe. Take the following model for example,
+which simply defines a linear function parameterized by an intercept and slope:
+
+.. code-block:: python
+
+    m = r.Model()
+    with m:
+        intercept = r.Variable(r.Uniform(0.0, 10.0))
+        slope = r.Variable(r.Uniform(1.0, 6.0))
+        value = r.Stock(init=intercept)
+        value += slope
+
+        final = r.Metric(value.timeseries[-1])
+
+
+We could run this model with several intercepts and slopes to get a variety of
+stock lines:
+
+.. code-block:: python
+
+    example_data_trace = m(
+        n=6,
+        intercept=r.List([1, 10, 3.5, 15, 20, 6]),
+        slope=r.List([2, 2, 2, 1, 1, 1])
+    )
+    r.plot_trace_refs(m, [example_data_trace], [m.slope, m.value])
+
+
+.. figure:: ../_static/data_example_1.png
+    :align: center
+
+
 
 
 Technical process
