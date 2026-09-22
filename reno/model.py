@@ -12,6 +12,7 @@ import warnings
 from collections.abc import Iterator
 from copy import deepcopy
 from pathlib import Path
+from types import TracebackType
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -83,7 +84,7 @@ class Model:
             name (str): Optional name to give the model, should be used when
                 submodels are in play, as the model name is used to help
                 visually distinguish which model things belong to.
-            n (int): The number of samples to simulate at once (by default).
+            n (int): The number of samples to simulate (by default).
             steps (int): How many time steps to run the simulation for (by default).
             label (str): Optional visual label to use when printing model things if
                 cleaner than using the name.
@@ -201,7 +202,9 @@ class Model:
         """
         MODEL_CONTEXTS.current_models.append(self)
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
+    def __exit__(
+        self, exc_type: type, exc_value: Exception, traceback: TracebackType
+    ) -> None:
         MODEL_CONTEXTS.current_models.pop()
         for index, ref in enumerate(self._unnamed_references):
             # make sure adding this ref wasn't already handled
@@ -210,7 +213,7 @@ class Model:
             ):
                 if ref.name is not None and ref.model is not None:
                     continue
-            elif isinstance(ref, reno.components.TrackedReference):
+            elif isinstance(ref, reno.components.TrackedReference):  # noqa: SIM102
                 if ref.name is not None and ref.parent is not None:
                     continue
             name = reno.utils._get_assigned_var_name(ref)
@@ -416,12 +419,16 @@ class Model:
         self,
         steps: int = None,
         quiet: bool = True,
-        debug: bool = False,
         label: str = None,
     ) -> Iterator:
-        # TODO: should this also take config? (no?)
-        # TODO: do we populate here? (no?)
+        """An iterator to sequentially step through every timestep of a single
+        sample, running the component equations at each one.
 
+        Args:
+            steps (int): The number of timesteps to run the sample for.
+            quiet (bool): Whether to show progress bars.
+            label (str): The label to add to the progress bar
+        """
         ref_compute_order = self.dependency_compute_order(inits_order=False)
         for step in tqdm(range(steps), disable=quiet, desc=label):
             for ref in ref_compute_order:
@@ -447,7 +454,7 @@ class Model:
     #
     #    # TODO: compute metrics for just this one
 
-    def _set_sample_index(self, sample_index: int):
+    def _set_sample_index(self, sample_index: int) -> None:
         """Recursively pass sample index down into every submodel."""
         self._current_sample_index = sample_index
         for model in self.models:
@@ -465,16 +472,18 @@ class Model:
         sample_index: int,
         steps: int = None,
         quiet: bool = True,
-        debug: bool = False,
-    ):
+    ) -> xr.Dataset:
+        """Run a single sample for the model to completion.
+
+        This runs through the timestep iterator, then executes metrics and collects
+        the dataset.
+        """
         if steps is None:
             steps = self.steps
         self._set_sample_index(sample_index)
         self._populate(steps)
 
-        for step in self.sim_timestep_iter(
-            steps, True, debug, f"Sample {sample_index}"
-        ):
+        for step in self.sim_timestep_iter(steps, True, f"Sample {sample_index}"):
             pass
 
         self.run_metrics(steps)
@@ -484,8 +493,16 @@ class Model:
         return ds
 
     def sim_sample_iter(
-        self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
+        self, n: int = None, steps: int = None, quiet: bool = False
     ) -> Iterator:
+        """An iterator to sequentially go through each sample index (up to ``n``) and serially
+        run each individual sample to completion using the ``sim_timestep_iter``.
+
+        Args:
+            n (int): The number of samples to run.
+            steps (int): The number of timesteps to run each sample for.
+            quiet (bool): Whether to show progress bars.
+        """
         if n is None:
             n = self.n
         if steps is None:
@@ -494,55 +511,16 @@ class Model:
         for sample_index in tqdm(range(n), disable=quiet, total=n):
             yield self._run_sample(sample_index, steps=steps)
 
-    # def simulate_samples(self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False) -> Iterator:
-    #     if n is None:
-    #         n = self.n
-    #     if steps is None:
-    #         steps = self.steps
-    #
-    #     pass
-    #
-    #
-    # def simulator(
-    #     self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
-    # ) -> Iterator:
-    #     """An iterator to use for running the simulation step by step. Leaving n and/or
-    #     steps None will use the model's default (as defined in constructor).
-    #     """
-    #     if n is None:
-    #         n = self.n
-    #     if steps is None:
-    #         steps = self.steps
-    #
-    #     self._recursive_sub_populate_n_steps(
-    #         n, steps
-    #     )  # TODO: (2025.07.28) isn't this redundant?
-    #     # (should already be being handled in _populate?)
-    #     self._populate(n, steps)
-    #
-    #     # note that dependency_compute_order includes all submodels' refs
-    #     ref_compute_order = self.dependency_compute_order(inits_order=False)
-    #
-    #     for step in tqdm(range(1, steps), disable=quiet, desc=self.name):
-    #         if debug:
-    #             print("Beginning step", step, self.name)
-    #         for ref in ref_compute_order:
-    #             ref.eval(step, save=True)
-    #         yield
-    #
-    #     self.run_metrics(n, steps)
-    #
-    # TODO: this function feels unnecessary
     def simulate(
-        self, n: int = None, steps: int = None, quiet: bool = False, debug: bool = False
-    ) -> None:
+        self, n: int = None, steps: int = None, quiet: bool = False
+    ) -> xr.Dataset:
         """Run each step of the the full simulation. Leaving n and/or
         steps None will use the model's default (as defined in constructor).
         """
         # for step in self.simulator(n, steps, quiet, debug):
         #     pass
         sample_datasets = []
-        for sample_ds in self.sim_sample_iter(n, steps, quiet, debug):
+        for sample_ds in self.sim_sample_iter(n, steps, quiet):
             sample_datasets.append(sample_ds)
 
         full_ds = xr.concat(sample_datasets, dim="sample")
@@ -552,7 +530,13 @@ class Model:
         )
         return full_ds
 
-    def get_attrs(self) -> dict:
+    def get_attrs(self) -> dict[str, Any]:
+        """Recursively get a dictionary of the full current configuration of the
+        model (all free variables).
+
+        The dictionary itself is flat, but all submodel config keys are prefixed
+        with the model name and a period: ``submodel_name.config_name``.
+        """
         self_attrs = self.get_nonrecursive_config()
 
         all_attrs = {}
@@ -969,7 +953,7 @@ class Model:
 
         # TODO: collect config as well?
 
-    def sample_dataset(self) -> xr.Dataset:
+    def sample_dataset(self) -> xr.Dataset:  # noqa: C901
         """Get the dataset from a single sample run."""
         sub_dses = {}
         if len(self.models) > 0:
@@ -1496,6 +1480,10 @@ class Model:
             observations (list[reno.Observation]): Observed values (data/evidence) to
                 use for computing posteriors, at least one should be specified if not
                 exclusively running priors.
+            data (dict[reno.components.Reference | reno.components.EquationPart, list | np.ndarray | reno.components.Distribution]):
+                An optional alternative to ``observations`` and ``**free_refs`` - you
+                can specify a dictionary of references and config/data/observed distributions.
+                This makes it easier to parameterize a model from a pandas dataframe or similar.
             smc (bool): Whether to use the sequential monte carlo sampler or not, the
                 default is to do so - the regular samplers in PyMC tend not to do well
                 if posterior distributions might have multiple peaks, see:

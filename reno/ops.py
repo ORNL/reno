@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, TypeAlias
 
 import numpy as np
+import pandas as pd
 import pytensor.tensor as pt
 
 import pymc as pm
@@ -652,7 +653,7 @@ class orient_timeseries(reno.components.Operation):
         # NOTE: ...this is the dumbest way possible to ensure type is kept...but
         # it works? I'm going to claim that with horseshoe theory, this is so
         # dumb that it's actually smart.
-        zero_value = values[0] * 0
+        # zero_value = values[0] * 0
         # for i in range(remainder):
         #     values.append(zero_value)
 
@@ -2419,7 +2420,7 @@ class Observation(reno.components.Distribution):
     def __init__(
         self,
         ref: reno.components.Reference | reno.components.EquationPart,
-        data: int | float | list | np.ndarray,
+        data: int | float | list | np.ndarray | pd.Series,
         *args: list,
         dist: type = Normal,
         **kwargs: dict,

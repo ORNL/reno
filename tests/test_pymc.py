@@ -475,7 +475,7 @@ def test_data_dictionary():
 
     trace = m.pymc(
         n=4000,
-        intercept=[1, 10, 3.5, 15, 20, 6],
+        # intercept=[1, 10, 3.5, 15, 20, 6],
         slope=ops.Uniform(0.0, 6.0, dim=6),
 
         data = {

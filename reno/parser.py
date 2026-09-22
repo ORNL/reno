@@ -214,7 +214,7 @@ def parser_table() -> dict[str, type]:
 # vvv -- python func syntax parsing -- vvv
 
 
-def parse_function_args(
+def parse_function_args(  # noqa: C901
     string: str, refs: dict[str, reno.components.Reference] = None
 ) -> tuple[list[any], dict[str, any], int, int]:
     """Pull out any python formatted args or kwargs for a function.
