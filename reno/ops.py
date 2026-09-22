@@ -1605,10 +1605,12 @@ class stack(reno.components.Operation):
             if implied_n > 1:
                 to_stack[index] = np.broadcast_to(item, (implied_n,))
 
-        for i, part in enumerate(to_stack):
-            if not isinstance(part, np.ndarray):
-                to_stack[i] = np.array([part])
-        return np.stack(to_stack, axis=-1)
+        # for i, part in enumerate(to_stack):
+        #     if not isinstance(part, np.ndarray):
+        #         to_stack[i] = np.array([part])
+        # print("The stack then is ", np.stack(to_stack, axis=-1))
+
+        return np.stack(to_stack, axis=0)
 
     def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
         return pt.stack([part.pt(**refs) for part in self.sub_equation_parts])

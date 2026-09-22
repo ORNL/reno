@@ -538,12 +538,13 @@ def test_multidim_categorical():
 def test_multidim_vector():
     """Specifying a static variable/flow with an array and dims should treat the array as that extra dim."""
     t = TimeRef()
-    thing1 = Variable([0, 1, 2, 3, 4], dim=5)
-    thing2 = Variable(thing1 + 10 + t, dim=5)
-    thing1.populate(1, 2)
-    thing2.populate(1, 2)
+    m = model.Model()
+    with m:
+        thing1 = Variable([0, 1, 2, 3, 4], dim=5)
+        thing2 = Variable(thing1 + 10 + t, dim=5)
+    m(n=1, steps=2)
 
-    thing2.eval(1, save=True)
+    # thing2.eval(1, save=True)
     assert (thing1.value == [0, 1, 2, 3, 4]).all()
     assert (thing2.value == [[10, 11, 12, 13, 14], [11, 12, 13, 14, 15]]).all()
 
@@ -551,24 +552,32 @@ def test_multidim_vector():
 def test_multidim_vector2():
     """A static variable/flow from a single scalar should still work as above"""
     t = TimeRef()
-    thing1 = Variable(4, dim=5)
-    thing2 = Variable(thing1 + 10 + t, dim=5)
-    thing1.populate(1, 2)
-    thing2.populate(1, 2)
+    m = model.Model()
+    with m:
+        thing1 = Variable(4, dim=5)
+        thing2 = Variable(thing1 + 10 + t, dim=5)
+    m(n=1, steps=2)
 
-    thing2.eval(1, save=True)
+    # thing2.eval(1, save=True)
     assert (thing1.value == [4, 4, 4, 4, 4]).all()
     assert (thing2.value == [[14, 14, 14, 14, 14], [15, 15, 15, 15, 15]]).all()
 
 
 def test_normal_population():
     """Populating a normal distribution without specifying dim should correctly populate."""
-    norm = ops.Normal(0, 1)
-    norm.populate(3)
-    assert norm.value.shape == (3,)
 
-    norm.populate(3, dim=2)
-    assert norm.value.shape == (3, 2)
+    m = model.Model()
+    with m:
+        norm = Variable(ops.Normal(0, 1))
+
+    ds = m(n=3)
+
+    # norm.populate(3)
+    assert ds.norm.values.shape == (3,)
+
+    norm.dim = 2
+    ds = m(n=3)
+    assert ds.norm.values.shape == (3, 2)
 
 
 def test_basic_normal_pymc():
@@ -583,11 +592,11 @@ def test_basic_normal_pymc():
 
 
 def test_normal_not_none():
-    """A model with a normal distribution should run corrrectly."""
+    """A model with a normal distribution should run correctly."""
     m = model.Model()
     m.v1 = Variable(reno.Normal(5, 10))
-    m()
-    assert m.v1.value[0] is not None
+    ds = m()
+    assert ds.v1.values[0] is not None
 
 
 def test_normal_w_dim():
@@ -595,8 +604,8 @@ def test_normal_w_dim():
     full matrix as expected."""
     m = model.Model()
     m.v1 = Variable(reno.Normal(10, 5), dim=3)
-    m(n=7, steps=4)
-    assert m.v1.value.shape == (7, 3)
+    ds = m(n=7, steps=4)
+    assert ds.v1.values.shape == (7, 3)
 
 
 def test_basic_normal_w_dim_pymc():
@@ -615,8 +624,8 @@ def test_normal_w_dim_and_single_sample():
     full matrix as expected, even when num samples is only 1."""
     m = model.Model()
     m.v1 = Variable(reno.Normal(10, 5), dim=3)
-    m(n=1, steps=4)
-    assert m.v1.value.shape == (1, 3)
+    ds = m(n=1, steps=4)
+    assert ds.v1.values.shape == (1, 3)
 
 
 def test_normal_w_seq():
@@ -624,8 +633,8 @@ def test_normal_w_seq():
     a value for each timestep."""
     m = model.Model()
     m.v1 = Variable(reno.Normal(1, 2, per_timestep=True))
-    m(n=2, steps=5)
-    assert m.v1.value.shape == (2, 5)
+    ds = m(n=2, steps=5)
+    assert ds.v1.values.shape == (2, 5)
 
 
 def test_normal_w_seq_and_dim():
@@ -633,8 +642,8 @@ def test_normal_w_seq_and_dim():
     should correctly populate all the things."""
     m = model.Model()
     m.v1 = Variable(reno.Normal(1, 2, per_timestep=True), dim=4)
-    m(n=2, steps=5)
-    assert m.v1.value.shape == (2, 5, 4)
+    ds = m(n=2, steps=5)
+    assert ds.v1.values.shape == (2, 5, 4)
 
 
 def test_normal_w_seq_and_dim_pymc():
@@ -867,15 +876,18 @@ def test_stack():
     m = model.Model()
     with m:
         v0, v1, v2 = Variable(1), Variable(2), Variable(3)
+        v4 = Variable([1, 2, 3])
         f3 = Flow(ops.stack(v0, v1, v2))
 
         s0 = Stock()
         f3 >> s0
 
     assert f3.shape == 3
+    assert s0.shape == 3
     ds = m()
     assert (ds.f3.values[0] == [1, 2, 3]).all()
     assert (ds.s0.values[0][2] == [2, 4, 6]).all()
+    assert (ds.f3.values == ds.v4.values).all()
 
 
 def test_stack_pymc():
