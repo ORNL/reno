@@ -635,12 +635,6 @@ class orient_timeseries(reno.components.Operation):
     #     if self.model is not None:
     #     return
 
-    def get_is_timeseries(self) -> bool:
-        """This is the one operation that _creates_ a timeseries dimension, so it always
-        returns ``True``.
-        """
-        return True
-
     def op_eval(self, t: int, **kwargs: dict) -> np.ndarray:
         # if self.sub_equation_parts[0].model is not None:
         #     full_steps = self.sub_equation_parts[0].model.steps

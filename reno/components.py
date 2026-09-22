@@ -71,8 +71,6 @@ class EquationPart:
         self.sub_equation_parts = sub_equation_parts
         self._shape = None  # remember, for now only the data dim
         self._dtype = None
-        # self._is_timeseries = None  # NOTE: just put in function, not
-        # necessary to cache right now
 
     # ---- MATH OPERATION OVERLOADING/EQUATION PART REPLACEMENT ----
 
@@ -238,15 +236,6 @@ class EquationPart:
         if self._dtype is None:
             self._dtype = self.get_type()
         return self._dtype
-
-    @property
-    def is_timeseries(self) -> bool:
-        """Whether the first axis of this data is a timeseries or not.
-
-        This occurs when a orient_timeseries operation is involved, but gets squashed if
-        a series operation (not on a later axis) is run.
-        """
-        return self.get_is_timeseries()
 
     def equal(self, obj: EquationPart | int | float | np.ndarray) -> Operation:
         """Returns a symbolic operation for checking equality with passed object."""
@@ -429,19 +418,6 @@ class EquationPart:
         """
         return None
 
-    def get_is_timeseries(self) -> bool:
-        """Recursively determines if the value at this point is an entire timeseries.
-
-        This indicates for multidimensional data whether the first axis is involved or not.
-        This should evaluate True when a ``orient_timeseries`` operation is used, and
-        go back to False if a series operation is subsequently supplied.
-        """
-        found_timeseries = False
-        for sub_equation_part in self.sub_equation_parts:
-            if sub_equation_part.is_timeseries:
-                found_timeseries = True
-        return found_timeseries
-
     def find_parts_of_type(
         self, search_type: type, already_checked: list[EquationPart] = None
     ) -> list[EquationPart]:
@@ -557,12 +533,6 @@ class Scalar(EquationPart):
                 # TODO: possibly raise warning here?
                 return None
         return type(self.value)
-
-    def get_is_timeseries(self) -> bool:
-        """Scalars are leaf nodes in equations, so never includes a subop that is
-        timeseries based.
-        """
-        return False
 
     def eval(
         self,
@@ -701,12 +671,6 @@ class Distribution(EquationPart):
             for sub_eq in self.sub_equation_parts:
                 e.add_note(f"\t{sub_eq}: {sub_eq._shape}")
             raise
-
-    def get_is_timeseries(self) -> bool:
-        """Distributions are leaf nodes in equations, so never includes a subop that is
-        timeseries based.
-        """
-        return False
 
     def eval(
         self,
@@ -899,15 +863,8 @@ class AggregationOperation(Operation):
     that operates across/aggregates values in a series into one of a different shape.
 
     This exists to indicate that an aggregation operation acting on a timeseries-shaped
-    input will _no longer_ be timeseries-shaped afterwards, added to address
-    ``get_is_timeseries`` needs.
+    input will _no longer_ be timeseries-shaped afterwards
     """
-
-    def get_is_timeseries(self) -> bool:
-        """An aggregation operation explicitly takes out/reduces across a dimension,
-        meaning it removes a separate timeseries axis if relevant.
-        """
-        return False
 
 
 class ExtendedOperation(Operation):
@@ -2878,12 +2835,6 @@ class Stock(TrackedReference):
         if eq is None:
             eq = self + self.compute_diff_eq()
         return super()._implied_eq(eq=eq)
-
-    def get_is_timeseries(self) -> bool:
-        """Stocks don't use sub_equation_parts directly"""
-        # TODO: why isn't this _implied_eq? I get a recursion depth error when I
-        # use that.
-        return self.compute_diff_eq().is_timeseries
 
     def to_dict(self) -> dict:
         """Serialize class into a dictionary for saving to file.
