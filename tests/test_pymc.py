@@ -487,3 +487,68 @@ def test_data_dictionary():
     vals = trace.posterior.slope.values
     np.testing.assert_almost_equal(np.mean(vals[vals < 1.5]), 1.0, decimal=1)
     np.testing.assert_almost_equal(np.mean(vals[vals > 1.5]), 2.0, decimal=1)
+
+
+def test_data_dictionary_with_straight_list():
+    """Passing a list instead of a distribution for a config variable passed to
+    the data parameter should also work."""
+
+    m = Model()
+    with m:
+        intercept = Variable(ops.Uniform(0.0, 10.0))
+        slope = Variable(ops.Uniform(1.0, 6.0))
+        value = Stock(init=intercept)
+        value += slope
+        final = Metric(value.timeseries[-1])
+
+    df = pd.DataFrame({
+        "intercept": [1, 10, 3.5, 15, 20, 6],
+        "final": [19.0, 28.0, 21.0, 24.0, 29.0, 15.0],
+        "final_unc": [0.1, 1.0, 0.2, 0.2, 0.1, 0.5],
+    })
+
+    trace = m.pymc(
+        n=4000,
+        slope=ops.Uniform(0.0, 6.0, dim=6),
+
+        data = {
+            m.intercept: df.intercept,
+            m.final: ops.Normal(df.final, df.final_unc),
+        }
+    )
+
+    vals = trace.posterior.slope.values
+    np.testing.assert_almost_equal(np.mean(vals[vals < 1.5]), 1.0, decimal=1)
+    np.testing.assert_almost_equal(np.mean(vals[vals > 1.5]), 2.0, decimal=1)
+
+
+def test_data_dictionary_with_regular_config():
+    """Passing normal distributions unrelated to a dataset to the data parameter
+    should also work."""
+
+    m = Model()
+    with m:
+        intercept = Variable(ops.Uniform(0.0, 10.0))
+        slope = Variable(ops.Uniform(1.0, 6.0))
+        value = Stock(init=intercept)
+        value += slope
+        final = Metric(value.timeseries[-1])
+
+    df = pd.DataFrame({
+        "intercept": [1, 10, 3.5, 15, 20, 6],
+        "final": [19.0, 28.0, 21.0, 24.0, 29.0, 15.0],
+        "final_unc": [0.1, 1.0, 0.2, 0.2, 0.1, 0.5],
+    })
+
+    trace = m.pymc(
+        n=4000,
+        data = {
+            m.slope: ops.Uniform(0.0, 6.0, dim=len(df)),
+            m.intercept: df.intercept,
+            m.final: ops.Normal(df.final, df.final_unc),
+        }
+    )
+
+    vals = trace.posterior.slope.values
+    np.testing.assert_almost_equal(np.mean(vals[vals < 1.5]), 1.0, decimal=1)
+    np.testing.assert_almost_equal(np.mean(vals[vals > 1.5]), 2.0, decimal=1)

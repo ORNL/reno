@@ -35,34 +35,34 @@ to the pymc function:
 
 .. code-block:: python
 
-    import reno
+    import reno as r
 
-    t = reno.TimeRef()
-    tub = reno.Model("tub", steps=30, doc="Model the amount of water in a bathtub based on a drain and faucet rate")
+    t = r.TimeRef()
+    tub = r.Model("tub", steps=30, doc="Model the amount of water in a bathtub based on a drain and faucet rate")
     with tub:
-        faucet, drain = reno.Flow(), reno.Flow()
-        water_level = reno.Stock()
+        faucet, drain = r.Flow(), r.Flow()
+        water_level = r.Stock()
 
-        faucet_off_time = reno.Variable(5, doc="Timestep to turn the faucet off in the simulation.")
+        faucet_off_time = r.Variable(5, doc="Timestep to turn the faucet off in the simulation.")
 
         faucet >> water_level >> drain
 
         # the faucet should be some waterflow amount until the faucet is turned
         # off, so we use a piecewise operation to make a conditional based on time
-        faucet.eq = reno.Piecewise([5, 0], [t < faucet_off_time, t >= faucet_off_time])
+        faucet.eq = r.Piecewise([5, 0], [t < faucet_off_time, t >= faucet_off_time])
 
-        drain.eq = reno.sin(t) + 2
+        drain.eq = r.sin(t) + 2
         # the drain can't move negative water, and can't drain more than exists
         # in the tub
         drain.min = 0
         drain.max = water_level
 
-        final_water_level = reno.Metric(water_level.timeseries[-1])
+        final_water_level = r.Metric(water_level.timeseries[-1])
 
 
 .. code-block:: python
 
-   trace = tub.pymc(n=1000, faucet_off_time=reno.Normal(10, 5), compute_prior_only=True)
+   trace = tub.pymc(n=1000, faucet_off_time=r.Normal(10, 5), compute_prior_only=True)
 
 ``.pymc`` calls return Arviz ``InferenceData`` objects, which contain a
 ``.prior`` XArray dataset (very similar to what the normal Reno model call
@@ -74,7 +74,7 @@ trace:
 
 .. code-block:: python
 
-    reno.plot_trace_refs(tub, [trace.prior], [tub.faucet_off_time])
+    r.plot_trace_refs(tub, [trace.prior], [tub.faucet_off_time])
 
 
 .. figure:: ../_static/tub_prior_faucet_dist.png
@@ -98,15 +98,15 @@ the ``final_water_level`` metric:
 
     trace = tub.pymc(
         n=1000,
-        faucet_off_time=reno.Normal(10, 5),
-        observations=[reno.Observation(tub.final_water_level, [12.0], 2.0)]
+        faucet_off_time=r.Normal(10, 5),
+        observations=[r.Observation(tub.final_water_level, [12.0], 2.0)]
     )
 
 And observe the change from prior to posterior:
 
 .. code-block:: python
 
-    reno.plot_trace_refs(
+    r.plot_trace_refs(
         tub,
         {"prior": trace.prior, "post": trace.posterior},
         [tub.faucet_off_time, tub.faucet, tub.drain, tub.water_level],
@@ -117,20 +117,45 @@ And observe the change from prior to posterior:
    :align: center
 
 
-Implied observations
-====================
+Implied metrics
+===============
 
-(TODO)
+``Observations`` are typically given a :py:class:`reno.components.Metric`
+component in the model, which their provided value describes. An observation can
+also be given a direct equation part, which is implicitly turned into a new
+metric, for example:
+
+.. code-block:: python
+
+    tub.final_water_level = r.Metric(tub.water_level.timeseries[-1])
+    tub.pymc(
+        ...
+        observations = [r.Observation(tub.final_water_level, ...)]
+    )
+
+Could instead implicitly get the final water level equation with:
+
+.. code-block:: python
+
+    tub.pymc(
+        ...
+        observations = [r.Observation(tub.water_level.timeseries[-1], ...)]
+    )
+
+This can be useful in cases where you might have observations for several
+different timesteps, and it's too cumbersome to create individual metric
+components for every single one.
+
 
 
 Observations and config via ``data``
 ====================================
 
 The ``.pymc`` function has a ``data`` parameter, which can be used as an
-alternative parameter to ``observations``. Passing a dictionary of references
-and/or equation parts to this parameter will populate both model free reference
-configuration as well as observed values, in a way that's more convenient if you
-have a dataset in a pandas dataframe. Take the following model for example,
+alternative to ``observations``. Passing a dictionary of references
+and/or equation parts will populate free variables
+(configuration) as well as observed values, in a way that's more convenient if you
+have a dataset in a pandas dataframe. Take the following model,
 which simply defines a linear function parameterized by an intercept and slope:
 
 .. code-block:: python
@@ -145,8 +170,8 @@ which simply defines a linear function parameterized by an intercept and slope:
         final = r.Metric(value.timeseries[-1])
 
 
-We could run this model with several intercepts and slopes to get a variety of
-stock lines:
+We could run this model with "multiple rows of data", or several intercepts and slopes,
+to get a variety of stock lines:
 
 .. code-block:: python
 
@@ -161,7 +186,81 @@ stock lines:
 .. figure:: ../_static/data_example_1.png
     :align: center
 
+From a Bayesian inference standpoint, we'll assume we don't know what the slopes are,
+but have the final measurement values for each of those slope/intercept pairs.
+We could pass this final measurement as a list to the observation:
 
+.. code-block:: python
+
+    m.pymc(
+        n=4000,
+        intercept=[1, 10, 3.5, 15, 20, 6],
+        slope=r.Uniform(0.0, 6.0, dim=6),
+        observations=[
+            r.Observation(m.final, [19.0, 28.0, 21.0, 24.0, 29.0, 15.0], 0.5)
+        ],
+    )
+
+Alternatively, if we had all of our data in a dataframe, we can pass one or both of
+``m.intercept`` and ``m.final`` as keys in the ``data`` dictionary. Note that
+distributions can be passed directly, rather than indirectly setting the
+arguments on an observation.
+
+.. code-block:: python
+
+    import pandas as pd
+
+    df = pd.DataFrame({
+        "intercept": [1, 10, 3.5, 15, 20, 6],
+        "final": [19.0, 28.0, 21.0, 24.0, 29.0, 15.0],
+    })
+
+    trace = m.pymc(
+        n=4000,
+        slope=r.Uniform(0.0, 6.0, dim=len(df)),
+
+        data = {
+            m.intercept: df.intercept,
+            m.final: r.Normal(df.final, 0.5),
+        }
+    )
+    r.plot_trace_refs(m, [trace], [m.slope, m.value])
+
+.. figure:: ../_static/data_example_2.png
+    :align: center
+
+
+To extend the example further, we could assume we have different uncertainty
+values for each example in each row, and pass those in through distributions in
+``data`` as well:
+
+.. code-block:: python
+
+    df = pd.DataFrame({
+        "intercept": [1, 10, 3.5, 15, 20, 6],
+        "intercept_unc": [1.0, 0.5, 0.2, 0.5, 0.1, 0.2],
+        "final": [19.0, 28.0, 21.0, 24.0, 29.0, 15.0],
+        "final_unc": [0.1, 1.0, 0.2, 0.2, 0.1, 0.5],
+    })
+
+    trace = m.pymc(
+        n=4000,
+        slope=r.Uniform(0.0, 6.0, dim=len(df)),
+
+        data = {
+            m.intercept: r.Normal(df.intercept, df.intercept_unc),
+            m.final: r.Normal(df.final, df.final_unc),
+        }
+    )
+    r.plot_trace_refs(m, [trace], [m.slope, m.value])
+
+.. figure:: ../_static/data_example_3.png
+    :align: center
+
+
+Fundamentally this allows a more intuitive/semantic way of using collections of
+measurement data which may be describing a combination of system "inputs" (free
+variables) and "outputs" (observations).
 
 
 Technical process
