@@ -5,6 +5,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.15.0] - 2026-09-23
+
+### Added
+
+* Optional data dimension parameter to all distribution ops, can now produce
+  vectors per timestep from a distribution
+* Support to `Observation` for any defined distribution as the likelihood,
+  rather than only the default
+* `data` parameter to a model's `.pymc()` function, allowing easier simultaneous
+  configuration of free variables and observed values from a dataframe, see [the
+  Bayesian inference
+docs](https://ornl.gihub.io/reno/stable/user/bayes.html#observations-and-config-via-data)
+  for more information
+* Equation parts that take defined values (e.g. variables, distributions, etc.)
+  now support pandas series
+
+
+### Changed
+
+* Default parameter ordering of an ``Observation`` to match default Normal
+  distribution, see the [migration guide](https://ornl.github.io/reno/stable/user/migration_guide.html)
+* Samples in a multi-sample simulation are now run in series rather than in
+  parallel. This is to reduce complexity of many of the numpy operations and fix
+  some of the inconsistencies in implementation between the pytensor and numpy
+  sides. As a result, many internal functions no longer have a `n` param, and
+  component `.value` attributes only reflect a single sample's data at a time.
+
+
+### Fixed
+
+* Plots of components with data dimension not plotting correctly
+
+
+
 ## [0.14.2] - 2026-09-11
 
 ### Added
