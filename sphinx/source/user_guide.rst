@@ -12,6 +12,7 @@ User Guide
     user/explorer.rst
     user/submodels.rst
     user/extending.rst
+    user/migration_guide.rst
 
 
 TODO: page on more in-depth controls for graphing

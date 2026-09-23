@@ -2466,64 +2466,6 @@ class Observation(reno.components.Distribution):
         refs["__PTNAME__"] = f"{self.ref.qual_name()}_likelihood"
         return dist.pt_str(**refs)
 
-    # def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-    #     return pm.Normal(
-    #         f"{self.ref.qual_name()}_likelihood",
-    #         self.ref.pt(**refs),
-    #         *(self.args),
-    #         **(self.kwargs),
-    #         observed=self.data,
-    #     )
-
-    # def pt_str(self, **refs: dict[str, str]) -> str:
-    #     return f'pm.Normal("{self.ref.qual_name()}_likelihood", {self.ref.pt_str(**refs)}, {self.sigma}, observed={self.data})'
-    #
-
-
-class Observation_(reno.components.Distribution):
-    """Represents a Normal distribution around an observed value.
-
-    Should only be used for supplying observational data with likelihoods
-    to bayesian models constructed with model.pymc()
-
-    Args:
-        ref (reno.components.Reference): The equation to supply an observed value for.
-        sigma (float): The std dev to use for the likelihood Normal distribution.
-        data (list): The actual observed data to apply.
-    """
-
-    def __init__(
-        self,
-        ref: reno.components.Reference | reno.components.EquationPart,
-        sigma: float = 1.0,
-        data: list = None,
-    ):
-        super().__init__()
-        self.ref = ref
-        self.sigma = sigma
-        self.data = data
-
-    def add_tensors(self, pymc_model: pm.Model) -> None:
-        with pymc_model:
-            # sigma = pm.HalfNormal(f"{self.ref.qual_name()}_sigma", self.sigma)
-            pm.Normal(
-                f"{self.ref.qual_name()}_likelihood",
-                pymc_model[self.ref.qual_name()],
-                self.sigma,
-                observed=self.data,
-            )
-
-    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
-        return pm.Normal(
-            f"{self.ref.qual_name()}_likelihood",
-            self.ref.pt(**refs),
-            self.sigma,
-            observed=self.data,
-        )
-
-    def pt_str(self, **refs: dict[str, str]) -> str:
-        return f'pm.Normal("{self.ref.qual_name()}_likelihood", {self.ref.pt_str(**refs)}, {self.sigma}, observed={self.data})'
-
 
 # class Sweep(reno.components.Distribution):
 #     """Similar in principle to ops.List, unimplemented idea for this is to
