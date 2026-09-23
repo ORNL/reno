@@ -1,0 +1,6 @@
+reno.ops.dist\_extra\_kwargs
+============================
+
+.. currentmodule:: reno.ops
+
+.. autofunction:: dist_extra_kwargs

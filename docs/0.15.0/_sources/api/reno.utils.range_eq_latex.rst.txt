@@ -1,0 +1,6 @@
+reno.utils.range\_eq\_latex
+===========================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: range_eq_latex

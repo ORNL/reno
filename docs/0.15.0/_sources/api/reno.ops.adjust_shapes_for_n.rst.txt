@@ -1,0 +1,6 @@
+reno.ops.adjust\_shapes\_for\_n
+===============================
+
+.. currentmodule:: reno.ops
+
+.. autofunction:: adjust_shapes_for_n

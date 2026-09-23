@@ -1,0 +1,6 @@
+reno.utils.find\_ref\_root\_model
+=================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: find_ref_root_model

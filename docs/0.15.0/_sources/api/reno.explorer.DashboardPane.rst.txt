@@ -1,0 +1,70 @@
+reno.explorer.DashboardPane
+===========================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: DashboardPane
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~DashboardPane.__init__
+      ~DashboardPane.clone
+      ~DashboardPane.controls
+      ~DashboardPane.embed
+      ~DashboardPane.fire_on_cache_invalidated
+      ~DashboardPane.from_dict
+      ~DashboardPane.from_param
+      ~DashboardPane.from_values
+      ~DashboardPane.get_root
+      ~DashboardPane.jscallback
+      ~DashboardPane.jslink
+      ~DashboardPane.link
+      ~DashboardPane.on_cache_invalidated
+      ~DashboardPane.save
+      ~DashboardPane.select
+      ~DashboardPane.servable
+      ~DashboardPane.server_doc
+      ~DashboardPane.show
+      ~DashboardPane.to_dict
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DashboardPane.align
+      ~DashboardPane.aspect_ratio
+      ~DashboardPane.css_classes
+      ~DashboardPane.design
+      ~DashboardPane.height
+      ~DashboardPane.height_policy
+      ~DashboardPane.loading
+      ~DashboardPane.margin
+      ~DashboardPane.max_height
+      ~DashboardPane.max_width
+      ~DashboardPane.min_height
+      ~DashboardPane.min_width
+      ~DashboardPane.name
+      ~DashboardPane.param
+      ~DashboardPane.rx
+      ~DashboardPane.sizing_mode
+      ~DashboardPane.styles
+      ~DashboardPane.stylesheets
+      ~DashboardPane.tags
+      ~DashboardPane.value
+      ~DashboardPane.visible
+      ~DashboardPane.width
+      ~DashboardPane.width_policy
+      ~DashboardPane.to_serialize

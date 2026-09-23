@@ -1,0 +1,6 @@
+reno.tab\_exporter.export\_bokeh\_html
+======================================
+
+.. currentmodule:: reno.tab_exporter
+
+.. autofunction:: export_bokeh_html

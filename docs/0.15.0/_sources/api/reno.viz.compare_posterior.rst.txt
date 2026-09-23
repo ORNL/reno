@@ -1,0 +1,6 @@
+reno.viz.compare\_posterior
+===========================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: compare_posterior

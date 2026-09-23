@@ -1,0 +1,35 @@
+reno.diagrams.ModelDiagram
+==========================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: ModelDiagram
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ModelDiagram.__init__
+      ~ModelDiagram.all_edges
+      ~ModelDiagram.all_nodes
+      ~ModelDiagram.configure
+      ~ModelDiagram.get_ref_node
+      ~ModelDiagram.get_topmost_diagram
+      ~ModelDiagram.to_graphviz
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ModelDiagram.subgraph_colors

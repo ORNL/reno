@@ -1,0 +1,6 @@
+reno.tab\_exporter.export\_selenium\_pdf
+========================================
+
+.. currentmodule:: reno.tab_exporter
+
+.. autofunction:: export_selenium_pdf

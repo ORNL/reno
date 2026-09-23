@@ -1,0 +1,40 @@
+reno.diagrams.ToMetricDiagramEdge
+=================================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: ToMetricDiagramEdge
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ToMetricDiagramEdge.__init__
+      ~ToMetricDiagramEdge.add_to_graphviz
+      ~ToMetricDiagramEdge.configure_color
+      ~ToMetricDiagramEdge.find_duplicate_edges
+      ~ToMetricDiagramEdge.mark_rendered
+      ~ToMetricDiagramEdge.other
+      ~ToMetricDiagramEdge.should_render
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ToMetricDiagramEdge.PRIORITY
+      ~ToMetricDiagramEdge.arrowsize
+      ~ToMetricDiagramEdge.default_color
+      ~ToMetricDiagramEdge.style
+      ~ToMetricDiagramEdge.weight
+      ~ToMetricDiagramEdge.rendered

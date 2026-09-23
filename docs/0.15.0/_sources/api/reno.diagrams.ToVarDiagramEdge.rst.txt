@@ -1,0 +1,40 @@
+reno.diagrams.ToVarDiagramEdge
+==============================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: ToVarDiagramEdge
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ToVarDiagramEdge.__init__
+      ~ToVarDiagramEdge.add_to_graphviz
+      ~ToVarDiagramEdge.configure_color
+      ~ToVarDiagramEdge.find_duplicate_edges
+      ~ToVarDiagramEdge.mark_rendered
+      ~ToVarDiagramEdge.other
+      ~ToVarDiagramEdge.should_render
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ToVarDiagramEdge.PRIORITY
+      ~ToVarDiagramEdge.arrowsize
+      ~ToVarDiagramEdge.default_color
+      ~ToVarDiagramEdge.style
+      ~ToVarDiagramEdge.weight
+      ~ToVarDiagramEdge.rendered

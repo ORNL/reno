@@ -1,0 +1,6 @@
+reno.pymc.to\_pymc\_model\_str
+==============================
+
+.. currentmodule:: reno.pymc
+
+.. autofunction:: to_pymc_model_str

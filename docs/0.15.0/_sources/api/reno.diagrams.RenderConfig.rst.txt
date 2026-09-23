@@ -1,0 +1,44 @@
+reno.diagrams.RenderConfig
+==========================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: RenderConfig
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~RenderConfig.__init__
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~RenderConfig.flow_sparklines
+      ~RenderConfig.group_colors
+      ~RenderConfig.hide
+      ~RenderConfig.hide_groups
+      ~RenderConfig.lr
+      ~RenderConfig.metric_sparklines
+      ~RenderConfig.metrics
+      ~RenderConfig.show
+      ~RenderConfig.show_groups
+      ~RenderConfig.sparklines
+      ~RenderConfig.stock_sparklines
+      ~RenderConfig.theme
+      ~RenderConfig.traces
+      ~RenderConfig.universe
+      ~RenderConfig.var_sparklines
+      ~RenderConfig.vars

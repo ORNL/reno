@@ -1,0 +1,6 @@
+reno.utils.get\_dependency\_relevant\_equation\_part
+====================================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: get_dependency_relevant_equation_part

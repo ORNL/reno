@@ -1,0 +1,40 @@
+reno.diagrams.StockLimitDiagramEdge
+===================================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: StockLimitDiagramEdge
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~StockLimitDiagramEdge.__init__
+      ~StockLimitDiagramEdge.add_to_graphviz
+      ~StockLimitDiagramEdge.configure_color
+      ~StockLimitDiagramEdge.find_duplicate_edges
+      ~StockLimitDiagramEdge.mark_rendered
+      ~StockLimitDiagramEdge.other
+      ~StockLimitDiagramEdge.should_render
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~StockLimitDiagramEdge.PRIORITY
+      ~StockLimitDiagramEdge.arrowsize
+      ~StockLimitDiagramEdge.default_color
+      ~StockLimitDiagramEdge.style
+      ~StockLimitDiagramEdge.weight
+      ~StockLimitDiagramEdge.rendered

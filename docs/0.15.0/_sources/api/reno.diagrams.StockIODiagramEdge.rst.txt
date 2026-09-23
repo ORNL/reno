@@ -1,0 +1,40 @@
+reno.diagrams.StockIODiagramEdge
+================================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: StockIODiagramEdge
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~StockIODiagramEdge.__init__
+      ~StockIODiagramEdge.add_to_graphviz
+      ~StockIODiagramEdge.configure_color
+      ~StockIODiagramEdge.find_duplicate_edges
+      ~StockIODiagramEdge.mark_rendered
+      ~StockIODiagramEdge.other
+      ~StockIODiagramEdge.should_render
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~StockIODiagramEdge.PRIORITY
+      ~StockIODiagramEdge.arrowsize
+      ~StockIODiagramEdge.default_color
+      ~StockIODiagramEdge.style
+      ~StockIODiagramEdge.weight
+      ~StockIODiagramEdge.rendered

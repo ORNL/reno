@@ -1,0 +1,3 @@
+html[data-theme="dark"] img:not(.only-dark, .dark-light) {
+    filter: none !important;
+}

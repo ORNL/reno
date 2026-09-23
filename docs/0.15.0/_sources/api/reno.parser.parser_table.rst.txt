@@ -1,0 +1,6 @@
+reno.parser.parser\_table
+=========================
+
+.. currentmodule:: reno.parser
+
+.. autofunction:: parser_table

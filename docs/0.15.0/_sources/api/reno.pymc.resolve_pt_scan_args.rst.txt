@@ -1,0 +1,6 @@
+reno.pymc.resolve\_pt\_scan\_args
+=================================
+
+.. currentmodule:: reno.pymc
+
+.. autofunction:: resolve_pt_scan_args
