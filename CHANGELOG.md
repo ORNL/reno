@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `data` parameter to a model's `.pymc()` function, allowing easier simultaneous
   configuration of free variables and observed values from a dataframe, see [the
   Bayesian inference
-docs](https://ornl.gihub.io/reno/stable/user/bayes.html#observations-and-config-via-data)
+docs](https://ornl.github.io/reno/stable/user/bayes.html#observations-and-config-via-data)
   for more information
 * Equation parts that take defined values (e.g. variables, distributions, etc.)
   now support pandas series
