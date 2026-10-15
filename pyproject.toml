@@ -73,7 +73,7 @@ lint.flake8-annotations.mypy-init-return = true  # don't require return type ann
 #
 
 [tool.setuptools]
-packages = ["reno"]
+packages = ["reno", "reno.examples"]
 
 [tool.setuptools.package-data]
 reno = ["res/*.vue", "res/*.js"]
