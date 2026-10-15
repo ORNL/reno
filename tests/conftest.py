@@ -24,6 +24,12 @@ def data_file_loc():
 
 
 @pytest.fixture
+def predator_prey():
+    from reno.examples import lotka_volterra
+    return lotka_volterra.predator_prey
+
+
+@pytest.fixture
 def tub_model():
     t = TimeRef()
 

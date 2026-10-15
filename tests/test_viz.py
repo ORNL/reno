@@ -11,3 +11,10 @@ def test_plot_trace_refs_on_compute_prior_only(tub_model):
 def test_plot_trace_refs_on_full_posterior(tub_model):
     ds = tub_model.pymc(n=1000, faucet_shutoff_time=r.Normal(10, 5), observations=[r.Observation(tub_model.final_water_level, 12.0, 5.0)])
     r.plot_trace_refs(tub_model, {"prior": ds.prior, "post": ds.posterior}, ["faucet_off_time", "faucet", "drain", "water_level"])
+
+
+def test_graph_with_sparklines(predator_prey):
+    """Getting a diagram of a model with sparklines shouldn't break."""
+    predator_prey(n=10)
+    predator_prey.graph(stock_sparklines=True, flow_sparklines=True)
+    # predator_prey.graph(stock_sparklines=True, flow_sparklines=True, traces=[ds])

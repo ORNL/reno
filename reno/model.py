@@ -139,6 +139,9 @@ class Model:
         """Docstring/comment to describe this model."""
         # TODO: offset?
 
+        self.last_dataset: xr.Dataset = None
+        """XArray dataset output from the last numpy run. This is used for plotting
+        defaults on functions that aren't explicitlyk passed traces."""
         self.trace = None  # assigned by pymc()
         """Arviz trace produced by the last pymc run. This is used for plotting
         defaults on functions that aren't explicitly passed traces."""
@@ -528,6 +531,7 @@ class Model:
         full_ds = full_ds.assign_coords(
             {"sample": (["sample"], list(range(len(sample_datasets))))}
         )
+        self.last_dataset = full_ds
         return full_ds
 
     def get_attrs(self) -> dict[str, Any]:
@@ -1063,147 +1067,15 @@ class Model:
         ds_merged = xr.merge(ds_to_merge)
         return ds_merged
 
-    def dataset(self) -> xr.Dataset:  # noqa: C901
+    def dataset(self) -> xr.Dataset:
         """Turn all of the model's tracked reference values into an xarray dataset,
         including the "configuration" of the input parameters etc.
         """
-        sub_dses = {}
-        if len(self.models) > 0:
-            for model in self.models:
-                sub_dses[model.name] = model.dataset()
-
-        # add non-static non-dim base refs (stocks, flows, vars)
-        # partial case 1, (sample, t)  (see TrackedReference for cases
-        # explanation)
-        all_refs = self.stocks + self.flows + self.vars
-        all_refs = [ref for ref in all_refs if not ref.implicit]
-        ds = xr.Dataset(
-            {
-                # ref.name: (["sample", "step"], ref.value)
-                ref.qual_name(): (["sample", "step"], ref.value)
-                for ref in all_refs
-                if not ref.is_static() and ref.dim == 1
-            },
-            coords={
-                "sample": (["sample"], list(range(self.last_n))),
-                "step": (["step"], list(range(self.last_steps))),
-                # "vec": (["vec"], []),
-            },
-            attrs=self.get_nonrecursive_config(),
-        )
-
-        # handle any multi-dim refs
-        multidim_vars = {}
-        for ref in all_refs:
-            if ref.dim > 1:
-                vec_name = f"{ref.qual_name()}_vec"
-                if ref.is_static():
-                    if ref._sample_dim:
-                        # case 2, (sample, dim)
-                        dims = ["sample", vec_name]
-                        coords = {
-                            "sample": (["sample"], list(range(self.last_n))),
-                            vec_name: ([vec_name], list(range(ref.dim))),
-                        }
-                        val = ref.value
-                        if ref.value.shape[0] != self.last_n:
-                            val = np.broadcast_to(ref.value, (self.last_n, ref.dim))
-                    else:
-                        # case 1, (dim,)
-                        dims = ["sample", vec_name]
-                        coords = {
-                            "sample": (["sample"], list(range(self.last_n))),
-                            vec_name: ([vec_name], list(range(ref.dim))),
-                        }
-                        val = ref.value
-                        # TODO: I'm pretty sure this needs a repeat per last_n
-                        # with axis=0...a broadcast may not work
-                        val = np.broadcast_to(val, (self.last_n, ref.dim))
-                else:
-                    # partial case 1, (sample, t, dim)
-                    dims = ["sample", "step", vec_name]
-                    coords = {
-                        "sample": (["sample"], list(range(self.last_n))),
-                        "step": (["step"], list(range(self.last_steps))),
-                        vec_name: ([vec_name], list(range(ref.dim))),
-                    }
-                    val = ref.value
-
-                da = xr.DataArray(data=val, dims=dims, coords=coords)
-                multidim_vars[ref.qual_name()] = da
-        ds = ds.assign(multidim_vars)
-
-        # handle any static refs (don't change wrt to step)
-        # NOTE: this is only dealing with vectors right now, not single nums?
-        static_refs = {}
-        for ref in all_refs:
-            if ref.is_static() and ref.dim == 1:
-                val = ref.value
-                # print(
-                #     "(dataset)",
-                #     ref.qual_name(),
-                #     type(ref.value),
-                #     ref.value.shape,
-                #     ref.value,
-                #     ref._static,
-                #     ref._sample_dim,
-                # )
-                # TODO: geeeez there's got to be a better way?? np.min/max etc.
-                # will return a numpy.int even if the inputs are not numpy
-                # types (e.g. python int)
-                if (
-                    isinstance(ref.value, (int, float))
-                    or (isinstance(ref.value, np.ndarray) and len(ref.value.shape) == 0)
-                    or (len(ref.value.shape) > 0 and ref.value.shape[0] != self.last_n)
-                    or len(ref.value.shape) == 0
-                ):
-                    val = np.broadcast_to(ref.value, (self.last_n,))
-                static_refs[ref.qual_name()] = (["sample"], val)
-        ds = ds.assign(static_refs)
-
-        # add metrics, note that some metrics will be 1 per sample, others will
-        # be 1 per step
-        new_vars = {}
-        for metric in self.metrics:
-            val = metric.value
-            if metric.is_static():  # noqa: SIM102
-                # bleh, see note above
-                if (
-                    isinstance(val, (int, float))
-                    or (isinstance(val, np.ndarray) and len(val.shape) == 0)
-                    or (len(val.shape) > 0 and val.shape[0] != self.last_n)
-                    or len(val.shape) == 0
-                ):
-                    val = np.broadcast_to(val, (self.last_n,))
-            coords = ["sample"] if len(val.shape) == 1 else ["sample", "step"]
-            new_vars[metric.qual_name()] = (coords, val)
-        ds = ds.assign(new_vars)
-
-        # merge in any sub datasets
-        all_attrs = {}
-        for sub_ds_name, sub_ds in sub_dses.items():
-            # essentially flatten attr names
-            renamed_attrs = {}
-            for attr in sub_ds.attrs:
-                renamed_attrs[f"{sub_ds_name}.{attr}"] = sub_ds.attrs[attr]
-            sub_ds = sub_ds.drop_attrs(deep=False)
-            sub_ds = sub_ds.assign_attrs(renamed_attrs)
-            all_attrs.update(renamed_attrs)
-
-            # BUG: still not working
-            # update var names (no longer necessary, fixed with qual_name usage up above)
-            # renamed_vars = {
-            #     name: f"{sub_ds_name}_{name}" for name in list(sub_ds.keys())
-            # }
-            # sub_ds = sub_ds.rename_vars(renamed_vars)
-            sub_dses[sub_ds_name] = sub_ds  # TODO: how was this not necessary before??
-
-        ds_to_merge = [ds]  # , *list(sub_dses.values())]
-        ds_to_merge.extend(sub_dses.values())
-        ds_merged = xr.merge(ds_to_merge)
-        ds_merged = ds_merged.assign_attrs(ds.attrs)
-        ds_merged = ds_merged.assign_attrs(all_attrs)
-        return ds_merged
+        # TODO: this probably shouldn't even be a function, this is a holdover
+        # from when the dataset could be fully re-constructed from the matrix
+        # values on every component (this changed when we switched to serial
+        # sampling
+        return self.last_dataset
 
     def __call__(
         self,
