@@ -153,26 +153,31 @@ class Explorer(pn.custom.PyComponent):
         may take significant time to complete posterior sampling), we commit some minor
         tomfoolery and monkey business to make that happen.
         """
-        # from rich.progress import Progress
-        from pymc.smc.sampling import CustomProgress
+        try:
+            # from rich.progress import Progress
+            from pymc.smc.sampling import CustomProgress
 
-        class CustomSMCProgress(CustomProgress):
-            def __init__(self, *args: list, **kwargs: dict):
-                super().__init__(*args, **kwargs)
-                self.total = len(self.tasks)
-                self.per_progress = {key: 0.0 for key in self.task_ids}
-                self.explorer_ref = outer_self
+            class CustomSMCProgress(CustomProgress):
+                def __init__(self, *args: list, **kwargs: dict):
+                    super().__init__(*args, **kwargs)
+                    self.total = len(self.tasks)
+                    self.per_progress = {key: 0.0 for key in self.task_ids}
+                    self.explorer_ref = outer_self
 
-            def update(self, status, task_id, **kwargs: dict) -> None:  # noqa: ANN001
-                # print(task_id, status)
-                self.per_progress[task_id] = float(status[status.rfind(" ") + 1 :])
-                sumtotal = sum([progress for progress in self.per_progress.values()])
-                sumtotal = sumtotal * 100 / len(self.tasks)
-                sumtotal = int(sumtotal)
-                self.explorer_ref.runs_list.progress.value = sumtotal
-                super().update(status=status, task_id=task_id, **kwargs)
+                def update(self, status, task_id, **kwargs: dict) -> None:  # noqa: ANN001
+                    # print(task_id, status)
+                    self.per_progress[task_id] = float(status[status.rfind(" ") + 1 :])
+                    sumtotal = sum(
+                        [progress for progress in self.per_progress.values()]
+                    )
+                    sumtotal = sumtotal * 100 / len(self.tasks)
+                    sumtotal = int(sumtotal)
+                    self.explorer_ref.runs_list.progress.value = sumtotal
+                    super().update(status=status, task_id=task_id, **kwargs)
 
-        reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
+            reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
+        except:
+            print("Unable to change progress")
 
     def set_running(self, running: bool) -> None:
         """Set the status of the spinny things in various subcomponents
@@ -455,7 +460,7 @@ class ObservablesList(pn.viewable.Viewer):
         observations = []
         for row in self.rows:
             obs = reno.ops.Observation(
-                row.reference.value, row.sigma.value, [row.data.value]
+                row.reference.value, row.data.value, row.sigma.value
             )
             observations.append(obs)
         return observations
