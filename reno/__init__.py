@@ -46,6 +46,7 @@ from reno.ops import (
     Normal,
     Observation,
     Uniform,
+    Triangular,
     abs,
     add,
     assign,
