@@ -34,3 +34,20 @@ test:
   parallel:
     matrix:
       - VERSION: ["3.12", "3.13", "3.14"]
+
+
+pre-commit:
+  image: python:3.13
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    paths:
+      - ".cache/pip"
+  tags:
+    - linux
+  script:
+    - pip install pre-commit
+    - SKIP=test,clean pre-commit run --all-files
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
