@@ -18,7 +18,7 @@ class WorkspaceListerHandler(RequestHandler):
     }
     """
 
-    def get(self):
+    def get(self) -> None:
         self.set_header("Content-Type", "application/json")
         self.write(
             json.dumps(
@@ -44,7 +44,7 @@ class RunPriorHandler(RequestHandler):
     }
     """
 
-    def post(self):
+    def post(self) -> None:
         explorer = pn.state.cache["active_workspaces"][
             list(pn.state.cache["active_workspaces"])[0]
         ]
@@ -97,7 +97,7 @@ class RunPosteriorHandler(RequestHandler):
     }
     """
 
-    def post(self):
+    def post(self) -> None:
         explorer = pn.state.cache["active_workspaces"][
             list(pn.state.cache["active_workspaces"])[0]
         ]
@@ -126,7 +126,7 @@ class RunPosteriorHandler(RequestHandler):
         if "steps" in body:
             explorer.vars_editor.steps.value = int(body["steps"])
 
-        observations = {}
+        # observations = {}
         if "observed" in body:
             for name, values in body["observed"].items():
                 explorer.observables.add_observation()
@@ -160,13 +160,13 @@ class PaneListHandler(RequestHandler):
 
     # TODO: don't forget this depends on the tab
 
-    def get(self):
+    def get(self) -> None:
         explorer = pn.state.cache["active_workspaces"][
             list(pn.state.cache["active_workspaces"])[0]
         ]
 
         paneset = explorer.view.active_tab  # .panes
-        ids = [pane.name for pane in explorer.view.active_tab.panes]
+        # ids = [pane.name for pane in explorer.view.active_tab.panes]
         panes_info = paneset.to_dict()["panes"]
         # panes_dict = {}
         # for i, pane in enumerate(panes_info):
@@ -174,7 +174,7 @@ class PaneListHandler(RequestHandler):
         self.set_header("Content-Type", "application/json")
         self.write(json.dumps(panes_info))
 
-    def post(self):
+    def post(self) -> None:
         explorer = pn.state.cache["active_workspaces"][
             list(pn.state.cache["active_workspaces"])[0]
         ]
@@ -202,7 +202,7 @@ class AddPaneHandler(RequestHandler):
     }
     """
 
-    def post(self):
+    def post(self) -> None:
         explorer = pn.state.cache["active_workspaces"][
             list(pn.state.cache["active_workspaces"])[0]
         ]
