@@ -13,6 +13,9 @@
 test:
   tags:
     - linux
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
   image: "python:$VERSION"
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
