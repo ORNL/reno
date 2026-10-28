@@ -13,7 +13,7 @@ import traceback
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -176,7 +176,7 @@ class Explorer(pn.custom.PyComponent):
                     super().update(status=status, task_id=task_id, **kwargs)
 
             reno.model.pm.smc.sampling.CustomProgress = CustomSMCProgress
-        except:
+        except:  # noqa: E722
             print("Unable to change progress")
 
     def set_running(self, running: bool) -> None:
@@ -369,7 +369,7 @@ class Observable(pn.viewable.Viewer):
             sizing_mode="stretch_width",
         )
         self.sigma = pn.widgets.FloatInput(
-            name="Sigma(σ)",
+            name="Sigma(σ)",  # noqa: RUF001
             value=1.0,
             description="Uncertainty/tolerance around data value",
             sizing_mode="stretch_width",
@@ -588,7 +588,7 @@ class ClickablePane(pn.custom.JSComponent):
         for callback in self._clicked_callbacks:
             callback()
 
-    def _handle_js_clicked(self, event) -> None:
+    def _handle_js_clicked(self, event: Any) -> None:
         if self.click_enabled:
             self.fire_on_click()
 
@@ -2456,6 +2456,7 @@ def create_explorer() -> pn.template.Template:  # noqa: C901
 
 
 def main() -> None:
+    """Main server entry point from CLI."""
     global WORKSPACE_FOLDER
     parser = argparse.ArgumentParser()
     parser.add_argument(
