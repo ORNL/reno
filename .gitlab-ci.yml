@@ -11,6 +11,8 @@
 # - source venv/bin/activate
 #
 test:
+  tags:
+    - linux
   image: "python:$VERSION"
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
