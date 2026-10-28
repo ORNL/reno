@@ -1,0 +1,31 @@
+# image: python:latest
+# variables:
+#   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+# cache:
+#   paths:
+#     - ".cache/pip"
+# before_script:
+# - python --version ; pip --version
+# - pip install virtualenv
+# - virtualenv venv
+# - source venv/bin/activate
+#
+test:
+  image: "python:$VERSION"
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    paths:
+      - ".cache/pip"
+  script:
+    - python --version ; pip --version
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - python -m pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest
+    - pytest -vv
+  parallel:
+    matrix:
+      - VERSION: ["3.12", "3.13", "3.14"]
