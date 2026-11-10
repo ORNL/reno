@@ -2239,7 +2239,7 @@ class Triangular(reno.components.Distribution):
         c = self.sub_equation_parts[1].pt_str(**refs)
         return (
             f'pm.Triangular("{name}", lower={lower}, upper={upper}, c={c}'
-            f'{dist_dim_shape_args_str(self, refs)})'
+            f"{dist_dim_shape_args_str(self, refs)})"
         )
 
 
