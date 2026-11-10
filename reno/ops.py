@@ -970,11 +970,11 @@ class mod(reno.components.Operation):
 class abs(reno.components.Operation):
     """|a| (absolute value).
 
-    String notation: ``(abs A B)``
+    String notation: ``(abs A)``
     """
 
     def __init__(self, a: EquationOrValue):
-        super().__init__("abs", a)
+        super().__init__(a)
 
     def op_latex(self, **kwargs: dict) -> str:
         return f"|{self.sub_equation_parts[0].latex(**kwargs)}|"
