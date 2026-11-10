@@ -70,6 +70,7 @@ __all__ = [  # noqa: RUF022
     # -- distributions --
     "Normal",
     "Uniform",
+    "Triangular",
     "DiscreteUniform",
     "Bernoulli",
     "Categorical",
@@ -2174,6 +2175,72 @@ class Uniform(reno.components.Distribution):
     def pt_str(self, **refs: dict[str, str]) -> str:
         name, *_ = dist_params(self, refs)
         return f'pm.Uniform("{name}", {self.sub_equation_parts[0].pt_str(**refs)}, {self.sub_equation_parts[1].pt_str(**refs)}{dist_dim_shape_args_str(self, refs)})'
+
+
+class Triangular(reno.components.Distribution):
+    """Triangular distribution with lower bound, upper bound, and mode.
+
+    String notation: ``Triangular(lower=0.0, upper=1.0, c=0.5, per_timestep=False)``
+    ``c`` is the most likely value of the distribution. Must be between ``lower`` and ``upper``.
+    """
+
+    def __init__(
+        self,
+        lower: float = 0.0,
+        upper: float = 1.0,
+        c: float = 0.5,
+        per_timestep: bool = False,
+        dim: int = 1,
+    ):
+        super().__init__(lower, upper, c, per_timestep=per_timestep, dim=dim)
+
+    def op_latex(self, **kwargs: dict) -> str:
+        return (
+            f"\\text{{Triangular}}("
+            f"{self.sub_equation_parts[0].latex(**kwargs)}, "
+            f"{self.sub_equation_parts[1].latex(**kwargs)}, "
+            f"{self.sub_equation_parts[2].latex(**kwargs)})"
+        )
+
+    def get_type(self) -> type:
+        return float
+
+    def populate(self, steps: int = 0, dim: int = 1) -> None:
+        dims = dist_shape(self, steps, dim)
+        lower = self.sub_equation_parts[0].eval()
+        upper = self.sub_equation_parts[1].eval()
+        c = self.sub_equation_parts[2].eval()
+        self.value = np.random.triangular(lower, c, upper, size=dims)
+
+    def __repr__(self) -> str:
+        args = (
+            f"{self.clean_part_repr(0)}, "
+            f"{self.clean_part_repr(1)}, "
+            f"{self.clean_part_repr(2)}"
+        )
+        if not self.per_timestep:
+            return f"Triangular({args})"
+        return f"Triangular({args}, {self.per_timestep})"
+
+    def pt(self, **refs: dict[str, pt.TensorVariable]) -> pt.TensorVariable:
+        name, *_ = dist_params(self, refs)
+        return pm.Triangular(
+            name,
+            lower=self.sub_equation_parts[0].pt(**refs),
+            upper=self.sub_equation_parts[1].pt(**refs),
+            c=self.sub_equation_parts[2].pt(**refs),
+            **dist_dim_shape_args(self, refs),
+        )
+
+    def pt_str(self, **refs: dict[str, str]) -> str:
+        name, *_ = dist_params(self, refs)
+        lower = self.sub_equation_parts[0].pt_str(**refs)
+        upper = self.sub_equation_parts[1].pt_str(**refs)
+        c = self.sub_equation_parts[1].pt_str(**refs)
+        return (
+            f'pm.Triangular("{name}", lower={lower}, upper={upper}, c={c}'
+            f'{dist_dim_shape_args_str(self, refs)})'
+        )
 
 
 class DiscreteUniform(reno.components.Distribution):
