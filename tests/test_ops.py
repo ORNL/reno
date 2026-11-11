@@ -906,6 +906,36 @@ def test_stack_pymc():
     assert (ds.prior.s0.values[0][0][2] == [2, 4, 6]).all()
 
 
+def test_stack_single_nonstatic():
+    """Stacking multiple non-static 1d values should work the same as stacking multiple static 1d values."""
+
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0, v1 = Variable(t + 1), Variable(t + 3)
+        v2 = Variable(ops.stack(v0, v1))
+
+    assert v0.shape == 1
+    assert v2.shape == 2
+    assert (v2.eval() == [1, 3]).all()
+    ds = m()
+    assert (ds.v2.values[0][0] == [1, 3]).all()
+
+
+def test_stack_single_nonstatic_pymc():
+    """Stacking multiple non-static 1d values should work the same as stacking multiple static 1d values in pymc."""
+
+    m = model.Model()
+    t = TimeRef()
+    with m:
+        v0, v1 = Variable(t + 1), Variable(t + 3)
+        v2 = Variable(ops.stack(v0, v1))
+
+    ds = m.pymc(1, compute_prior_only=True)
+    assert (ds.prior.v2.values[0][0][0] == [1, 3]).all()
+
+
+
 def test_stack_n():
     """Stacking statics with a non-sample-static variable in a n>1 case should still work."""
     m = model.Model()
