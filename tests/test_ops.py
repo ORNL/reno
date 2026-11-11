@@ -1057,3 +1057,11 @@ def test_static_timeseries_static_slice_pymc():
 
     ds = m.pymc(1, compute_prior_only=True)
     assert (ds.prior.v2.values[0][0][0:4] == [2, 4, 6, 8]).all()
+
+
+def test_abs_works_correctly():
+    """The absolute value should work....like an absolute value."""
+    assert ops.abs(-1).eval() == 1
+    assert ops.abs(1).eval() == 1
+    assert ops.abs(-1.0).eval() == 1.0
+    assert ops.abs(1.0).eval() == 1.0
