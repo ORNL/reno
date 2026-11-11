@@ -935,6 +935,19 @@ def test_stack_single_nonstatic_pymc():
     assert (ds.prior.v2.values[0][0][0] == [1, 3]).all()
 
 
+# this doesn't work until we implement n-dim?
+@pytest.mark.skip
+def test_stack_multidim():
+    """Stacking multiple static multidim values should correctly create a new dimension to stack them in."""
+    m = model.Model()
+    with m:
+        v0 = Variable(1, dim=3)
+        v1 = Variable(3, dim=3)
+        v2 = Variable(ops.stack(v0, v1))
+    assert (v2.eval() == [[1, 1, 1], [3, 3, 3]]).all()
+    ds = m()
+    assert (ds.v2.values[0][0] == [[1, 1, 1], [3, 3, 3]]).all()
+
 
 def test_stack_n():
     """Stacking statics with a non-sample-static variable in a n>1 case should still work."""
