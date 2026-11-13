@@ -788,7 +788,14 @@ def test_init_dist_w_eq_influences_shape():
 def test_init_dist_w_eq_influences_shape_after_change():
     """A stock that has a multidim init should ensure that the component
     itself is also multidim if that multidim is the result of an equation
-    change after a model run."""
+    change after a model run.
+
+    NOTE: previously, the shape was expected to "update" as soon as an equation
+    changes because the shape wasn't cached. The expectation now is that
+    shape may or may not be accurate if population hasn't occurred since
+    a change. This is necessary because complex models will waste significant
+    amounts of time in get_shape functions without the caching.
+    """
 
     m = Model()
     with m:
@@ -799,6 +806,9 @@ def test_init_dist_w_eq_influences_shape_after_change():
 
     m()
     m.v0.eq = ops.Normal(1.0, 2.0, dim=4)
+    print("---")
+    m()  # this didn't used to be necessary, but we need the populate
+    # to occur in order for s's shape to update
 
     assert v0.shape == 4
     assert s.shape == 4
