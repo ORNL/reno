@@ -1593,6 +1593,7 @@ class stack(reno.components.Operation):
             if (
                 part.shape == 1
                 and hasattr(to_stack[i], "shape")
+                and len(to_stack[i].shape) != 0
                 and to_stack[i].shape[0] != 1
             ):
                 implied_n = to_stack[i].shape[0]

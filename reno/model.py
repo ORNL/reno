@@ -1034,6 +1034,7 @@ class Model:
                     # TODO: I'm pretty sure this needs a repeat per last_n
                     # with axis=0...a broadcast may not work
                     val = np.broadcast_to(val, (ref.dim,))
+                    # val = np.repeat(val, ref.dim)
                     val = [val]  # sample dim
                 else:
                     # partial case 1, (t, dim)
