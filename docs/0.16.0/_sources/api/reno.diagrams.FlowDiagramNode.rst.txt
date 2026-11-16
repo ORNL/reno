@@ -1,0 +1,45 @@
+reno.diagrams.FlowDiagramNode
+=============================
+
+.. currentmodule:: reno.diagrams
+
+.. autoclass:: FlowDiagramNode
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~FlowDiagramNode.__init__
+      ~FlowDiagramNode.add_edge
+      ~FlowDiagramNode.add_to_graphviz
+      ~FlowDiagramNode.check_str_or_listpart_in_dict
+      ~FlowDiagramNode.check_str_or_listpart_in_list
+      ~FlowDiagramNode.configure_color
+      ~FlowDiagramNode.configure_render
+      ~FlowDiagramNode.configure_sparklines
+      ~FlowDiagramNode.fix_implicit_inflow_edges
+      ~FlowDiagramNode.generate_sparkline
+      ~FlowDiagramNode.graphviz_ref_node
+      ~FlowDiagramNode.map_edges
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~FlowDiagramNode.default_color
+      ~FlowDiagramNode.default_font_color
+      ~FlowDiagramNode.default_sparkline_edge_color
+      ~FlowDiagramNode.other_attrs
+      ~FlowDiagramNode.shape
+      ~FlowDiagramNode.style

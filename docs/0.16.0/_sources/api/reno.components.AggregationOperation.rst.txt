@@ -1,0 +1,54 @@
+reno.components.AggregationOperation
+====================================
+
+.. currentmodule:: reno.components
+
+.. autoclass:: AggregationOperation
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~AggregationOperation.__init__
+      ~AggregationOperation.astype
+      ~AggregationOperation.clip
+      ~AggregationOperation.equal
+      ~AggregationOperation.eval
+      ~AggregationOperation.find_parts_of_type
+      ~AggregationOperation.get_shape
+      ~AggregationOperation.get_type
+      ~AggregationOperation.is_static
+      ~AggregationOperation.latex
+      ~AggregationOperation.mean
+      ~AggregationOperation.not_equal
+      ~AggregationOperation.op_eval
+      ~AggregationOperation.op_latex
+      ~AggregationOperation.op_repr
+      ~AggregationOperation.op_types
+      ~AggregationOperation.pt
+      ~AggregationOperation.pt_str
+      ~AggregationOperation.seek_refs
+      ~AggregationOperation.series_max
+      ~AggregationOperation.series_min
+      ~AggregationOperation.sum
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~AggregationOperation.OP_REPR
+      ~AggregationOperation.dtype
+      ~AggregationOperation.shape
+      ~AggregationOperation.timeseries
+      ~AggregationOperation.non_repr_part_indices

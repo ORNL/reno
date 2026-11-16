@@ -1,0 +1,34 @@
+﻿reno.diagrams
+=============
+
+.. automodule:: reno.diagrams
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+
+      DiagramEdge
+      DiagramNode
+      FlowDiagramNode
+      MetricDiagramNode
+      ModelDiagram
+      RenderConfig
+      StockDiagramNode
+      StockIODiagramEdge
+      StockLimitDiagramEdge
+      ToFlowDiagramEdge
+      ToMetricDiagramEdge
+      ToVarDiagramEdge
+      VarDiagramNode

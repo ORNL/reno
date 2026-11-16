@@ -1,0 +1,69 @@
+reno.explorer.ClickablePane
+===========================
+
+.. currentmodule:: reno.explorer
+
+.. autoclass:: ClickablePane
+   :members:
+   :special-members:
+   :show-inheritance:
+   :inherited-members:
+
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+
+      ~ClickablePane.__init__
+      ~ClickablePane.clone
+      ~ClickablePane.controls
+      ~ClickablePane.embed
+      ~ClickablePane.fire_on_click
+      ~ClickablePane.get_root
+      ~ClickablePane.jscallback
+      ~ClickablePane.jslink
+      ~ClickablePane.link
+      ~ClickablePane.on_click
+      ~ClickablePane.on_event
+      ~ClickablePane.on_msg
+      ~ClickablePane.reset_pan
+      ~ClickablePane.save
+      ~ClickablePane.select
+      ~ClickablePane.servable
+      ~ClickablePane.server_doc
+      ~ClickablePane.show
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ClickablePane.align
+      ~ClickablePane.aspect_ratio
+      ~ClickablePane.child
+      ~ClickablePane.click_enabled
+      ~ClickablePane.css_classes
+      ~ClickablePane.design
+      ~ClickablePane.drag_scroll_enabled
+      ~ClickablePane.height
+      ~ClickablePane.height_policy
+      ~ClickablePane.loading
+      ~ClickablePane.margin
+      ~ClickablePane.max_height
+      ~ClickablePane.max_width
+      ~ClickablePane.min_height
+      ~ClickablePane.min_width
+      ~ClickablePane.name
+      ~ClickablePane.param
+      ~ClickablePane.sizing_mode
+      ~ClickablePane.styles
+      ~ClickablePane.stylesheets
+      ~ClickablePane.tags
+      ~ClickablePane.visible
+      ~ClickablePane.width
+      ~ClickablePane.width_policy

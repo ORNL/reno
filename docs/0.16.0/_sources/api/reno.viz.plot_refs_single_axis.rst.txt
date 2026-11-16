@@ -1,0 +1,6 @@
+reno.viz.plot\_refs\_single\_axis
+=================================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: plot_refs_single_axis

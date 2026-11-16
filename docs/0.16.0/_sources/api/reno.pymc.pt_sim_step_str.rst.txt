@@ -1,0 +1,6 @@
+reno.pymc.pt\_sim\_step\_str
+============================
+
+.. currentmodule:: reno.pymc
+
+.. autofunction:: pt_sim_step_str

@@ -1,0 +1,6 @@
+reno.ops.dist\_params
+=====================
+
+.. currentmodule:: reno.ops
+
+.. autofunction:: dist_params

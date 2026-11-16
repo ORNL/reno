@@ -1,0 +1,6 @@
+reno.utils.shapiness
+====================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: shapiness
