@@ -355,13 +355,49 @@ class Model:
             full_list.extend(submodel.all_metrics())
         return full_list
 
+    def _all_parts(self) -> list[reno.components.EquationPart]:
+        """Get a list of every equation part in all references of this model.
+
+        Mostly only needed to correctly reset type/shape info, but possibly
+        useful for helping gauge "complexity" of the model.
+        """
+        parts = []
+        for ref in self.all_refs():
+            parts.extend(
+                [
+                    part
+                    for part in ref.find_parts_of_type(reno.components.EquationPart)
+                    if part not in parts
+                ]
+            )
+            # NOTE: see top of find_parts_of_type function, it doesn't currently
+            # collect anything from .init, so we'll do that manually here for
+            # now
+            if hasattr(ref, "init") and ref.init is not None:
+                parts.append(ref.init)
+                parts.extend(
+                    [
+                        part
+                        for part in ref.init.find_parts_of_type(
+                            reno.components.EquationPart
+                        )
+                        if part not in parts
+                    ]
+                )
+        return parts
+
     def _reset_type_and_shape_info(self) -> None:
         """Reference dtype and shape are cached, this goes through every reference
         and resets it to None to force recompute.
         """
+        for part in self._all_parts():
+            part._shape = None
+            part._dtype = None
         for ref in self.all_refs():
             ref._shape = None
             ref._dtype = None
+            if hasattr(ref, "_populated"):
+                ref._populated = False
 
     def _recursive_sub_populate_steps(self, steps: int) -> None:
         """Recursively populate all submodel's steps settings."""
