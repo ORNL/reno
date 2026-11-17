@@ -220,12 +220,13 @@ class EquationPart:
     def shape(self) -> int:
         """The size of the data dimension, 1 by default."""
         try:
-            # TODO: sometimes causes weird issues if you try to cache
-            # unfortunately
-            # if self._shape is None:
-            #     self._shape = self.get_shape()
-            # return self._shape
-            return self.get_shape()
+            # use caching, otherwise complex models see several orders of
+            # magnitude increase in runtime from the ridiculous number of recursive
+            # calls that get made, just to determine shape
+            if self._shape is None:
+                self._shape = self.get_shape()
+            return self._shape
+            # return self.get_shape()
         except Exception as e:
             e.add_note(f"Was trying to get shape of {self.qual_name()}")
             raise
@@ -429,6 +430,10 @@ class EquationPart:
             already_checked (list[EquationPart]): Used to avoid recursing into already
                 checked visited equation parts.
         """
+        # TODO: this doesn't search trackedref .init? Should it?
+        # because it isn't, resetting shape/type info doesn't go through assign
+        # ops on the init of trackedrefs. Getting around this for now by having
+        # _all_parts in model explicitly look for inits
         if already_checked is None:
             already_checked = []
 

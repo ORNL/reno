@@ -1,0 +1,6 @@
+reno.viz.compare\_seq
+=====================
+
+.. currentmodule:: reno.viz
+
+.. autofunction:: compare_seq

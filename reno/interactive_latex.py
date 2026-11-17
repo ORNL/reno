@@ -23,6 +23,7 @@ class InteractiveLatex(ipv.VuetifyTemplate):
     template_file = reno.utils.resource_path("interactive_latex.vue")
 
     def __init__(self):
+        """Create a new latex widget."""
         self.latex = Latex()
         self.latex_output = ipw.Output()
 
@@ -30,14 +31,14 @@ class InteractiveLatex(ipv.VuetifyTemplate):
 
         super().__init__()
 
-    def refresh_display(self):
+    def refresh_display(self) -> None:
         """Re-send updated latex to frontend."""
         with self.latex_output:
             clear_output(True)
             display(self.latex)
         self.send({"method": "attachEventHandlers", "args": []})
 
-    def on_row_clicked(self, callback: Callable[[int], None]):
+    def on_row_clicked(self, callback: Callable[[int], None]) -> None:
         """Register function to execute when a row (equation) in the
         latex is clicked.
 
@@ -45,11 +46,11 @@ class InteractiveLatex(ipv.VuetifyTemplate):
         """
         self._row_clicked_callbacks.append(callback)
 
-    def fire_on_row_clicked(self, index: int):
+    def fire_on_row_clicked(self, index: int) -> None:
         """Trigger the callbacks for the row_clicked event."""
         for callback in self._row_clicked_callbacks:
             callback(index)
 
-    def vue_fire_on_row_clicked(self, index: int):
+    def vue_fire_on_row_clicked(self, index: int) -> None:
         """Make fire_on_row_clicked accessible to vue."""
         self.fire_on_row_clicked(index)

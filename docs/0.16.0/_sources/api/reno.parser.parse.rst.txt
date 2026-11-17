@@ -1,0 +1,6 @@
+reno.parser.parse
+=================
+
+.. currentmodule:: reno.parser
+
+.. autofunction:: parse

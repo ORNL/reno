@@ -1,0 +1,6 @@
+reno.utils.is\_free\_var
+========================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: is_free_var

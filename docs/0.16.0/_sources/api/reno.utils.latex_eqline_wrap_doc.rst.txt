@@ -1,0 +1,6 @@
+reno.utils.latex\_eqline\_wrap\_doc
+===================================
+
+.. currentmodule:: reno.utils
+
+.. autofunction:: latex_eqline_wrap_doc
